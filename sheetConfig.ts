@@ -1,13 +1,6 @@
 
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry } from './types';
-
-// Central hub for all spreadsheet IDs
-export const SPREADSHEET_IDS = {
-  EXECUTION: '156rACoJheFPD4lftBrvVqXScxDp1y8d3msB1tFWbEAc',
-  STRATEGY: '1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc',
-  PARTNERS: '1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs',
-  YDS_APP: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
-};
+import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role } from './types';
+import type { SpreadsheetIds } from './contexts/SpreadsheetConfigContext';
 
 // Defines the structure for a column's mapping and type information
 type ColumnConfig = {
@@ -23,10 +16,20 @@ export interface SheetConfig<T> {
   columns: { [K in keyof Partial<T>]: ColumnConfig };
 }
 
-// --- Configuration for each data type ---
+// --- Configuration creator functions for each data type ---
 
-export const peopleConfig: SheetConfig<Person> = {
-  spreadsheetId: SPREADSHEET_IDS.EXECUTION,
+export const getRolesConfig = (ids: SpreadsheetIds): SheetConfig<Role> => ({
+  spreadsheetId: ids.EXECUTION,
+  range: 'ROLES!A2:B',
+  keyField: 'role_name',
+  columns: {
+    role_name: { header: 'role_name' },
+    permissions: { header: 'permissions', type: 'string_array' },
+  },
+});
+
+export const getPeopleConfig = (ids: SpreadsheetIds): SheetConfig<Person> => ({
+  spreadsheetId: ids.EXECUTION,
   range: 'PEOPLE & CAPACITY!A2:AD',
   keyField: 'user_id',
   columns: {
@@ -37,11 +40,12 @@ export const peopleConfig: SheetConfig<Person> = {
     role_title: { header: 'role_title' },
     manager_id: { header: 'manager_id' },
     is_active: { header: 'is_active', type: 'boolean' },
+    role_name: { header: 'role_name' },
   },
-};
+});
 
-export const projectsConfig: SheetConfig<Project> = {
-  spreadsheetId: SPREADSHEET_IDS.EXECUTION,
+export const getProjectsConfig = (ids: SpreadsheetIds): SheetConfig<Project> => ({
+  spreadsheetId: ids.EXECUTION,
   range: 'PROJECTS!A2:Z',
   keyField: 'project_id',
   columns: {
@@ -56,10 +60,10 @@ export const projectsConfig: SheetConfig<Project> = {
     budget_planned: { header: 'budget_planned', type: 'number' },
     budget_spent: { header: 'budget_spent', type: 'number' },
   },
-};
+});
 
-export const tasksConfig: SheetConfig<Task> = {
-  spreadsheetId: SPREADSHEET_IDS.EXECUTION,
+export const getTasksConfig = (ids: SpreadsheetIds): SheetConfig<Task> => ({
+  spreadsheetId: ids.EXECUTION,
   range: 'TASKS!A2:AA',
   keyField: 'task_id',
   columns: {
@@ -72,10 +76,10 @@ export const tasksConfig: SheetConfig<Task> = {
     estimate_hours: { header: 'estimate_hours', type: 'number' },
     due_date: { header: 'due_date' },
   },
-};
+});
 
-export const businessUnitsConfig: SheetConfig<BusinessUnit> = {
-  spreadsheetId: SPREADSHEET_IDS.STRATEGY,
+export const getBusinessUnitsConfig = (ids: SpreadsheetIds): SheetConfig<BusinessUnit> => ({
+  spreadsheetId: ids.STRATEGY,
   range: 'BUSINESS UNITS!A2:AC',
   keyField: 'bu_id',
   columns: {
@@ -88,10 +92,10 @@ export const businessUnitsConfig: SheetConfig<BusinessUnit> = {
     primary_flywheel_id: { header: 'primary_flywheel_id' },
     upsell_flywheel_id: { header: 'Upsell_flywheel_id' },
   },
-};
+});
 
-export const flywheelsConfig: SheetConfig<Flywheel> = {
-  spreadsheetId: SPREADSHEET_IDS.STRATEGY,
+export const getFlywheelsConfig = (ids: SpreadsheetIds): SheetConfig<Flywheel> => ({
+  spreadsheetId: ids.STRATEGY,
   range: 'Flywheel!A2:X',
   keyField: 'flywheel_id',
   columns: {
@@ -102,10 +106,10 @@ export const flywheelsConfig: SheetConfig<Flywheel> = {
     primary_channels: { header: 'primary_channels', type: 'string_array' },
     target_revenue: { header: 'target_revenue', type: 'number' },
   },
-};
+});
 
-export const leadsConfig: SheetConfig<Lead> = {
-  spreadsheetId: SPREADSHEET_IDS.PARTNERS,
+export const getLeadsConfig = (ids: SpreadsheetIds): SheetConfig<Lead> => ({
+  spreadsheetId: ids.PARTNERS,
   range: 'LEADS!A2:N',
   keyField: 'lead_id',
   columns: {
@@ -124,10 +128,10 @@ export const leadsConfig: SheetConfig<Lead> = {
     last_activity_date: { header: 'last_activity_date' },
     disqualified_reason: { header: 'disqualified_reason' },
   },
-};
+});
 
-export const opportunitiesConfig: SheetConfig<Opportunity> = {
-  spreadsheetId: SPREADSHEET_IDS.PARTNERS,
+export const getOpportunitiesConfig = (ids: SpreadsheetIds): SheetConfig<Opportunity> => ({
+  spreadsheetId: ids.PARTNERS,
   range: 'OPPORTUNITIES!A2:Z',
   keyField: 'opportunity_id',
   columns: {
@@ -139,10 +143,10 @@ export const opportunitiesConfig: SheetConfig<Opportunity> = {
     close_date: { header: 'close_date' },
     owner_user_id: { header: 'owner_user_id' },
   },
-};
+});
 
-export const accountsConfig: SheetConfig<Account> = {
-  spreadsheetId: SPREADSHEET_IDS.PARTNERS,
+export const getAccountsConfig = (ids: SpreadsheetIds): SheetConfig<Account> => ({
+  spreadsheetId: ids.PARTNERS,
   range: 'ACCOUNTS!A2:Z',
   keyField: 'account_id',
   columns: {
@@ -152,10 +156,10 @@ export const accountsConfig: SheetConfig<Account> = {
     website: { header: 'website' },
     owner_user_id: { header: 'owner_user_id' },
   },
-};
+});
 
-export const braindumpConfig: SheetConfig<BrainDump> = {
-  spreadsheetId: SPREADSHEET_IDS.YDS_APP,
+export const getBrainDumpConfig = (ids: SpreadsheetIds): SheetConfig<BrainDump> => ({
+  spreadsheetId: ids.YDS_APP,
   range: 'BrainDump!A2:F',
   keyField: 'braindump_id',
   columns: {
@@ -166,10 +170,10 @@ export const braindumpConfig: SheetConfig<BrainDump> = {
     user_email: { header: 'UserEmail' },
     priority: { header: 'Priority' },
   },
-};
+});
 
-export const logConfig: SheetConfig<LogEntry> = {
-  spreadsheetId: SPREADSHEET_IDS.YDS_APP,
+export const getLogConfig = (ids: SpreadsheetIds): SheetConfig<LogEntry> => ({
+  spreadsheetId: ids.YDS_APP,
   range: 'Login!A2:J',
   keyField: 'log_id',
   columns: {
@@ -184,4 +188,4 @@ export const logConfig: SheetConfig<LogEntry> = {
     success_criteria: { header: 'Success Criteria' },
     status: { header: 'Status' },
   },
-};
+});

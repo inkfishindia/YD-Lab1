@@ -1,11 +1,18 @@
 
-import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump } from '../types';
+import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role } from '../types';
+
+export const mockRoles: Role[] = [
+  { role_name: 'Admin', permissions: ['*:*'] },
+  { role_name: 'Manager', permissions: ['*:read', 'projects:write', 'tasks:write', 'people:read', 'partners:write', 'strategy:read'] },
+  { role_name: 'Contributor', permissions: ['projects:read', 'tasks:*', 'braindump:*'] },
+  { role_name: 'Viewer', permissions: ['*:read'] },
+];
 
 export const mockPeople: Person[] = [
-  { user_id: 'mock_user_1', full_name: 'Alex Johnson', email: 'alex.j@example.com', department: 'Engineering', role_title: 'Lead Developer', is_active: true, manager_id: '' },
-  { user_id: 'mock_user_2', full_name: 'Maria Garcia', email: 'maria.g@example.com', department: 'Product', role_title: 'Product Manager', is_active: true, manager_id: '' },
-  { user_id: 'mock_user_3', full_name: 'Sam Chen', email: 'sam.c@example.com', department: 'Design', role_title: 'UX Designer', is_active: false, manager_id: 'mock_user_2' },
-  { user_id: 'mock_user_4', full_name: 'David Lee', email: 'david.l@example.com', department: 'Engineering', role_title: 'Frontend Developer', is_active: true, manager_id: 'mock_user_1' },
+  { user_id: 'mock_user_1', full_name: 'Alex Johnson', email: 'alex.j@example.com', department: 'Engineering', role_title: 'Lead Developer', is_active: true, manager_id: '', role_name: 'Admin' },
+  { user_id: 'mock_user_2', full_name: 'Maria Garcia', email: 'maria.g@example.com', department: 'Product', role_title: 'Product Manager', is_active: true, manager_id: '', role_name: 'Manager' },
+  { user_id: 'mock_user_3', full_name: 'Sam Chen', email: 'sam.c@example.com', department: 'Design', role_title: 'UX Designer', is_active: false, manager_id: 'mock_user_2', role_name: 'Contributor' },
+  { user_id: 'mock_user_4', full_name: 'David Lee', email: 'david.l@example.com', department: 'Engineering', role_title: 'Frontend Developer', is_active: true, manager_id: 'mock_user_1', role_name: 'Contributor' },
 ];
 
 export const mockProjects: Project[] = [

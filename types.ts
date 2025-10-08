@@ -36,6 +36,11 @@ export enum OpportunityStage {
     ClosedLost = 'Closed Lost',
 }
 
+export interface Role {
+  role_name: string;
+  permissions: string[];
+}
+
 export interface LogEntry {
   log_id: string;
   timestamp: string;
@@ -58,6 +63,7 @@ export interface Person {
   role_title: string;
   manager_id?: string;
   is_active: boolean;
+  role_name: string;
 }
 
 export interface Project {

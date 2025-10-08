@@ -1,17 +1,6 @@
-import {
-    peopleConfig,
-    projectsConfig,
-    tasksConfig,
-    businessUnitsConfig,
-    flywheelsConfig,
-    leadsConfig,
-    opportunitiesConfig,
-    accountsConfig,
-    braindumpConfig,
-    logConfig,
-    SheetConfig
-} from '../sheetConfig';
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry } from '../types';
+
+import { SheetConfig } from '../sheetConfig';
+import type { LogEntry } from '../types';
 
 // --- Type Helper Utilities ---
 
@@ -78,7 +67,7 @@ async function fetchSheetData(spreadsheetId: string, range: string): Promise<any
     }
 }
 
-async function fetchAndParseSheetData<T>(config: SheetConfig<T>): Promise<T[]> {
+export async function fetchAndParseSheetData<T>(config: SheetConfig<T>): Promise<T[]> {
     const { spreadsheetId, range, columns, keyField } = config;
     const sheetName = range.split('!')[0];
 
@@ -187,7 +176,7 @@ function mapEntityToRowArray<T>(entity: Partial<T>, headerMap: Record<string, nu
 
 // --- Generic CRUD Functions ---
 
-async function createEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: Partial<T>): Promise<T> {
+export async function createEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: Partial<T>): Promise<T> {
     const { spreadsheetId, range, columns, keyField } = config;
     const sheetName = range.split('!')[0];
 
@@ -208,7 +197,7 @@ async function createEntity<T extends { [key: string]: any }>(config: SheetConfi
     return fullEntity;
 }
 
-async function updateEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: T): Promise<T> {
+export async function updateEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: T): Promise<T> {
     const { spreadsheetId, range, columns, keyField } = config;
     const sheetName = range.split('!')[0];
     const id = entityData[keyField] as string;
@@ -231,7 +220,7 @@ async function updateEntity<T extends { [key: string]: any }>(config: SheetConfi
     return entityData;
 }
 
-async function deleteEntity<T>(config: SheetConfig<T>, id: string): Promise<void> {
+export async function deleteEntity<T>(config: SheetConfig<T>, id: string): Promise<void> {
     const { spreadsheetId, range } = config;
     const sheetName = range.split('!')[0];
     const [sheetId, rowIndex] = await Promise.all([
@@ -255,62 +244,3 @@ async function deleteEntity<T>(config: SheetConfig<T>, id: string): Promise<void
         },
     });
 }
-
-// --- Public Read API ---
-
-export const getPeople = (): Promise<Person[]> => fetchAndParseSheetData(peopleConfig);
-export const getProjects = (): Promise<Project[]> => fetchAndParseSheetData(projectsConfig);
-export const getTasks = (): Promise<Task[]> => fetchAndParseSheetData(tasksConfig);
-export const getBusinessUnits = (): Promise<BusinessUnit[]> => fetchAndParseSheetData(businessUnitsConfig);
-export const getFlywheels = (): Promise<Flywheel[]> => fetchAndParseSheetData(flywheelsConfig);
-export const getLeads = (): Promise<Lead[]> => fetchAndParseSheetData(leadsConfig);
-export const getOpportunities = (): Promise<Opportunity[]> => fetchAndParseSheetData(opportunitiesConfig);
-export const getAccounts = (): Promise<Account[]> => fetchAndParseSheetData(accountsConfig);
-export const getBrainDumps = (): Promise<BrainDump[]> => fetchAndParseSheetData(braindumpConfig);
-
-// --- Public Write API ---
-
-export const addPerson = (person: Omit<Person, 'user_id'>): Promise<Person> => createEntity(peopleConfig, person);
-export const updatePerson = (person: Person): Promise<Person> => updateEntity(peopleConfig, person);
-export const deletePerson = (userId: string): Promise<void> => deleteEntity(peopleConfig, userId);
-
-export const addProject = (project: Omit<Project, 'project_id'>): Promise<Project> => createEntity(projectsConfig, project);
-export const updateProject = (project: Project): Promise<Project> => updateEntity(projectsConfig, project);
-export const deleteProject = (projectId: string): Promise<void> => deleteEntity(projectsConfig, projectId);
-
-export const addTask = (task: Omit<Task, 'task_id'>): Promise<Task> => createEntity(tasksConfig, task);
-export const updateTask = (task: Task): Promise<Task> => updateEntity(tasksConfig, task);
-export const deleteTask = (taskId: string): Promise<void> => deleteEntity(tasksConfig, taskId);
-
-export const addBusinessUnit = (bu: Omit<BusinessUnit, 'bu_id'>): Promise<BusinessUnit> => createEntity(businessUnitsConfig, bu);
-export const updateBusinessUnit = (bu: BusinessUnit): Promise<BusinessUnit> => updateEntity(businessUnitsConfig, bu);
-export const deleteBusinessUnit = (buId: string): Promise<void> => deleteEntity(businessUnitsConfig, buId);
-
-export const addLead = (lead: Omit<Lead, 'lead_id'>): Promise<Lead> => createEntity(leadsConfig, lead);
-export const updateLead = (lead: Lead): Promise<Lead> => updateEntity(leadsConfig, lead);
-export const deleteLead = (leadId: string): Promise<void> => deleteEntity(leadsConfig, leadId);
-
-export const addOpportunity = (opportunity: Omit<Opportunity, 'opportunity_id'>): Promise<Opportunity> => createEntity(opportunitiesConfig, opportunity);
-export const updateOpportunity = (opportunity: Opportunity): Promise<Opportunity> => updateEntity(opportunitiesConfig, opportunity);
-export const deleteOpportunity = (opportunityId: string): Promise<void> => deleteEntity(opportunitiesConfig, opportunityId);
-
-export const addAccount = (account: Omit<Account, 'account_id'>): Promise<Account> => createEntity(accountsConfig, account);
-export const updateAccount = (account: Account): Promise<Account> => updateEntity(accountsConfig, account);
-export const deleteAccount = (accountId: string): Promise<void> => deleteEntity(accountsConfig, accountId);
-
-export const addBrainDump = (item: Omit<BrainDump, 'braindump_id'>): Promise<BrainDump> => createEntity(braindumpConfig, item);
-export const updateBrainDump = (item: BrainDump): Promise<BrainDump> => updateEntity(braindumpConfig, item);
-export const deleteBrainDump = (itemId: string): Promise<void> => deleteEntity(braindumpConfig, itemId);
-
-// This function can be called from anywhere to log an action,
-// avoiding context circular dependencies.
-export const logUserAction = (logData: Omit<LogEntry, 'log_id' | 'timestamp'>): void => {
-  const logEntry: Omit<LogEntry, 'log_id'> = {
-    ...logData,
-    timestamp: new Date().toISOString(),
-  };
-  // Fire-and-forget, with error logging.
-  createEntity(logConfig, logEntry).catch(error => {
-    console.error("Failed to log user action:", error);
-  });
-};
