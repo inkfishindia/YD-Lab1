@@ -10,7 +10,8 @@ const PlatformsIntegrationsPage: React.FC = () => {
         EXECUTION: '',
         STRATEGY: '',
         PARTNERS: '',
-        YDS_APP: ''
+        YDS_APP: '',
+        MANIFEST: '',
     });
     const [isSaved, setIsSaved] = useState(false);
 
@@ -72,6 +73,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
                     {renderInputField("STRATEGY", "Strategy Spreadsheet ID", "Contains sheets for Business Units and Flywheels.")}
                     {renderInputField("PARTNERS", "Partners/Revenue Spreadsheet ID", "Contains sheets for Leads, Opportunities, and Accounts.")}
                     {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like BrainDump and Logs.")}
+                    {renderInputField("MANIFEST", "Manifest Spreadsheet ID", "Contains sheets for Built in Tools and Agents.")}
                     
                     <div className="flex items-center gap-4">
                         <Button type="submit">Save Configuration</Button>

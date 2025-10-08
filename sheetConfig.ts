@@ -1,5 +1,5 @@
 
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role } from './types';
+import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, BuiltInTool, Agent, Hub } from './types';
 import type { SpreadsheetIds } from './contexts/SpreadsheetConfigContext';
 
 // Defines the structure for a column's mapping and type information
@@ -108,6 +108,30 @@ export const getFlywheelsConfig = (ids: SpreadsheetIds): SheetConfig<Flywheel> =
   },
 });
 
+export const getHubsConfig = (ids: SpreadsheetIds): SheetConfig<Hub> => ({
+  spreadsheetId: ids.STRATEGY,
+  range: 'HUBS!A2:Q',
+  keyField: 'hub_id',
+  columns: {
+    hub_id: { header: 'hub_id' },
+    hub_name: { header: 'hub_name' },
+    function_category: { header: 'function_category' },
+    owner_user_id: { header: 'owner_User_id' },
+    what_they_enable: { header: 'what_they_enable' },
+    serves_flywheel_ids: { header: 'Serves', type: 'string_array' },
+    capacity_constraint: { header: 'capacity_constraint', type: 'boolean' },
+    hiring_priority: { header: 'hiring_priority' },
+    monthly_budget: { header: 'monthly_budget', type: 'number' },
+    serves_bu1: { header: 'BU1', type: 'boolean' },
+    serves_bu2: { header: 'BU2', type: 'boolean' },
+    serves_bu3: { header: 'BU3', type: 'boolean' },
+    serves_bu4: { header: 'BU4', type: 'boolean' },
+    serves_bu5: { header: 'BU5', type: 'boolean' },
+    serves_bu6: { header: 'BU6', type: 'boolean' },
+    notes: { header: 'notes' },
+  },
+});
+
 export const getLeadsConfig = (ids: SpreadsheetIds): SheetConfig<Lead> => ({
   spreadsheetId: ids.PARTNERS,
   range: 'LEADS!A2:N',
@@ -187,5 +211,35 @@ export const getLogConfig = (ids: SpreadsheetIds): SheetConfig<LogEntry> => ({
     context: { header: 'Context' },
     success_criteria: { header: 'Success Criteria' },
     status: { header: 'Status' },
+  },
+});
+
+export const getBuiltInToolsConfig = (ids: SpreadsheetIds): SheetConfig<BuiltInTool> => ({
+  spreadsheetId: ids.MANIFEST,
+  range: 'Built in tools!A2:E',
+  keyField: 'tool_id',
+  columns: {
+    tool_id: { header: 'tool_id' },
+    Tool: { header: 'Tool' },
+    Category: { header: 'Category' },
+    Alternate: { header: 'Alternate' },
+    Use: { header: 'Use' },
+  },
+});
+
+export const getAgentsConfig = (ids: SpreadsheetIds): SheetConfig<Agent> => ({
+  spreadsheetId: ids.MANIFEST,
+  range: 'Agents!A2:I',
+  keyField: 'agent_id',
+  columns: {
+    agent_id: { header: 'agent_id' },
+    Use: { header: 'Use' },
+    Role: { header: 'Role' },
+    Persona: { header: 'Persona' },
+    Character: { header: 'Character' },
+    Function: { header: 'Function' },
+    Prompt: { header: 'Prompt' },
+    Guidelines: { header: 'Guidelines' },
+    References: { header: 'References' },
   },
 });

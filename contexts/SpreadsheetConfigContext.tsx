@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
 const LOCAL_STORAGE_KEY = 'yd_labs_spreadsheet_ids';
@@ -7,6 +8,7 @@ export interface SpreadsheetIds {
   STRATEGY: string;
   PARTNERS: string;
   YDS_APP: string;
+  MANIFEST: string;
 }
 
 interface ISpreadsheetConfigContext {
@@ -23,6 +25,7 @@ const initialIds: SpreadsheetIds = {
   STRATEGY: '',
   PARTNERS: '',
   YDS_APP: '',
+  MANIFEST: '',
 };
 
 export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -35,7 +38,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ c
       const storedIdsJson = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (storedIdsJson) {
         const storedIds = JSON.parse(storedIdsJson);
-        if (storedIds.EXECUTION && storedIds.STRATEGY && storedIds.PARTNERS && storedIds.YDS_APP) {
+        if (storedIds.EXECUTION && storedIds.STRATEGY && storedIds.PARTNERS && storedIds.YDS_APP && storedIds.MANIFEST) {
           setSpreadsheetIds(storedIds);
           setIsConfigured(true);
         }
@@ -53,7 +56,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ c
       setSpreadsheetIds(ids);
       // FIX: The result of chained `&&` on strings is a string, not a boolean.
       // Explicitly convert the truthy/falsy value to a boolean before setting the state.
-      const allIdsPresent = !!(ids.EXECUTION && ids.STRATEGY && ids.PARTNERS && ids.YDS_APP);
+      const allIdsPresent = !!(ids.EXECUTION && ids.STRATEGY && ids.PARTNERS && ids.YDS_APP && ids.MANIFEST);
       setIsConfigured(allIdsPresent);
     } catch (error) {
       console.error("Failed to save spreadsheet IDs to local storage:", error);

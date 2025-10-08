@@ -1,5 +1,5 @@
 
-import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role } from '../types';
+import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role, BuiltInTool, Agent, Hub } from '../types';
 
 export const mockRoles: Role[] = [
   { role_name: 'Admin', permissions: ['*:*'] },
@@ -61,4 +61,53 @@ export const mockBrainDumps: BrainDump[] = [
   { braindump_id: 'mock_bd_1', timestamp: '2024-08-15T10:00:00Z', type: 'Idea', content: 'Develop a new AI-powered feature for task prioritization.', user_email: 'alex.j@example.com', priority: Priority.Medium },
   { braindump_id: 'mock_bd_2', timestamp: '2024-08-15T11:30:00Z', type: 'Feedback', content: 'Users are reporting that the mobile app dashboard loads slowly.', user_email: 'maria.g@example.com', priority: Priority.High },
   { braindump_id: 'mock_bd_3', timestamp: '2024-08-16T09:05:00Z', type: 'Note', content: 'Remember to follow up with the marketing team about the Q4 campaign stats.', user_email: 'alex.j@example.com', priority: Priority.Low },
+];
+
+export const mockBuiltInTools: BuiltInTool[] = [
+  { tool_id: 'tool_1', Tool: 'Gemini', Category: 'Content Generation', Alternate: 'Jasper.ai', Use: 'Product descriptions, ad copy, emails' },
+  { tool_id: 'tool_2', Tool: 'Midjourney', Category: 'Image Generation', Alternate: 'DALL-E 3', Use: 'Marketing visuals, concept art' },
+];
+
+export const mockAgents: Agent[] = [
+  { agent_id: 'agent_1', Use: 'Customer Support', Role: 'Support Agent', Persona: 'Friendly and helpful', Character: 'Empathetic', Function: 'Answer user queries', Prompt: 'You are a helpful customer support agent...', Guidelines: 'Always be polite.', References: 'KB Article #123' },
+  { agent_id: 'agent_2', Use: 'Sales Outreach', Role: 'Sales Development Rep', Persona: 'Confident and persuasive', Character: 'Professional', Function: 'Generate leads', Prompt: 'You are a skilled SDR...', Guidelines: 'Follow up twice.', References: 'Sales Playbook v2' },
+];
+
+export const mockHubs: Hub[] = [
+  {
+    hub_id: 'HUB-01',
+    hub_name: 'Production',
+    function_category: 'Operations',
+    owner_user_id: 'mock_user_1',
+    what_they_enable: 'Blanks sourcing, printing (DTG/screen/embroidery), quality control, fulfillment, shipping, custom manufacturing',
+    serves_flywheel_ids: ['mock_fw_1', 'mock_fw_2'],
+    capacity_constraint: false,
+    hiring_priority: 'Low',
+    monthly_budget: 500000,
+    serves_bu1: true,
+    serves_bu2: true,
+    serves_bu3: true,
+    serves_bu4: true,
+    serves_bu5: true,
+    serves_bu6: true,
+    notes: 'Currently at 65% capacity. Need custom artisan for BU4 premium gifting. Quality is strong.',
+  },
+  {
+    hub_id: 'HUB-02',
+    hub_name: 'Marketing Creative',
+    function_category: 'Marketing',
+    owner_user_id: 'mock_user_2',
+    what_they_enable: 'Campaign assets, social media content, product photography',
+    serves_flywheel_ids: ['mock_fw_1'],
+    capacity_constraint: true,
+    hiring_priority: 'High',
+    monthly_budget: 250000,
+    serves_bu1: true,
+    serves_bu2: false,
+    serves_bu3: false,
+    serves_bu4: false,
+    serves_bu5: false,
+    serves_bu6: false,
+    notes: 'Needs a new video editor.',
+  }
 ];

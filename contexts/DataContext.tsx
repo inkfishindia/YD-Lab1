@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, Role, LogEntry } from '../types';
+import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, Role, LogEntry, BuiltInTool, Agent, Hub } from '../types';
 import { useAuth } from './AuthContext';
 import * as sheetService from '../services/googleSheetService';
-import { mockPeople, mockProjects, mockTasks, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps, mockRoles } from '../data/mockData';
+import { mockPeople, mockProjects, mockTasks, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps, mockRoles, mockBuiltInTools, mockAgents, mockHubs } from '../data/mockData';
 import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
 import * as config from '../sheetConfig';
 
@@ -18,6 +18,9 @@ interface IDataContext {
   accounts: Account[];
   braindumps: BrainDump[];
   roles: Role[];
+  builtInTools: BuiltInTool[];
+  agents: Agent[];
+  hubs: Hub[];
   loading: boolean;
   addPerson: (person: Omit<Person, 'user_id'>) => Promise<void>;
   updatePerson: (person: Person) => Promise<void>;
@@ -43,6 +46,15 @@ interface IDataContext {
   addBusinessUnit: (bu: Omit<BusinessUnit, 'bu_id'>) => Promise<void>;
   updateBusinessUnit: (bu: BusinessUnit) => Promise<void>;
   deleteBusinessUnit: (buId: string) => Promise<void>;
+  addBuiltInTool: (tool: Omit<BuiltInTool, 'tool_id'>) => Promise<void>;
+  updateBuiltInTool: (tool: BuiltInTool) => Promise<void>;
+  deleteBuiltInTool: (toolId: string) => Promise<void>;
+  addAgent: (agent: Omit<Agent, 'agent_id'>) => Promise<void>;
+  updateAgent: (agent: Agent) => Promise<void>;
+  deleteAgent: (agentId: string) => Promise<void>;
+  addHub: (hub: Omit<Hub, 'hub_id'>) => Promise<void>;
+  updateHub: (hub: Hub) => Promise<void>;
+  deleteHub: (hubId: string) => Promise<void>;
 }
 
 const DataContext = createContext<IDataContext | undefined>(undefined);
@@ -63,6 +75,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [braindumps, setBrainDumps] = useState<BrainDump[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [builtInTools, setBuiltInTools] = useState<BuiltInTool[]>([]);
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [hubs, setHubs] = useState<Hub[]>([]);
 
   // Memoize dynamic sheet configurations
   const dynamicConfigs = useMemo(() => {
@@ -79,6 +94,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       braindumps: config.getBrainDumpConfig(spreadsheetIds),
       roles: config.getRolesConfig(spreadsheetIds),
       logs: config.getLogConfig(spreadsheetIds),
+      builtInTools: config.getBuiltInToolsConfig(spreadsheetIds),
+      agents: config.getAgentsConfig(spreadsheetIds),
+      hubs: config.getHubsConfig(spreadsheetIds),
     };
   }, [spreadsheetIds, isConfigured]);
 
@@ -89,7 +107,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const fetchData = async () => {
         setLoading(true);
         try {
-          const [peopleData, projectsData, tasksData, buData, flywheelData, leadsData, opportunitiesData, accountsData, braindumpData, rolesData] = await Promise.all([
+          const [peopleData, projectsData, tasksData, buData, flywheelData, leadsData, opportunitiesData, accountsData, braindumpData, rolesData, toolsData, agentsData, hubsData] = await Promise.all([
             sheetService.fetchAndParseSheetData(dynamicConfigs.people),
             sheetService.fetchAndParseSheetData(dynamicConfigs.projects),
             sheetService.fetchAndParseSheetData(dynamicConfigs.tasks),
@@ -100,6 +118,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             sheetService.fetchAndParseSheetData(dynamicConfigs.accounts),
             sheetService.fetchAndParseSheetData(dynamicConfigs.braindumps),
             sheetService.fetchAndParseSheetData(dynamicConfigs.roles),
+            sheetService.fetchAndParseSheetData(dynamicConfigs.builtInTools),
+            sheetService.fetchAndParseSheetData(dynamicConfigs.agents),
+            sheetService.fetchAndParseSheetData(dynamicConfigs.hubs),
           ]);
           setPeople(peopleData);
           setProjects(projectsData);
@@ -111,6 +132,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setAccounts(accountsData);
           setBrainDumps(braindumpData);
           setRoles(rolesData);
+          setBuiltInTools(toolsData);
+          setAgents(agentsData);
+          setHubs(hubsData);
         } catch (error) {
           console.error("Failed to fetch data from Google Sheets:", error);
           alert("Could not fetch data from Google Sheets. Check spreadsheet IDs in settings and console for more details.");
@@ -132,6 +156,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAccounts(mockAccounts);
       setBrainDumps(mockBrainDumps);
       setRoles(mockRoles);
+      setBuiltInTools(mockBuiltInTools);
+      setAgents(mockAgents);
+      setHubs(mockHubs);
       setLoading(false);
     }
   }, [isSignedIn, isConfigured, dynamicConfigs]);
@@ -329,9 +356,76 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch(error) { handleError(error, 'delete braindump item'); }
   };
 
+  const addBuiltInTool = async (tool: Omit<BuiltInTool, 'tool_id'>) => {
+    if (!dynamicConfigs) return;
+    try {
+        const newTool = await sheetService.createEntity(dynamicConfigs.builtInTools, tool);
+        setBuiltInTools(prev => [...prev, newTool]);
+    } catch(error) { handleError(error, 'add built-in tool'); }
+  };
+  const updateBuiltInTool = async (updatedTool: BuiltInTool) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.updateEntity(dynamicConfigs.builtInTools, updatedTool);
+        setBuiltInTools(prev => prev.map(t => (t.tool_id === updatedTool.tool_id ? updatedTool : t)));
+    } catch(error) { handleError(error, 'update built-in tool'); }
+  };
+  const deleteBuiltInTool = async (toolId: string) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.deleteEntity(dynamicConfigs.builtInTools, toolId);
+        setBuiltInTools(prev => prev.filter(t => t.tool_id !== toolId));
+    } catch(error) { handleError(error, 'delete built-in tool'); }
+  };
+
+  const addAgent = async (agent: Omit<Agent, 'agent_id'>) => {
+    if (!dynamicConfigs) return;
+    try {
+        const newAgent = await sheetService.createEntity(dynamicConfigs.agents, agent);
+        setAgents(prev => [...prev, newAgent]);
+    } catch(error) { handleError(error, 'add agent'); }
+  };
+  const updateAgent = async (updatedAgent: Agent) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.updateEntity(dynamicConfigs.agents, updatedAgent);
+        setAgents(prev => prev.map(a => (a.agent_id === updatedAgent.agent_id ? updatedAgent : a)));
+    } catch(error) { handleError(error, 'update agent'); }
+  };
+  const deleteAgent = async (agentId: string) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.deleteEntity(dynamicConfigs.agents, agentId);
+        setAgents(prev => prev.filter(a => a.agent_id !== agentId));
+    } catch(error) { handleError(error, 'delete agent'); }
+  };
+  
+  const addHub = async (hub: Omit<Hub, 'hub_id'>) => {
+    if (!dynamicConfigs) return;
+    try {
+        const newHub = await sheetService.createEntity(dynamicConfigs.hubs, hub);
+        setHubs(prev => [...prev, newHub]);
+    } catch(error) { handleError(error, 'add hub'); }
+  };
+  const updateHub = async (updatedHub: Hub) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.updateEntity(dynamicConfigs.hubs, updatedHub);
+        setHubs(prev => prev.map(h => (h.hub_id === updatedHub.hub_id ? updatedHub : h)));
+    } catch(error) { handleError(error, 'update hub'); }
+  };
+  const deleteHub = async (hubId: string) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.deleteEntity(dynamicConfigs.hubs, hubId);
+        setHubs(prev => prev.filter(h => h.hub_id !== hubId));
+    } catch(error) { handleError(error, 'delete hub'); }
+  };
+
+
   return (
     <DataContext.Provider value={{
-      people, projects, tasks, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, loading,
+      people, projects, tasks, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, builtInTools, agents, hubs, loading,
       addPerson, updatePerson, deletePerson,
       addProject, updateProject, deleteProject,
       addTask, updateTask, deleteTask,
@@ -339,7 +433,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addLead, updateLead, deleteLead,
       addOpportunity, updateOpportunity, deleteOpportunity,
       addAccount, updateAccount, deleteAccount,
-      addBrainDump, updateBrainDump, deleteBrainDump
+      addBrainDump, updateBrainDump, deleteBrainDump,
+      addBuiltInTool, updateBuiltInTool, deleteBuiltInTool,
+      addAgent, updateAgent, deleteAgent,
+      addHub, updateHub, deleteHub,
     }}>
       {children}
     </DataContext.Provider>

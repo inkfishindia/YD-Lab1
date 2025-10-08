@@ -153,3 +153,42 @@ export interface BrainDump {
   user_email: string;
   priority: Priority;
 }
+
+export interface BuiltInTool {
+  tool_id: string;
+  Tool: string;
+  Category: string;
+  Alternate: string;
+  Use: string;
+}
+
+export interface Agent {
+  agent_id: string;
+  Use: string;
+  Role: string;
+  Persona: string;
+  Character: string;
+  Function: string;
+  Prompt: string;
+  Guidelines: string;
+  References: string;
+}
+
+export interface Hub {
+  hub_id: string;
+  hub_name: string;
+  function_category: string;
+  owner_user_id: string;
+  what_they_enable: string;
+  serves_flywheel_ids: string[];
+  capacity_constraint: boolean;
+  hiring_priority: string;
+  monthly_budget: number;
+  serves_bu1: boolean;
+  serves_bu2: boolean;
+  serves_bu3: boolean;
+  serves_bu4: boolean;
+  serves_bu5: boolean;
+  serves_bu6: boolean;
+  notes: string;
+}
