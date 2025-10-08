@@ -1,15 +1,14 @@
 
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { SearchIcon, BellIcon, PlusIcon, ChevronDownIcon, GoogleIcon } from './Icons';
+import { SearchIcon, BellIcon, PlusIcon, ChevronDownIcon } from './Icons';
 import { useAuth } from '../contexts/AuthContext';
-import Button from './ui/Button';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { currentUser, signOut, signIn, isSignedIn } = useAuth();
+  const { currentUser, signOut } = useAuth();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
 
@@ -42,7 +41,7 @@ const Header: React.FC = () => {
         </div>
 
         <div className="relative">
-          <button onClick={() => setDropdownOpen(!dropdownOpen)} disabled={!isSignedIn} className="flex items-center justify-center bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded-md hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed">
+          <button onClick={() => setDropdownOpen(!dropdownOpen)} className="flex items-center justify-center bg-blue-600 text-white px-3 py-2 text-sm font-medium rounded-md hover:bg-blue-700">
             <PlusIcon className="w-5 h-5" />
             <span className="hidden md:inline ml-2">Create New</span>
             <ChevronDownIcon className="w-5 h-5 ml-1 hidden md:inline" />
@@ -60,7 +59,7 @@ const Header: React.FC = () => {
             <BellIcon className="w-6 h-6"/>
         </button>
 
-        {isSignedIn && currentUser ? (
+        {currentUser && (
             <div className="relative">
                 <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center space-x-2 focus:outline-none">
                     <img src={currentUser.imageUrl} alt={currentUser.name} className="w-8 h-8 rounded-full" />
@@ -78,11 +77,6 @@ const Header: React.FC = () => {
                     </div>
                 )}
             </div>
-        ) : (
-          <Button onClick={signIn} variant="secondary">
-            <GoogleIcon className="w-5 h-5 mr-2" />
-            Sign In
-          </Button>
         )}
       </div>
     </header>

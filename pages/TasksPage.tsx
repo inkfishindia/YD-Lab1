@@ -1,7 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { useAuth } from '../contexts/AuthContext';
 import type { Task } from '../types';
 import { Priority, Status } from '../types';
 import Button from '../components/ui/Button';
@@ -14,7 +12,6 @@ type SortConfig = { key: keyof Task; direction: 'ascending' | 'descending' } | n
 
 const TasksPage: React.FC = () => {
   const { tasks, addTask, updateTask, deleteTask, people, projects } = useData();
-  const { isSignedIn } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filters, setFilters] = useState({ title: '', assignee_user_id: '', status: '', priority: '' });
@@ -82,7 +79,7 @@ const TasksPage: React.FC = () => {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold text-white">Tasks</h1>
-        <Button onClick={() => openModal()} disabled={!isSignedIn} className="flex items-center gap-2">
+        <Button onClick={() => openModal()} className="flex items-center gap-2">
           <PlusIcon className="w-5 h-5" /> Add Task
         </Button>
       </div>
@@ -127,8 +124,8 @@ const TasksPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap"><Badge text={task.priority} colorClass={PRIORITY_COLORS[task.priority]} /></td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{task.due_date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                  <button onClick={() => openModal(task)} disabled={!isSignedIn} className="text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"><EditIcon className="w-5 h-5"/></button>
-                  <button onClick={() => deleteTask(task.task_id)} disabled={!isSignedIn} className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"><TrashIcon className="w-5 h-5"/></button>
+                  <button onClick={() => openModal(task)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
+                  <button onClick={() => deleteTask(task.task_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
                 </td>
               </tr>
             ))}

@@ -1,7 +1,5 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { useAuth } from '../contexts/AuthContext';
 import type { Project, Person, Task } from '../types';
 import { Priority, Status } from '../types';
 import Button from '../components/ui/Button';
@@ -15,7 +13,6 @@ type SortConfig = { key: keyof Project; direction: 'ascending' | 'descending' } 
 
 const ProjectsPage: React.FC = () => {
   const { projects, addProject, updateProject, deleteProject, people, businessUnits, tasks } = useData();
-  const { isSignedIn } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -131,7 +128,7 @@ const ProjectsPage: React.FC = () => {
       <div className="w-3/5 flex flex-col">
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-semibold text-white">Projects</h1>
-          <Button onClick={() => openModal()} disabled={!isSignedIn} className="flex items-center gap-2">
+          <Button onClick={() => openModal()} className="flex items-center gap-2">
             <PlusIcon className="w-5 h-5" />
             Add Project
           </Button>
@@ -176,8 +173,8 @@ const ProjectsPage: React.FC = () => {
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-300">{project.target_end_date}</td>
                   <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <span className="relative z-10 flex items-center gap-4">
-                      <button onClick={(e) => { e.stopPropagation(); openModal(project); }} disabled={!isSignedIn} className="text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"><EditIcon className="w-5 h-5"/></button>
-                      <button onClick={(e) => { e.stopPropagation(); deleteProject(project.project_id); }} disabled={!isSignedIn} className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"><TrashIcon className="w-5 h-5"/></button>
+                      <button onClick={(e) => { e.stopPropagation(); openModal(project); }} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
+                      <button onClick={(e) => { e.stopPropagation(); deleteProject(project.project_id); }} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
                     </span>
                   </td>
                 </tr>

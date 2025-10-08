@@ -14,7 +14,7 @@ import TaskFormModal from '../components/forms/TaskFormModal';
 
 const BrainDumpPage: React.FC = () => {
     const { braindumps, addBrainDump, updateBrainDump, deleteBrainDump, addTask } = useData();
-    const { currentUser, isSignedIn } = useAuth();
+    const { currentUser } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<BrainDump | null>(null);
     const [promotingItem, setPromotingItem] = useState<BrainDump | null>(null);
@@ -64,7 +64,7 @@ const BrainDumpPage: React.FC = () => {
         <div className="container mx-auto">
             <div className="flex justify-between items-center mb-4">
                 <h1 className="text-2xl font-semibold text-white">BrainDump</h1>
-                <Button onClick={() => openModal()} disabled={!isSignedIn} className="flex items-center gap-2">
+                <Button onClick={() => openModal()} className="flex items-center gap-2">
                     <PlusIcon className="w-5 h-5" />
                     Add Item
                 </Button>
@@ -97,9 +97,9 @@ const BrainDumpPage: React.FC = () => {
                                 <p>{new Date(item.timestamp).toLocaleString()}</p>
                             </div>
                             <div className="flex space-x-3">
-                                <button title="Promote to Task" onClick={() => setPromotingItem(item)} disabled={!isSignedIn} className="text-green-400 hover:text-green-300 disabled:opacity-50 disabled:cursor-not-allowed"><ArrowUpCircleIcon className="w-5 h-5"/></button>
-                                <button title="Edit Item" onClick={() => openModal(item)} disabled={!isSignedIn} className="text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"><EditIcon className="w-5 h-5"/></button>
-                                <button title="Delete Item" onClick={() => deleteBrainDump(item.braindump_id)} disabled={!isSignedIn} className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"><TrashIcon className="w-5 h-5"/></button>
+                                <button title="Promote to Task" onClick={() => setPromotingItem(item)} className="text-green-400 hover:text-green-300"><ArrowUpCircleIcon className="w-5 h-5"/></button>
+                                <button title="Edit Item" onClick={() => openModal(item)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
+                                <button title="Delete Item" onClick={() => deleteBrainDump(item.braindump_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
                             </div>
                         </div>
                     </Card>

@@ -2,8 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Card from '../components/ui/Card';
-import { ViewGridIcon } from '../components/Icons';
-import Button from '../components/ui/Button';
 
 // --- Type Definitions for API responses ---
 interface CalendarEvent {
@@ -28,12 +26,12 @@ interface DriveFile {
 }
 
 const WorkspacePage: React.FC = () => {
-    const { isSignedIn, signIn } = useAuth();
+    const { isSignedIn } = useAuth();
     const [events, setEvents] = useState<CalendarEvent[]>([]);
     const [messages, setMessages] = useState<GmailMessage[]>([]);
     const [files, setFiles] = useState<DriveFile[]>([]);
     const [loading, setLoading] = useState({ calendar: true, gmail: true, drive: true });
-    const [error, setError] = useState<{ calendar: string | null, gmail: string | null, drive: string | null }>({ calendar: null, gmail: null, drive: null });
+    const [error, setError] = useState({ calendar: null, gmail: null, drive: null });
 
     const getHeaderValue = (headers: { name: string; value: string }[], name: string) => {
         const header = headers.find(h => h.name.toLowerCase() === name.toLowerCase());
@@ -123,17 +121,6 @@ const WorkspacePage: React.FC = () => {
 
     const renderLoading = () => <div className="flex justify-center items-center h-full"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-400"></div></div>;
     const renderError = (message: string) => <div className="text-red-400 text-sm p-4 text-center">{message}</div>;
-
-    if (!isSignedIn) {
-        return (
-            <div className="flex flex-col items-center justify-center text-center p-8 bg-gray-900 border border-gray-800 rounded-lg h-full">
-                <ViewGridIcon className="w-12 h-12 text-gray-600 mb-4" />
-                <h2 className="text-xl font-semibold text-white">Unlock Your Workspace</h2>
-                <p className="text-gray-400 mt-2 mb-6 max-w-md">Sign in to connect your Google Workspace and see your upcoming events, unread emails, and recent files all in one place.</p>
-                <Button onClick={signIn}>Sign In to Continue</Button>
-            </div>
-        );
-    }
 
     return (
         <div className="space-y-6">

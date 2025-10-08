@@ -16,6 +16,7 @@ import AccountsPage from './pages/AccountsPage';
 import BrainDumpPage from './pages/BrainDumpPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
+import LoginPage from './pages/LoginPage';
 
 const App: React.FC = () => {
   return (
@@ -28,7 +29,7 @@ const App: React.FC = () => {
 };
 
 const AppContent: React.FC = () => {
-  const { isLoading, initError } = useAuth();
+  const { isSignedIn, isLoading, initError } = useAuth();
 
   if (initError) {
     return (
@@ -59,7 +60,13 @@ const AppContent: React.FC = () => {
 
   return (
     <HashRouter>
-      <MainLayout />
+      <Routes>
+        {!isSignedIn ? (
+          <Route path="*" element={<LoginPage />} />
+        ) : (
+          <Route path="/*" element={<MainLayout />} />
+        )}
+      </Routes>
     </HashRouter>
   );
 };

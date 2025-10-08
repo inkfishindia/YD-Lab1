@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump } from '../types';
 import { useAuth } from './AuthContext';
 import * as sheetService from '../services/googleSheetService';
+import { mockPeople, mockProjects, mockTasks, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps } from '../data/mockData';
 
 interface IDataContext {
   people: Person[];
@@ -90,17 +90,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       fetchData();
     } else {
-      // Not signed in, clear all data.
+      // Not signed in, load mock data for a demo view
+      setLoading(true);
+      setPeople(mockPeople);
+      setProjects(mockProjects);
+      setTasks(mockTasks);
+      setBusinessUnits(mockBusinessUnits);
+      setFlywheels(mockFlywheels);
+      setLeads(mockLeads);
+      setOpportunities(mockOpportunities);
+      setAccounts(mockAccounts);
+      setBrainDumps(mockBrainDumps);
       setLoading(false);
-      setPeople([]);
-      setProjects([]);
-      setTasks([]);
-      setBusinessUnits([]);
-      setFlywheels([]);
-      setLeads([]);
-      setOpportunities([]);
-      setAccounts([]);
-      setBrainDumps([]);
     }
   }, [isSignedIn]);
   

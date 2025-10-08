@@ -1,7 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
-import { useAuth } from '../contexts/AuthContext';
 import type { Account } from '../types';
 import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
@@ -11,7 +10,6 @@ type SortConfig = { key: keyof Account; direction: 'ascending' | 'descending' } 
 
 const AccountsPage: React.FC = () => {
   const { accounts, addAccount, updateAccount, deleteAccount, people } = useData();
-  const { isSignedIn } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [filters, setFilters] = useState({ name: '', industry: '' });
@@ -86,7 +84,7 @@ const AccountsPage: React.FC = () => {
     <div className="container mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-semibold text-white">Accounts</h1>
-        <Button onClick={() => openModal()} disabled={!isSignedIn} className="flex items-center gap-2">
+        <Button onClick={() => openModal()} className="flex items-center gap-2">
           <PlusIcon className="w-5 h-5" />
           Add Account
         </Button>
@@ -131,8 +129,8 @@ const AccountsPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{account.industry}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(account.owner_user_id)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                  <button onClick={() => openModal(account)} disabled={!isSignedIn} className="text-blue-400 hover:text-blue-300 disabled:opacity-50 disabled:cursor-not-allowed"><EditIcon className="w-5 h-5"/></button>
-                  <button onClick={() => deleteAccount(account.account_id)} disabled={!isSignedIn} className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"><TrashIcon className="w-5 h-5"/></button>
+                  <button onClick={() => openModal(account)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
+                  <button onClick={() => deleteAccount(account.account_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
                 </td>
               </tr>
             ))}
