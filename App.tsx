@@ -16,7 +16,6 @@ import AccountsPage from './pages/AccountsPage';
 import BrainDumpPage from './pages/BrainDumpPage';
 import ExecutiveDashboardPage from './pages/ExecutiveDashboardPage';
 import WorkspacePage from './pages/WorkspacePage';
-import LoginPage from './pages/LoginPage';
 
 const App: React.FC = () => {
   return (
@@ -84,7 +83,6 @@ const MainLayout: React.FC = () => (
           <Route path="/partners/opportunities" element={<OpportunitiesPage />} />
           <Route path="/partners/accounts" element={<AccountsPage />} />
           <Route path="/strategy" element={<StrategyPage />} />
-          <Route path="/login" element={<LoginPage />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </main>
