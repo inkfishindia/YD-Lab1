@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -7,6 +6,135 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Status, Priority, Task } from '../../types';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
+import { fetchUnreadGmailCount, fetchNextCalendarEvent } from '../../services/googleSheetService';
+import { EnvelopeIcon, CalendarIcon, FolderIcon } from '../../components/Icons';
+
+
+// --- Hero Section Components ---
+
+const InfoWidget: React.FC<{
+    icon: React.ElementType,
+    title: string,
+    value: string | number | null,
+    loading: boolean,
+    link?: string,
+    error?: boolean
+}> = ({ icon: Icon, title, value, loading, link, error = false }) => {
+    const content = (
+        <div className="flex items-center">
+            <div className="p-3 bg-gray-800 rounded-lg mr-4">
+                <Icon className={`w-6 h-6 ${error ? 'text-red-500' : 'text-blue-400'}`} />
+            </div>
+            <div>
+                <p className="text-sm text-gray-400">{title}</p>
+                {loading ? (
+                    <p className="text-lg font-semibold text-white animate-pulse">Loading...</p>
+                ) : error ? (
+                    <p className="text-lg font-semibold text-red-400">Error</p>
+                ) : (
+                    <p className="text-lg font-semibold text-white truncate">{value}</p>
+                )}
+            </div>
+        </div>
+    );
+
+    if (link && !loading && !error) {
+        return <a href={link} target="_blank" rel="noopener noreferrer" className="block hover:bg-gray-800/50 rounded-lg p-4 transition-colors">{content}</a>
+    }
+    
+    return <div className="p-4">{content}</div>;
+};
+
+const HeroSection: React.FC = () => {
+    const { currentUser } = useAuth();
+    const { projects } = useData();
+    const [unreadCount, setUnreadCount] = useState<number | null>(null);
+    const [nextEvent, setNextEvent] = useState<any | null>(null);
+    const [gmailLoading, setGmailLoading] = useState(true);
+    const [calendarLoading, setCalendarLoading] = useState(true);
+    const [gmailError, setGmailError] = useState(false);
+    const [calendarError, setCalendarError] = useState(false);
+
+    useEffect(() => {
+        const getWorkspaceData = async () => {
+            // Gmail
+            try {
+                setGmailError(false);
+                const count = await fetchUnreadGmailCount();
+                setUnreadCount(count);
+            } catch (error) {
+                console.error("Error fetching Gmail count:", error);
+                setGmailError(true);
+            } finally {
+                setGmailLoading(false);
+            }
+            // Calendar
+            try {
+                setCalendarError(false);
+                const event = await fetchNextCalendarEvent();
+                setNextEvent(event);
+            } catch (error) {
+                console.error("Error fetching calendar event:", error);
+                setCalendarError(true);
+            } finally {
+                setCalendarLoading(false);
+            }
+        };
+        if (currentUser) {
+            getWorkspaceData();
+        }
+    }, [currentUser]);
+
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return 'Good morning';
+        if (hour < 18) return 'Good afternoon';
+        return 'Good evening';
+    };
+
+    const activeProjects = projects.filter(p => p.status === Status.InProgress || p.status === Status.NotStarted).length;
+
+    const formatEvent = () => {
+        if (!nextEvent) return "No upcoming events";
+        const start = nextEvent.start?.dateTime || nextEvent.start?.date;
+        const time = new Date(start).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        return `${nextEvent.summary} at ${time}`;
+    };
+
+    return (
+        <Card className="mb-6">
+            <div className="p-4">
+              <h1 className="text-2xl font-bold text-white">{getGreeting()}, {currentUser?.name?.split(' ')[0]}</h1>
+              <p className="text-gray-400 text-sm">Here's your personal dashboard for today.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-gray-800 border-t border-gray-800">
+                <InfoWidget 
+                    icon={EnvelopeIcon} 
+                    title="Gmail Inbox" 
+                    value={unreadCount !== null ? `${unreadCount} Unread` : 'N/A'} 
+                    loading={gmailLoading}
+                    error={gmailError}
+                    link="https://mail.google.com"
+                />
+                 <InfoWidget 
+                    icon={CalendarIcon} 
+                    title="Next Up" 
+                    value={formatEvent()} 
+                    loading={calendarLoading}
+                    error={calendarError}
+                    link={nextEvent?.htmlLink}
+                />
+                 <InfoWidget 
+                    icon={FolderIcon} 
+                    title="Projects" 
+                    value={`${activeProjects} Active`} 
+                    loading={false}
+                />
+            </div>
+        </Card>
+    );
+};
+
 
 const DashboardPage: React.FC = () => {
   const { projects, tasks, people } = useData();
@@ -54,6 +182,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <HeroSection />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card>
           <h4 className="text-gray-400 text-sm font-medium">Total Projects</h4>

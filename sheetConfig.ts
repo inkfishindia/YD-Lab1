@@ -1,5 +1,5 @@
 
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, BuiltInTool, Agent, Hub } from './types';
+import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, BuiltInTool, Agent, Hub, Interface, Channel } from './types';
 import type { SpreadsheetIds } from './contexts/SpreadsheetConfigContext';
 
 // Defines the structure for a column's mapping and type information
@@ -129,6 +129,36 @@ export const getHubsConfig = (ids: SpreadsheetIds): SheetConfig<Hub> => ({
     serves_bu5: { header: 'BU5', type: 'boolean' },
     serves_bu6: { header: 'BU6', type: 'boolean' },
     notes: { header: 'notes' },
+  },
+});
+
+export const getInterfacesConfig = (ids: SpreadsheetIds): SheetConfig<Interface> => ({
+    spreadsheetId: ids.STRATEGY,
+    range: 'interfaces!A2:I',
+    keyField: 'interface_id',
+    columns: {
+        interface_id: { header: 'Interface_id' },
+        interface_name: { header: 'Interface_name' },
+        interface_category: { header: 'Interface_category' },
+        interface_type: { header: 'Interface_type' },
+        platform_id: { header: 'Channel id' },
+        bu_ids_served: { header: 'bu_ids_served', type: 'string_array' },
+        flywheel_id: { header: 'flywheel_id' },
+        interface_owner: { header: 'interface_owner' },
+        monthly_budget: { header: 'monthly_budget', type: 'number' },
+    },
+});
+
+export const getChannelsConfig = (ids: SpreadsheetIds): SheetConfig<Channel> => ({
+  spreadsheetId: ids.STRATEGY,
+  range: 'Channels!A2:E',
+  keyField: 'channel_id',
+  columns: {
+    channel_id: { header: 'Channel id' },
+    channel_type: { header: 'Channel type' },
+    channel_name: { header: 'Channel name' },
+    interfaces: { header: 'Interfaces' },
+    focus: { header: 'Focus' },
   },
 });
 

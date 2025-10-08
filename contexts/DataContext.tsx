@@ -1,9 +1,9 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, Role, LogEntry, BuiltInTool, Agent, Hub } from '../types';
+import type { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, Role, LogEntry, BuiltInTool, Agent, Hub, Interface, Channel } from '../types';
 import { useAuth } from './AuthContext';
 import * as sheetService from '../services/googleSheetService';
-import { mockPeople, mockProjects, mockTasks, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps, mockRoles, mockBuiltInTools, mockAgents, mockHubs } from '../data/mockData';
+import { mockPeople, mockProjects, mockTasks, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps, mockRoles, mockBuiltInTools, mockAgents, mockHubs, mockInterfaces, mockChannels } from '../data/mockData';
 import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
 import * as config from '../sheetConfig';
 
@@ -21,7 +21,10 @@ interface IDataContext {
   builtInTools: BuiltInTool[];
   agents: Agent[];
   hubs: Hub[];
+  interfaces: Interface[];
+  channels: Channel[];
   loading: boolean;
+  dataError: Error | null;
   addPerson: (person: Omit<Person, 'user_id'>) => Promise<void>;
   updatePerson: (person: Person) => Promise<void>;
   deletePerson: (userId: string) => Promise<void>;
@@ -55,6 +58,12 @@ interface IDataContext {
   addHub: (hub: Omit<Hub, 'hub_id'>) => Promise<void>;
   updateHub: (hub: Hub) => Promise<void>;
   deleteHub: (hubId: string) => Promise<void>;
+  addInterface: (iface: Omit<Interface, 'interface_id'>) => Promise<void>;
+  updateInterface: (iface: Interface) => Promise<void>;
+  deleteInterface: (ifaceId: string) => Promise<void>;
+  addChannel: (channel: Omit<Channel, 'channel_id'>) => Promise<void>;
+  updateChannel: (channel: Channel) => Promise<void>;
+  deleteChannel: (channelId: string) => Promise<void>;
 }
 
 const DataContext = createContext<IDataContext | undefined>(undefined);
@@ -63,6 +72,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const { isSignedIn } = useAuth();
   const { spreadsheetIds, isConfigured } = useSpreadsheetConfig();
   const [loading, setLoading] = useState(true);
+  const [dataError, setDataError] = useState<Error | null>(null);
   
   // Data states
   const [people, setPeople] = useState<Person[]>([]);
@@ -78,6 +88,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [builtInTools, setBuiltInTools] = useState<BuiltInTool[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [hubs, setHubs] = useState<Hub[]>([]);
+  const [interfaces, setInterfaces] = useState<Interface[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
 
   // Memoize dynamic sheet configurations
   const dynamicConfigs = useMemo(() => {
@@ -97,6 +109,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       builtInTools: config.getBuiltInToolsConfig(spreadsheetIds),
       agents: config.getAgentsConfig(spreadsheetIds),
       hubs: config.getHubsConfig(spreadsheetIds),
+      interfaces: config.getInterfacesConfig(spreadsheetIds),
+      channels: config.getChannelsConfig(spreadsheetIds),
     };
   }, [spreadsheetIds, isConfigured]);
 
@@ -106,8 +120,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (shouldFetchData) {
       const fetchData = async () => {
         setLoading(true);
+        setDataError(null);
         try {
-          const [peopleData, projectsData, tasksData, buData, flywheelData, leadsData, opportunitiesData, accountsData, braindumpData, rolesData, toolsData, agentsData, hubsData] = await Promise.all([
+          const [peopleData, projectsData, tasksData, buData, flywheelData, leadsData, opportunitiesData, accountsData, braindumpData, rolesData, toolsData, agentsData, hubsData, interfacesData, channelsData] = await Promise.all([
             sheetService.fetchAndParseSheetData(dynamicConfigs.people),
             sheetService.fetchAndParseSheetData(dynamicConfigs.projects),
             sheetService.fetchAndParseSheetData(dynamicConfigs.tasks),
@@ -121,6 +136,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             sheetService.fetchAndParseSheetData(dynamicConfigs.builtInTools),
             sheetService.fetchAndParseSheetData(dynamicConfigs.agents),
             sheetService.fetchAndParseSheetData(dynamicConfigs.hubs),
+            sheetService.fetchAndParseSheetData(dynamicConfigs.interfaces),
+            sheetService.fetchAndParseSheetData(dynamicConfigs.channels),
           ]);
           setPeople(peopleData);
           setProjects(projectsData);
@@ -135,8 +152,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setBuiltInTools(toolsData);
           setAgents(agentsData);
           setHubs(hubsData);
-        } catch (error) {
+          setInterfaces(interfacesData);
+          setChannels(channelsData);
+        } catch (error: any) {
           console.error("Failed to fetch data from Google Sheets:", error);
+          setDataError(error);
           alert("Could not fetch data from Google Sheets. Check spreadsheet IDs in settings and console for more details.");
         } finally {
           setLoading(false);
@@ -146,6 +166,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } else {
       // Not signed in or not configured, load mock data for a demo view
       setLoading(true);
+      setDataError(null);
       setPeople(mockPeople);
       setProjects(mockProjects);
       setTasks(mockTasks);
@@ -159,6 +180,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setBuiltInTools(mockBuiltInTools);
       setAgents(mockAgents);
       setHubs(mockHubs);
+      setInterfaces(mockInterfaces);
+      setChannels(mockChannels);
       setLoading(false);
     }
   }, [isSignedIn, isConfigured, dynamicConfigs]);
@@ -422,10 +445,54 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch(error) { handleError(error, 'delete hub'); }
   };
 
+  const addInterface = async (iface: Omit<Interface, 'interface_id'>) => {
+    if (!dynamicConfigs) return;
+    try {
+        const newInterface = await sheetService.createEntity(dynamicConfigs.interfaces, iface);
+        setInterfaces(prev => [...prev, newInterface]);
+    } catch(error) { handleError(error, 'add interface'); }
+  };
+  const updateInterface = async (updatedInterface: Interface) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.updateEntity(dynamicConfigs.interfaces, updatedInterface);
+        setInterfaces(prev => prev.map(i => (i.interface_id === updatedInterface.interface_id ? updatedInterface : i)));
+    } catch(error) { handleError(error, 'update interface'); }
+  };
+  const deleteInterface = async (interfaceId: string) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.deleteEntity(dynamicConfigs.interfaces, interfaceId);
+        setInterfaces(prev => prev.filter(i => i.interface_id !== interfaceId));
+    } catch(error) { handleError(error, 'delete interface'); }
+  };
+
+  const addChannel = async (channel: Omit<Channel, 'channel_id'>) => {
+    if (!dynamicConfigs) return;
+    try {
+        const newChannel = await sheetService.createEntity(dynamicConfigs.channels, channel);
+        setChannels(prev => [...prev, newChannel]);
+    } catch(error) { handleError(error, 'add channel'); }
+  };
+  const updateChannel = async (updatedChannel: Channel) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.updateEntity(dynamicConfigs.channels, updatedChannel);
+        setChannels(prev => prev.map(c => (c.channel_id === updatedChannel.channel_id ? updatedChannel : c)));
+    } catch(error) { handleError(error, 'update channel'); }
+  };
+  const deleteChannel = async (channelId: string) => {
+    if (!dynamicConfigs) return;
+    try {
+        await sheetService.deleteEntity(dynamicConfigs.channels, channelId);
+        setChannels(prev => prev.filter(c => c.channel_id !== channelId));
+    } catch(error) { handleError(error, 'delete channel'); }
+  };
+
 
   return (
     <DataContext.Provider value={{
-      people, projects, tasks, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, builtInTools, agents, hubs, loading,
+      people, projects, tasks, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, builtInTools, agents, hubs, interfaces, channels, loading, dataError,
       addPerson, updatePerson, deletePerson,
       addProject, updateProject, deleteProject,
       addTask, updateTask, deleteTask,
@@ -437,6 +504,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       addBuiltInTool, updateBuiltInTool, deleteBuiltInTool,
       addAgent, updateAgent, deleteAgent,
       addHub, updateHub, deleteHub,
+      addInterface, updateInterface, deleteInterface,
+      addChannel, updateChannel, deleteChannel,
     }}>
       {children}
     </DataContext.Provider>

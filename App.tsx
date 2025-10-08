@@ -7,7 +7,6 @@ import { PermissionsProvider } from './contexts/PermissionsContext';
 import { SpreadsheetConfigProvider, useSpreadsheetConfig } from './contexts/SpreadsheetConfigContext';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
-import LoginPage from './pages/LoginPage';
 import ConfigurationNeeded from './components/ConfigurationNeeded';
 
 // --- Layouts ---
@@ -51,9 +50,10 @@ import ContentPipelineTabs from './pages/marketing/ContentPipelineTabs';
 import ContentKanbanPage from './pages/marketing/content/ContentKanbanPage';
 import AssetDetailPage from './pages/marketing/content/AssetDetailPage';
 import ContentLibraryPage from './pages/marketing/content/ContentLibraryPage';
-import ChannelsTabs from './pages/marketing/ChannelsTabs';
-import AllChannelsPage from './pages/marketing/channels/AllChannelsPage';
-import ChannelPerformancePage from './pages/marketing/channels/ChannelPerformancePage';
+import InterfacesTabs from './pages/marketing/ChannelsTabs';
+import AllInterfacesPage from './pages/marketing/channels/AllChannelsPage';
+import ChannelsListPage from './pages/marketing/channels/ChannelsListPage';
+import InterfacePerformancePage from './pages/marketing/channels/ChannelPerformancePage';
 import BudgetAllocationPage from './pages/marketing/channels/BudgetAllocationPage';
 
 // --- Revenue ---
@@ -156,16 +156,12 @@ const AppContent: React.FC = () => {
     );
   }
 
+  const needsConfiguration = isSignedIn && !isConfigured;
+
   return (
     <HashRouter>
       <Routes>
-        {!isSignedIn ? (
-          <Route path="*" element={<LoginPage />} />
-        ) : !isConfigured ? (
-          <Route path="*" element={<MainLayout unconfigured />} />
-        ) : (
-          <Route path="/*" element={<MainLayout />} />
-        )}
+        <Route path="/*" element={<MainLayout unconfigured={needsConfiguration} />} />
       </Routes>
     </HashRouter>
   );
@@ -237,10 +233,11 @@ const MainLayout: React.FC<{ unconfigured?: boolean }> = ({ unconfigured = false
                 <Route path="asset" element={<AssetDetailPage />} />
                 <Route path="library" element={<ContentLibraryPage />} />
               </Route>
-              <Route path="channels" element={<ChannelsTabs />}>
+              <Route path="interfaces" element={<InterfacesTabs />}>
                 <Route index element={<Navigate to="all" replace />} />
-                <Route path="all" element={<AllChannelsPage />} />
-                <Route path="performance" element={<ChannelPerformancePage />} />
+                <Route path="all" element={<AllInterfacesPage />} />
+                <Route path="channels" element={<ChannelsListPage />} />
+                <Route path="performance" element={<InterfacePerformancePage />} />
                 <Route path="budget" element={<BudgetAllocationPage />} />
               </Route>
             </Route>

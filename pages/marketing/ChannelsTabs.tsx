@@ -3,12 +3,13 @@ import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 
 const tabs = [
-    { name: 'All Channels', href: 'all' },
-    { name: 'Channel Performance', href: 'performance' },
+    { name: 'All Interfaces', href: 'all' },
+    { name: 'Channels', href: 'channels' },
+    { name: 'Interface Performance', href: 'performance' },
     { name: 'Budget Allocation', href: 'budget' },
 ];
 
-const ChannelsTabs: React.FC = () => {
+const InterfacesTabs: React.FC = () => {
     const activeLinkStyle = "bg-gray-800 text-white";
     const inactiveLinkStyle = "text-gray-400 hover:bg-gray-700 hover:text-white";
 
@@ -36,4 +37,4 @@ const ChannelsTabs: React.FC = () => {
     );
 };
 
-export default ChannelsTabs;
+export default InterfacesTabs;

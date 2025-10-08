@@ -6,7 +6,7 @@ import { MegaphoneIcon } from '../components/Icons'; // Replace with more specif
 const marketingTabs = [
     { name: 'Campaigns', href: 'campaigns' },
     { name: 'Content Pipeline', href: 'content' },
-    { name: 'Channels', href: 'channels' },
+    { name: 'Interfaces', href: 'interfaces' },
 ];
 
 const MarketingPage: React.FC = () => {

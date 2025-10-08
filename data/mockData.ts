@@ -1,5 +1,5 @@
 
-import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role, BuiltInTool, Agent, Hub } from '../types';
+import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role, BuiltInTool, Agent, Hub, Interface, Channel } from '../types';
 
 export const mockRoles: Role[] = [
   { role_name: 'Admin', permissions: ['*:*'] },
@@ -110,4 +110,43 @@ export const mockHubs: Hub[] = [
     serves_bu6: false,
     notes: 'Needs a new video editor.',
   }
+];
+
+export const mockInterfaces: Interface[] = [
+    {
+        interface_id: 'mock_if_1',
+        interface_name: 'SEO & Blog',
+        interface_category: 'Organic',
+        interface_type: 'Inbound',
+        flywheel_id: 'mock_fw_1',
+        bu_ids_served: ['mock_bu_1'],
+        interface_owner: 'mock_user_2',
+        monthly_budget: 15000,
+    },
+    {
+        interface_id: 'mock_if_2',
+        interface_name: 'Enterprise Outbound',
+        interface_category: 'Sales',
+        interface_type: 'Outbound',
+        flywheel_id: 'mock_fw_2',
+        bu_ids_served: ['mock_bu_2'],
+        interface_owner: 'mock_user_1',
+        monthly_budget: 25000,
+    },
+    {
+        interface_id: 'mock_if_3',
+        interface_name: 'Partnership Program',
+        interface_category: 'Partnerships',
+        interface_type: 'Hybrid',
+        flywheel_id: 'mock_fw_2',
+        bu_ids_served: ['mock_bu_1', 'mock_bu_2'],
+        interface_owner: 'mock_user_2',
+        monthly_budget: 10000,
+    }
+];
+
+export const mockChannels: Channel[] = [
+  { channel_id: 'CH_1', channel_type: 'Owned', channel_name: 'Website', interfaces: 'mock_if_1', focus: 'Lead Gen & SEO' },
+  { channel_id: 'CH_2', channel_type: 'Paid Social', channel_name: 'Facebook Ads', interfaces: 'mock_if_2', focus: 'Brand Awareness' },
+  { channel_id: 'CH_3', channel_type: 'Paid Search', channel_name: 'Google Ads', interfaces: '', focus: 'Direct Conversions' },
 ];

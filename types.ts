@@ -192,3 +192,23 @@ export interface Hub {
   serves_bu6: boolean;
   notes: string;
 }
+
+export interface Interface {
+    interface_id: string;
+    interface_name: string;
+    interface_category: string;
+    interface_type: string;
+    platform_id?: string;
+    bu_ids_served: string[];
+    flywheel_id: string;
+    interface_owner: string;
+    monthly_budget: number;
+}
+
+export interface Channel {
+  channel_id: string;
+  channel_type: string;
+  channel_name: string;
+  interfaces: string;
+  focus: string;
+}

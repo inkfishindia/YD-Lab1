@@ -4,14 +4,17 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { SearchIcon, BellIcon, PlusIcon, ChevronDownIcon } from './Icons';
 import { useAuth } from '../contexts/AuthContext';
 import { usePermissions } from '../contexts/PermissionsContext';
+import { useData } from '../contexts/DataContext';
+import Button from './ui/Button';
 
 const Header: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { currentUser, signOut } = useAuth();
+  const { isSignedIn, currentUser, signIn, signOut } = useAuth();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const { hasPermission } = usePermissions();
+  const { loading: dataLoading, dataError } = useData();
   
   const canCreateSomething = hasPermission('projects:write') || hasPermission('tasks:write') || hasPermission('people:write');
 
@@ -67,11 +70,29 @@ const Header: React.FC = () => {
           </div>
         )}
         
-        <button className="text-gray-400 hover:text-white">
-            <BellIcon className="w-6 h-6"/>
-        </button>
+        <div className="relative">
+            <button className="text-gray-400 hover:text-white">
+                <BellIcon className="w-6 h-6"/>
+            </button>
+            <span
+                className={`absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-gray-950 ${
+                    dataLoading
+                        ? 'bg-yellow-500 animate-pulse'
+                        : dataError
+                        ? 'bg-red-500'
+                        : 'bg-green-500'
+                }`}
+                title={
+                    dataLoading
+                        ? 'Loading data from Google Sheets...'
+                        : dataError
+                        ? `Data Error: ${dataError.message}`
+                        : 'Data connection is healthy'
+                }
+            />
+        </div>
 
-        {currentUser && (
+        {isSignedIn && currentUser ? (
             <div className="relative">
                 <button onClick={() => setUserDropdownOpen(!userDropdownOpen)} className="flex items-center space-x-2 focus:outline-none">
                     <img src={currentUser.imageUrl} alt={currentUser.name} className="w-8 h-8 rounded-full" />
@@ -96,6 +117,8 @@ const Header: React.FC = () => {
                     </div>
                 )}
             </div>
+        ) : (
+          <Button onClick={signIn}>Sign In</Button>
         )}
       </div>
     </header>

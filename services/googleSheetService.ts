@@ -244,3 +244,43 @@ export async function deleteEntity<T>(config: SheetConfig<T>, id: string): Promi
         },
     });
 }
+
+// --- Workspace API Functions ---
+
+export async function fetchUnreadGmailCount(): Promise<number> {
+    try {
+        if (!(window as any).gapi?.client?.gmail) {
+            throw new Error("Google Gmail API client is not initialized.");
+        }
+        const response = await (window as any).gapi.client.gmail.users.labels.get({
+            userId: 'me',
+            id: 'INBOX'
+        });
+        return response.result.messagesUnread || 0;
+    } catch (err: any) {
+        const message = err.result?.error?.message || err.message || 'An unknown error occurred.';
+        console.error(`Error fetching unread Gmail count: ${message}`, { error: err });
+        throw new Error(message);
+    }
+}
+
+export async function fetchNextCalendarEvent(): Promise<any | null> {
+    try {
+        if (!(window as any).gapi?.client?.calendar) {
+            throw new Error("Google Calendar API client is not initialized.");
+        }
+        const response = await (window as any).gapi.client.calendar.events.list({
+            'calendarId': 'primary',
+            'timeMin': (new Date()).toISOString(),
+            'showDeleted': false,
+            'singleEvents': true,
+            'maxResults': 1,
+            'orderBy': 'startTime'
+        });
+        return response.result.items && response.result.items.length > 0 ? response.result.items[0] : null;
+    } catch (err: any) {
+        const message = err.result?.error?.message || err.message || 'An unknown error occurred.';
+        console.error(`Error fetching next calendar event: ${message}`, { error: err });
+        throw new Error(message);
+    }
+}

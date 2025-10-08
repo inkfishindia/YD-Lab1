@@ -2,8 +2,8 @@
 import React from 'react';
 import PlaceholderPage from '../../../components/ui/PlaceholderPage';
 
-const ChannelPerformancePage: React.FC = () => {
-    return <PlaceholderPage title="Channel Performance" />;
+const InterfacePerformancePage: React.FC = () => {
+    return <PlaceholderPage title="Interface Performance" />;
 };
 
-export default ChannelPerformancePage;
+export default InterfacePerformancePage;
