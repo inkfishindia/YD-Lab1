@@ -1,4 +1,5 @@
-import { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, BuiltInTool, Agent, Hub, Interface, Channel, CustomerSegment, SystemSegment, SystemFlywheel, SystemBusinessUnit, SystemChannel, SystemInterface, SystemHub, SystemPerson, SystemStage, SystemTouchpoint, FlywheelStrategy, SegmentPositioning, FunnelStage, InterfaceMap, Program, MgmtProject, Milestone, MgmtTask, MgmtHub, WeeklyUpdate, DecisionLog, SystemPlatform } from './types';
+// FIX: Add missing type imports for new data models.
+import { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, Hub, Interface, Channel, CustomerSegment, SystemSegment, SystemFlywheel, SystemBusinessUnit, SystemChannel, SystemInterface, SystemHub, SystemPerson, SystemStage, SystemTouchpoint, Program, MgmtProject, Milestone, MgmtTask, MgmtHub, WeeklyUpdate, DecisionLog, SystemPlatform } from './types';
 import type { SpreadsheetIds } from './contexts/SpreadsheetConfigContext';
 
 // Defines the structure for a column's mapping and type information
@@ -41,7 +42,7 @@ export const getCustomerSegmentsConfig = (ids: SpreadsheetIds): SheetConfig<Cust
 export const getRolesConfig = (ids: SpreadsheetIds): SheetConfig<Role> => ({
   spreadsheetId: ids.YDS_APP,
   gid: '1446257232',
-  range: 'Roles!A2:B',
+  range: 'ROLES!A2:B',
   keyField: 'role_name',
   columns: {
     role_name: { header: 'role' },
@@ -278,138 +279,6 @@ export const getLogConfig = (ids: SpreadsheetIds): SheetConfig<LogEntry> => ({
     success_criteria: { header: 'Success Criteria' },
     status: { header: 'Status' },
   },
-});
-
-export const getBuiltInToolsConfig = (ids: SpreadsheetIds): SheetConfig<BuiltInTool> => ({
-  spreadsheetId: ids.MANIFEST,
-  gid: '', // GID not provided for this sheet
-  range: 'Built in tools!A2:E',
-  keyField: 'tool_id',
-  columns: {
-    tool_id: { header: 'tool_id' },
-    Tool: { header: 'Tool' },
-    Category: { header: 'Category' },
-    Alternate: { header: 'Alternate' },
-    Use: { header: 'Use' },
-  },
-});
-
-export const getAgentsConfig = (ids: SpreadsheetIds): SheetConfig<Agent> => ({
-  spreadsheetId: ids.MANIFEST,
-  gid: '', // GID not provided for this sheet
-  range: 'Agents!A2:I',
-  keyField: 'agent_id',
-  columns: {
-    agent_id: { header: 'agent_id' },
-    Use: { header: 'Use' },
-    Role: { header: 'Role' },
-    Persona: { header: 'Persona' },
-    Character: { header: 'Character' },
-    Function: { header: 'Function' },
-    Prompt: { header: 'Prompt' },
-    Guidelines: { header: 'Guidelines' },
-    References: { header: 'References' },
-  },
-});
-
-// --- Positioning Framework Configs ---
-export const getFlywheelStrategiesConfig = (ids: SpreadsheetIds): SheetConfig<FlywheelStrategy> => ({
-    spreadsheetId: ids.POSITIONING_FRAMEWORK,
-    gid: '1727430360',
-    range: 'Flywheel stratgy!A2:P',
-    keyField: 'flywheelId',
-    columns: {
-        flywheelId: { header: 'Flywheel ID' },
-        flywheelName: { header: 'Flywheel Name' },
-        strategicRank: { header: 'Strategic Rank' },
-        servesSegments: { header: 'Serves Segments' },
-        positioningWeOwn: { header: 'Positioning We Own (Moat)' },
-        networkEffectType: { header: 'Network Effect Type' },
-        velocityCompounding: { header: 'Velocity & Compounding (Key Metric)' },
-        capitalEfficiency: { header: 'Capital Efficiency' },
-        strategicAction: { header: 'Strategic Action' },
-        bottleneckProblem: { header: 'Bottleneck/Problem' },
-        requiredFixes: { header: 'Required Fixes (Product/Tech)' },
-        keyBottleneckMetric: { header: 'Key Bottleneck Metric' },
-        fixInvestment: { header: 'Fix Investment' },
-        fixRoi: { header: 'Fix ROI' },
-        killCriteria: { header: 'Kill Criteria (If Fail)' },
-    }
-});
-
-export const getSegmentPositioningsConfig = (ids: SpreadsheetIds): SheetConfig<SegmentPositioning> => ({
-    spreadsheetId: ids.POSITIONING_FRAMEWORK,
-    gid: '1443075542',
-    range: 'SEGMENT POSITIOING!A2:Y',
-    keyField: 'segment',
-    columns: {
-        segment: { header: 'Segment' },
-        segmentName: { header: 'Segment Name' },
-        categoryName: { header: 'CATEGORY Name' },
-        categoryDefinition: { header: 'CATEGORY DEFINITION' },
-        ourPov: { header: 'Our POV (Strategic Narrative):' },
-        shiftFrom: { header: 'Shift Statement FROM' },
-        shiftTo: { header: 'Shift Statement TO' },
-        brandArchitecture: { header: 'BRAND ARCHITECTURE' },
-        tagline: { header: 'Tagline' },
-        architectureType: { header: 'Architecture Type' },
-        categoryCompetedIn: { header: 'Category Competed In' },
-        positionWeOwn: { header: 'Position We Own' },
-        proofPoints: { header: 'Proof Points:' },
-        gtmImplication: { header: 'GTM Implication' },
-        strategicBet: { header: 'STRATEGIC BET' },
-        strategyBetReason: { header: 'Strategy bet reason' },
-        action: { header: 'Action' },
-        target: { header: 'Target' },
-        enablementProgram: { header: 'Enablement program' },
-        roi: { header: 'ROI' },
-        investment: { header: 'INVESTMENT' },
-    }
-});
-
-export const getFunnelStagesConfig = (ids: SpreadsheetIds): SheetConfig<FunnelStage> => ({
-    spreadsheetId: ids.POSITIONING_FRAMEWORK,
-    gid: '1766871867',
-    range: 'Stage hub!A2:N',
-    keyField: 'stageId',
-    columns: {
-        stageId: { header: 'Stage_ID' },
-        flywheelId: { header: 'Flywheel_ID' },
-        flywheelName: { header: 'Flywheel_Name' },
-        stage: { header: 'Stage' },
-        type: { header: 'Type' },
-        hubId: { header: 'Hub_ID' },
-        hubName: { header: 'Hub_Name' },
-        ownerId: { header: 'Owner_ID' },
-        ownerName: { header: 'Owner_Name' },
-        interfaceChannel: { header: 'Interface/Channel' },
-        currentConv: { header: 'Current Conv' },
-        targetConv: { header: 'Target Conv' },
-        time: { header: 'Time' },
-        bottleneck: { header: 'Bottleneck' },
-    }
-});
-
-export const getInterfaceMapsConfig = (ids: SpreadsheetIds): SheetConfig<InterfaceMap> => ({
-    spreadsheetId: ids.POSITIONING_FRAMEWORK,
-    gid: '653800420',
-    range: 'Interfacemap - hub!A2:M',
-    keyField: 'interfaceId',
-    columns: {
-        flywheel: { header: 'Flywheel' },
-        buId: { header: 'BU_ID' },
-        channelId: { header: 'Channel_ID' },
-        channelName: { header: 'Channel_Name' },
-        interfaceId: { header: 'Interface_ID' },
-        interfaceName: { header: 'Interface_Name' },
-        hubId: { header: 'Hub_ID' },
-        hubName: { header: 'Hub_Name' },
-        ownerId: { header: 'Owner_ID' },
-        ownerName: { header: 'Owner_Name' },
-        sla: { header: 'SLA' },
-        status: { header: 'Status' },
-        bottleneck: { header: 'Bottleneck' },
-    }
 });
 
 // --- YDS Management System Configs ---
@@ -966,8 +835,6 @@ export const allSheetConfigs: Record<string, (ids: SpreadsheetIds) => SheetConfi
     'Accounts': getAccountsConfig,
     'BrainDump': getBrainDumpConfig,
     'Logs': getLogConfig,
-    'Built-in Tools': getBuiltInToolsConfig,
-    'Agents': getAgentsConfig,
     'SystemSegments': getSystemSegmentsConfig,
     'SystemFlywheels': getSystemFlywheelsConfig,
     'SystemBusinessUnits': getSystemBusinessUnitsConfig,
@@ -978,10 +845,6 @@ export const allSheetConfigs: Record<string, (ids: SpreadsheetIds) => SheetConfi
     'SystemStages': getSystemStagesConfig,
     'SystemTouchpoints': getSystemTouchpointsConfig,
     'SystemPlatforms': getSystemPlatformsConfig,
-    'Flywheel Strategies': getFlywheelStrategiesConfig,
-    'Segment Positionings': getSegmentPositioningsConfig,
-    'Funnel Stages': getFunnelStagesConfig,
-    'Interface Maps': getInterfaceMapsConfig,
     'Programs': getProgramsConfig,
     'MgmtProjects': getMgmtProjectsConfig,
     'Milestones': getMilestonesConfig,
@@ -1005,10 +868,6 @@ export const groupedSheetConfigs = {
         spreadsheetIdKey: 'PARTNERS' as keyof SpreadsheetIds,
         configs: { 'Leads': getLeadsConfig, 'Opportunities': getOpportunitiesConfig, 'Accounts': getAccountsConfig }
     },
-    'Manifest': {
-        spreadsheetIdKey: 'MANIFEST' as keyof SpreadsheetIds,
-        configs: { 'Built-in Tools': getBuiltInToolsConfig, 'Agents': getAgentsConfig }
-    },
     'YDC - Base': {
         spreadsheetIdKey: 'YDC_BASE' as keyof SpreadsheetIds,
         configs: { 
@@ -1022,15 +881,6 @@ export const groupedSheetConfigs = {
             'SystemStages': getSystemStagesConfig,
             'SystemTouchpoints': getSystemTouchpointsConfig,
             'SystemPlatforms': getSystemPlatformsConfig,
-        }
-    },
-    'Positioning Framework': {
-        spreadsheetIdKey: 'POSITIONING_FRAMEWORK' as keyof SpreadsheetIds,
-        configs: {
-            'Flywheel Strategies': getFlywheelStrategiesConfig,
-            'Segment Positionings': getSegmentPositioningsConfig,
-            'Funnel Stages': getFunnelStagesConfig,
-            'Interface Maps': getInterfaceMapsConfig,
         }
     },
     'YDS Management': {

@@ -9,9 +9,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
         STRATEGY: '',
         PARTNERS: '',
         YDS_APP: '',
-        MANIFEST: '',
         YDC_BASE: '',
-        POSITIONING_FRAMEWORK: '',
         YDS_MANAGEMENT: '',
     });
     const [isSaved, setIsSaved] = useState(false);
@@ -74,9 +72,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
                     {renderInputField("STRATEGY", "Strategy Spreadsheet ID", "Contains sheets for Business Units and Flywheels.")}
                     {renderInputField("PARTNERS", "Partners/Revenue Spreadsheet ID", "Contains sheets for Leads, Opportunities, and Accounts.")}
                     {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like People, BrainDump and Logs.")}
-                    {renderInputField("MANIFEST", "Manifest Spreadsheet ID", "Contains sheets for Built in Tools and Agents.")}
                     {renderInputField("YDC_BASE", "YDC - Base Spreadsheet ID", "Contains the interconnected data for the System Map.")}
-                    {renderInputField("POSITIONING_FRAMEWORK", "Positioning Framework Spreadsheet ID", "Contains strategic data for flywheels, segments, and funnels.")}
                     
                     <div className="flex items-center gap-4">
                         <Button type="submit">Save Configuration</Button>

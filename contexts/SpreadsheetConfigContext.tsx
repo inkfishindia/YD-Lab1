@@ -6,9 +6,7 @@ export interface SpreadsheetIds {
   STRATEGY: string;
   PARTNERS: string;
   YDS_APP: string;
-  MANIFEST: string;
   YDC_BASE: string;
-  POSITIONING_FRAMEWORK: string;
   YDS_MANAGEMENT: string;
 }
 
@@ -38,9 +36,7 @@ const initialIds: SpreadsheetIds = {
   STRATEGY: '1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc',
   PARTNERS: '1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs',
   YDS_APP: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
-  MANIFEST: '1it8OLmtuBJIiO7AMnGata5Utn6O3CiVxazpoFjAZHjc',
   YDC_BASE: '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY',
-  POSITIONING_FRAMEWORK: '1XPUQiompJVoAsnLvFoP3zxxsejRTZPe_yydsGoQU-qo',
   YDS_MANAGEMENT: '1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA',
 };
 
@@ -61,7 +57,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ c
             // Merge stored IDs with initial IDs to ensure new fields are present
             const mergedIds = { ...initialIds, ...ids };
             setSpreadsheetIds(mergedIds);
-            if (mergedIds.STRATEGY && mergedIds.PARTNERS && mergedIds.YDS_APP && mergedIds.MANIFEST && mergedIds.YDC_BASE && mergedIds.POSITIONING_FRAMEWORK && mergedIds.YDS_MANAGEMENT) {
+            if (mergedIds.STRATEGY && mergedIds.PARTNERS && mergedIds.YDS_APP && mergedIds.YDC_BASE && mergedIds.YDS_MANAGEMENT) {
               setIsConfigured(true);
             }
         }
@@ -88,7 +84,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ c
         
         if (config.ids) {
             setSpreadsheetIds(newIds);
-            const allIdsPresent = !!(newIds.STRATEGY && newIds.PARTNERS && newIds.YDS_APP && newIds.MANIFEST && newIds.YDC_BASE && newIds.POSITIONING_FRAMEWORK && newIds.YDS_MANAGEMENT);
+            const allIdsPresent = !!(newIds.STRATEGY && newIds.PARTNERS && newIds.YDS_APP && newIds.YDC_BASE && newIds.YDS_MANAGEMENT);
             setIsConfigured(allIdsPresent);
         }
         if (config.mappings) setSheetMappings(newMappings);

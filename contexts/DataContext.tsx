@@ -22,9 +22,6 @@ import {
   Account,
   BrainDump,
   Role,
-  LogEntry,
-  BuiltInTool,
-  Agent,
   Hub,
   Interface,
   Channel,
@@ -38,10 +35,6 @@ import {
   SystemPerson,
   SystemStage,
   SystemTouchpoint,
-  FlywheelStrategy,
-  SegmentPositioning,
-  FunnelStage,
-  InterfaceMap,
   Program,
   MgmtProject,
   Milestone,
@@ -52,6 +45,11 @@ import {
   Priority,
   Status,
   SystemPlatform,
+  // FIX: Add missing types for PositioningPage.
+  FlywheelStrategy,
+  SegmentPositioning,
+  FunnelStage,
+  InterfaceMap,
 } from '../types';
 import {
   mockPeople,
@@ -62,12 +60,15 @@ import {
   mockAccounts,
   mockBrainDumps,
   mockRoles,
-  mockBuiltInTools,
-  mockAgents,
   mockHubs,
   mockInterfaces,
   mockChannels,
   mockCustomerSegments,
+  // FIX: Add missing mock data for PositioningPage.
+  mockFlywheelStrategies,
+  mockSegmentPositionings,
+  mockFunnelStages,
+  mockInterfaceMaps,
 } from '../data/mockData';
 import * as sheetService from '../services/googleSheetService';
 
@@ -83,8 +84,6 @@ interface IDataContext {
   accounts: Account[];
   braindumps: BrainDump[];
   roles: Role[];
-  builtInTools: BuiltInTool[];
-  agents: Agent[];
   hubs: Hub[];
   interfaces: Interface[];
   channels: Channel[];
@@ -99,10 +98,6 @@ interface IDataContext {
   systemStages: SystemStage[];
   systemTouchpoints: SystemTouchpoint[];
   systemPlatforms: SystemPlatform[];
-  flywheelStrategies: FlywheelStrategy[];
-  segmentPositionings: SegmentPositioning[];
-  funnelStages: FunnelStage[];
-  interfaceMaps: InterfaceMap[];
   // FIX: Add projects and tasks for backward compatibility.
   projects: Project[];
   tasks: Task[];
@@ -113,6 +108,11 @@ interface IDataContext {
   mgmtHubs: MgmtHub[];
   weeklyUpdates: WeeklyUpdate[];
   decisionLogs: DecisionLog[];
+  // FIX: Add properties for PositioningPage data.
+  flywheelStrategies: FlywheelStrategy[];
+  segmentPositionings: SegmentPositioning[];
+  funnelStages: FunnelStage[];
+  interfaceMaps: InterfaceMap[];
   allData: Record<string, any[]>;
   loading: boolean;
   dataError: Error | null;
@@ -136,12 +136,6 @@ interface IDataContext {
   addBusinessUnit: (bu: Omit<BusinessUnit, 'bu_id'>) => Promise<void>;
   updateBusinessUnit: (bu: BusinessUnit) => Promise<void>;
   deleteBusinessUnit: (buId: string) => Promise<void>;
-  addBuiltInTool: (tool: Omit<BuiltInTool, 'tool_id'>) => Promise<void>;
-  updateBuiltInTool: (tool: BuiltInTool) => Promise<void>;
-  deleteBuiltInTool: (toolId: string) => Promise<void>;
-  addAgent: (agent: Omit<Agent, 'agent_id'>) => Promise<void>;
-  updateAgent: (agent: Agent) => Promise<void>;
-  deleteAgent: (agentId: string) => Promise<void>;
   addHub: (hub: Omit<Hub, 'hub_id'>) => Promise<void>;
   updateHub: (hub: Hub) => Promise<void>;
   deleteHub: (hubId: string) => Promise<void>;
@@ -234,8 +228,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [braindumps, setBrainDumps] = useState<BrainDump[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);
-  const [builtInTools, setBuiltInTools] = useState<BuiltInTool[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
   const [hubs, setHubs] = useState<Hub[]>([]);
   const [interfaces, setInterfaces] = useState<Interface[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -261,15 +253,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   );
   const [systemPlatforms, setSystemPlatforms] = useState<SystemPlatform[]>([]);
 
-  const [flywheelStrategies, setFlywheelStrategies] = useState<
-    FlywheelStrategy[]
-  >([]);
-  const [segmentPositionings, setSegmentPositionings] = useState<
-    SegmentPositioning[]
-  >([]);
-  const [funnelStages, setFunnelStages] = useState<FunnelStage[]>([]);
-  const [interfaceMaps, setInterfaceMaps] = useState<InterfaceMap[]>([]);
-
   // YDS Management states
   const [programs, setPrograms] = useState<Program[]>([]);
   const [mgmtProjects, setMgmtProjects] = useState<MgmtProject[]>([]);
@@ -278,6 +261,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [mgmtHubs, setMgmtHubs] = useState<MgmtHub[]>([]);
   const [weeklyUpdates, setWeeklyUpdates] = useState<WeeklyUpdate[]>([]);
   const [decisionLogs, setDecisionLogs] = useState<DecisionLog[]>([]);
+
+  // FIX: Add state for PositioningPage data.
+  const [flywheelStrategies, setFlywheelStrategies] = useState<
+    FlywheelStrategy[]
+  >([]);
+  const [segmentPositionings, setSegmentPositionings] = useState<
+    SegmentPositioning[]
+  >([]);
+  const [funnelStages, setFunnelStages] = useState<FunnelStage[]>([]);
+  const [interfaceMaps, setInterfaceMaps] = useState<InterfaceMap[]>([]);
 
   const dynamicConfigs: Record<string, SheetConfig<any>> | null = useMemo(() => {
     if (!isConfigured) return null;
@@ -319,8 +312,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       braindumps: mappedConfigs['BrainDump'],
       roles: mappedConfigs['Roles'],
       logs: mappedConfigs['Logs'],
-      builtInTools: mappedConfigs['Built-in Tools'],
-      agents: mappedConfigs['Agents'],
       hubs: mappedConfigs['Hubs'],
       interfaces: mappedConfigs['Interfaces'],
       channels: mappedConfigs['Channels'],
@@ -335,10 +326,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       systemStages: mappedConfigs['SystemStages'],
       systemTouchpoints: mappedConfigs['SystemTouchpoints'],
       systemPlatforms: mappedConfigs['SystemPlatforms'],
-      flywheelStrategies: mappedConfigs['Flywheel Strategies'],
-      segmentPositionings: mappedConfigs['Segment Positionings'],
-      funnelStages: mappedConfigs['Funnel Stages'],
-      interfaceMaps: mappedConfigs['Interface Maps'],
       programs: mappedConfigs['Programs'],
       mgmtProjects: mappedConfigs['MgmtProjects'],
       milestones: mappedConfigs['Milestones'],
@@ -395,8 +382,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           setAccounts(combinedData.accounts || []);
           setBrainDumps(combinedData.braindumps || []);
           setRoles(combinedData.roles || []);
-          setBuiltInTools(combinedData.builtInTools || []);
-          setAgents(combinedData.agents || []);
           setHubs(combinedData.hubs || []);
           setInterfaces(combinedData.interfaces || []);
           setChannels(combinedData.channels || []);
@@ -412,11 +397,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           setSystemStages(combinedData.systemStages || []);
           setSystemTouchpoints(combinedData.systemTouchpoints || []);
           setSystemPlatforms(combinedData.systemPlatforms || []);
-
-          setFlywheelStrategies(combinedData.flywheelStrategies || []);
-          setSegmentPositionings(combinedData.segmentPositionings || []);
-          setFunnelStages(combinedData.funnelStages || []);
-          setInterfaceMaps(combinedData.interfaceMaps || []);
 
           setPrograms(combinedData.programs || []);
           setMgmtProjects(combinedData.mgmtProjects || []);
@@ -452,16 +432,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setAccounts(mockAccounts);
         setBrainDumps(mockBrainDumps);
         setRoles(mockRoles);
-        setBuiltInTools(mockBuiltInTools);
-        setAgents(mockAgents);
         setHubs(mockHubs);
         setInterfaces(mockInterfaces);
         setChannels(mockChannels);
         setCustomerSegments(mockCustomerSegments);
-        setFlywheelStrategies([]);
-        setSegmentPositionings([]);
-        setFunnelStages([]);
-        setInterfaceMaps([]);
         setPrograms([]);
         setMgmtProjects([]);
         setMilestones([]);
@@ -469,6 +443,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setMgmtHubs([]);
         setWeeklyUpdates([]);
         setDecisionLogs([]);
+        // FIX: Add mock data for PositioningPage when not signed in.
+        setFlywheelStrategies(mockFlywheelStrategies);
+        setSegmentPositionings(mockSegmentPositionings);
+        setFunnelStages(mockFunnelStages);
+        setInterfaceMaps(mockInterfaceMaps);
       }
       setLoading(false);
     }
@@ -711,73 +690,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         throw new Error('BusinessUnits config not ready');
       await sheetService.deleteEntity(dynamicConfigs.businessUnits, buId);
       setBusinessUnits((prev) => prev.filter((b) => b.bu_id !== buId));
-    },
-    [dynamicConfigs],
-  );
-
-  const addBuiltInTool = useCallback(
-    async (tool: Omit<BuiltInTool, 'tool_id'>) => {
-      if (!dynamicConfigs?.builtInTools)
-        throw new Error('BuiltInTools config not ready');
-      const newTool = await sheetService.createEntity(
-        dynamicConfigs.builtInTools,
-        tool,
-      );
-      setBuiltInTools((prev) => [...prev, newTool]);
-    },
-    [dynamicConfigs],
-  );
-
-  const updateBuiltInTool = useCallback(
-    async (tool: BuiltInTool) => {
-      if (!dynamicConfigs?.builtInTools)
-        throw new Error('BuiltInTools config not ready');
-      await sheetService.updateEntity(dynamicConfigs.builtInTools, tool);
-      setBuiltInTools((prev) =>
-        prev.map((t) => (t.tool_id === tool.tool_id ? tool : t)),
-      );
-    },
-    [dynamicConfigs],
-  );
-
-  const deleteBuiltInTool = useCallback(
-    async (toolId: string) => {
-      if (!dynamicConfigs?.builtInTools)
-        throw new Error('BuiltInTools config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.builtInTools, toolId);
-      setBuiltInTools((prev) => prev.filter((t) => t.tool_id !== toolId));
-    },
-    [dynamicConfigs],
-  );
-
-  const addAgent = useCallback(
-    async (agent: Omit<Agent, 'agent_id'>) => {
-      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
-      const newAgent = await sheetService.createEntity(
-        dynamicConfigs.agents,
-        agent,
-      );
-      setAgents((prev) => [...prev, newAgent]);
-    },
-    [dynamicConfigs],
-  );
-
-  const updateAgent = useCallback(
-    async (agent: Agent) => {
-      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
-      await sheetService.updateEntity(dynamicConfigs.agents, agent);
-      setAgents((prev) =>
-        prev.map((a) => (a.agent_id === agent.agent_id ? agent : a)),
-      );
-    },
-    [dynamicConfigs],
-  );
-
-  const deleteAgent = useCallback(
-    async (agentId: string) => {
-      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.agents, agentId);
-      setAgents((prev) => prev.filter((a) => a.agent_id !== agentId));
     },
     [dynamicConfigs],
   );
@@ -1146,8 +1058,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       Accounts: accounts,
       BrainDump: braindumps,
       Roles: roles,
-      'Built-in Tools': builtInTools,
-      Agents: agents,
       Hubs: hubs,
       Interfaces: interfaces,
       Channels: channels,
@@ -1164,10 +1074,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       SystemStages: systemStages,
       SystemTouchpoints: systemTouchpoints,
       SystemPlatforms: systemPlatforms,
-      'Flywheel Strategies': flywheelStrategies,
-      'Segment Positionings': segmentPositionings,
-      'Funnel Stages': funnelStages,
-      'Interface Maps': interfaceMaps,
       Programs: programs,
       MgmtProjects: mgmtProjects,
       Milestones: milestones,
@@ -1175,6 +1081,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       MgmtHubs: mgmtHubs,
       WeeklyUpdates: weeklyUpdates,
       DecisionLogs: decisionLogs,
+      // FIX: Add PositioningPage data to allData.
+      FlywheelStrategies: flywheelStrategies,
+      SegmentPositionings: segmentPositionings,
+      FunnelStages: funnelStages,
+      InterfaceMaps: interfaceMaps,
     }),
     [
       people,
@@ -1185,8 +1096,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       accounts,
       braindumps,
       roles,
-      builtInTools,
-      agents,
       hubs,
       interfaces,
       channels,
@@ -1203,10 +1112,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       systemStages,
       systemTouchpoints,
       systemPlatforms,
-      flywheelStrategies,
-      segmentPositionings,
-      funnelStages,
-      interfaceMaps,
       programs,
       mgmtProjects,
       milestones,
@@ -1214,6 +1119,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       mgmtHubs,
       weeklyUpdates,
       decisionLogs,
+      // FIX: Add PositioningPage data dependencies.
+      flywheelStrategies,
+      segmentPositionings,
+      funnelStages,
+      interfaceMaps,
     ],
   );
 
@@ -1226,8 +1136,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     accounts,
     braindumps,
     roles,
-    builtInTools,
-    agents,
     hubs,
     interfaces,
     channels,
@@ -1244,10 +1152,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     systemStages,
     systemTouchpoints,
     systemPlatforms,
-    flywheelStrategies,
-    segmentPositionings,
-    funnelStages,
-    interfaceMaps,
     programs,
     mgmtProjects,
     milestones,
@@ -1255,6 +1159,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     mgmtHubs,
     weeklyUpdates,
     decisionLogs,
+    // FIX: Add PositioningPage data to context value.
+    flywheelStrategies,
+    segmentPositionings,
+    funnelStages,
+    interfaceMaps,
     allData,
     loading,
     dataError,
@@ -1276,12 +1185,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     addBusinessUnit,
     updateBusinessUnit,
     deleteBusinessUnit,
-    addBuiltInTool,
-    updateBuiltInTool,
-    deleteBuiltInTool,
-    addAgent,
-    updateAgent,
-    deleteAgent,
     addHub,
     updateHub,
     deleteHub,

@@ -489,7 +489,6 @@ const MainLayout: React.FC<{
                     element={<Navigate to="dashboard" replace />}
                   />
                   <Route path="dashboard" element={<FlywheelsMapPage />} />
-                  <Route path="positioning" element={<PositioningPage />} />
                   <Route path="business-units" element={<BusinessUnitsTabs />}>
                     <Route
                       index

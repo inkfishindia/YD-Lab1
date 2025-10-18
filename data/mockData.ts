@@ -12,12 +12,14 @@ import {
   OpportunityStage,
   BrainDump,
   Role,
-  BuiltInTool,
-  Agent,
   Hub,
   Interface,
   Channel,
   CustomerSegment,
+  FlywheelStrategy,
+  SegmentPositioning,
+  FunnelStage,
+  InterfaceMap,
 } from '../types';
 
 export const mockRoles: Role[] = [
@@ -338,48 +340,6 @@ export const mockBrainDumps: BrainDump[] = [
   },
 ];
 
-export const mockBuiltInTools: BuiltInTool[] = [
-  {
-    tool_id: 'tool_1',
-    Tool: 'Gemini',
-    Category: 'Content Generation',
-    Alternate: 'Jasper.ai',
-    Use: 'Product descriptions, ad copy, emails',
-  },
-  {
-    tool_id: 'tool_2',
-    Tool: 'Midjourney',
-    Category: 'Image Generation',
-    Alternate: 'DALL-E 3',
-    Use: 'Marketing visuals, concept art',
-  },
-];
-
-export const mockAgents: Agent[] = [
-  {
-    agent_id: 'agent_1',
-    Use: 'Customer Support',
-    Role: 'Support Agent',
-    Persona: 'Friendly and helpful',
-    Character: 'Empathetic',
-    Function: 'Answer user queries',
-    Prompt: 'You are a helpful customer support agent...',
-    Guidelines: 'Always be polite.',
-    References: 'KB Article #123',
-  },
-  {
-    agent_id: 'agent_2',
-    Use: 'Sales Outreach',
-    Role: 'Sales Development Rep',
-    Persona: 'Confident and persuasive',
-    Character: 'Professional',
-    Function: 'Generate leads',
-    Prompt: 'You are a skilled SDR...',
-    Guidelines: 'Follow up twice.',
-    References: 'Sales Playbook v2',
-  },
-];
-
 export const mockHubs: Hub[] = [
   {
     hub_id: 'HUB-01',
@@ -496,5 +456,60 @@ export const mockChannels: Channel[] = [
     channel_name: 'Google Ads',
     interfaces: 'mock_if_3',
     focus: 'Direct Conversions',
+  },
+];
+
+// FIX: Add mock data for new Positioning page types.
+export const mockFlywheelStrategies: FlywheelStrategy[] = [
+  {
+    flywheelId: 'mock_fw_1',
+    flywheelName: 'Self-Service Acquisition',
+    strategicRank: 1,
+    positioningWeOwn: 'The simplest tool for SMBs to get started.',
+    bottleneckProblem: 'High drop-off during user onboarding.',
+    servesSegments: 'SMB',
+    strategicAction: 'Redesign onboarding flow to be more guided.',
+    velocityCompounding: 'Weekly new sign-ups',
+    fixInvestment: '1 Designer, 2 Engineers for 1 Quarter',
+    killCriteria: 'If activation rate does not improve by 15% in 3 months.',
+  },
+];
+
+export const mockSegmentPositionings: SegmentPositioning[] = [
+  {
+    segment: 'SMB',
+    segmentName: 'Small-to-Medium Business',
+    tagline: 'Growth, simplified.',
+    ourPov:
+      'SMBs are underserved by complex enterprise tools. They need simple, powerful software that delivers value immediately.',
+    shiftFrom: 'Confusing, feature-packed platforms.',
+    shiftTo: 'An intuitive, outcome-focused experience.',
+  },
+];
+
+export const mockFunnelStages: FunnelStage[] = [
+  {
+    stageId: 'st_1',
+    flywheelId: 'mock_fw_1',
+    stage: 'Awareness',
+    hubName: 'Marketing Creative',
+    ownerName: 'Maria Garcia',
+    currentConv: '2.1%',
+    targetConv: '3.0%',
+    bottleneck: 'Low CTR on social ads.',
+    interfaceChannel: 'CH_1/mock_if_1',
+  },
+];
+
+export const mockInterfaceMaps: InterfaceMap[] = [
+  {
+    flywheel: 'Self-Service Acquisition',
+    interfaceId: 'mock_if_1',
+    interfaceName: 'SEO & Blog',
+    channelName: 'Website',
+    hubName: 'Marketing Creative',
+    ownerName: 'Maria Garcia',
+    status: 'Active',
+    channelId: 'CH_1',
   },
 ];

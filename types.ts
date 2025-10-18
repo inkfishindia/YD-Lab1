@@ -220,26 +220,6 @@ export interface LogEntry {
   status: Status;
 }
 
-export interface BuiltInTool {
-  tool_id: string;
-  Tool: string;
-  Category: string;
-  Alternate: string;
-  Use: string;
-}
-
-export interface Agent {
-  agent_id: string;
-  Use: string;
-  Role: string;
-  Persona: string;
-  Character: string;
-  Function: string;
-  Prompt: string;
-  Guidelines: string;
-  References: string;
-}
-
 export interface Hub {
   hub_id: string;
   hub_name: string;
@@ -557,81 +537,6 @@ export interface SystemPlatform {
   platform_link: string;
 }
 
-export interface FlywheelStrategy {
-  flywheelId: string;
-  flywheelName: string;
-  strategicRank: string;
-  servesSegments: string;
-  positioningWeOwn: string;
-  networkEffectType: string;
-  velocityCompounding: string;
-  capitalEfficiency: string;
-  strategicAction: string;
-  bottleneckProblem: string;
-  requiredFixes: string;
-  keyBottleneckMetric: string;
-  fixInvestment: string;
-  fixRoi: string;
-  killCriteria: string;
-}
-
-export interface SegmentPositioning {
-  segment: string;
-  segmentName: string;
-  categoryName: string;
-  categoryDefinition: string;
-  ourPov: string;
-  shiftFrom: string;
-  shiftTo: string;
-  brandArchitecture: string;
-  tagline: string;
-  architectureType: string;
-  categoryCompetedIn: string;
-  positionWeOwn: string;
-  proofPoints: string;
-  gtmImplication: string;
-  strategicBet: string;
-  strategyBetReason: string;
-  action: string;
-  target: string;
-  enablementProgram: string;
-  roi: string;
-  investment: string;
-}
-
-export interface FunnelStage {
-  stageId: string;
-  flywheelId: string;
-  flywheelName: string;
-  stage: string;
-  type: string;
-  hubId: string;
-  hubName: string;
-  ownerId: string;
-  ownerName: string;
-  interfaceChannel: string;
-  currentConv: string;
-  targetConv: string;
-  time: string;
-  bottleneck: string;
-}
-
-export interface InterfaceMap {
-  flywheel: string;
-  buId: string;
-  channelId: string;
-  channelName: string;
-  interfaceId: string;
-  interfaceName: string;
-  hubId: string;
-  hubName: string;
-  ownerId: string;
-  ownerName: string;
-  sla: string;
-  status: string;
-  bottleneck: string;
-}
-
 export interface Program {
   program_id: string;
   program_name: string;
@@ -810,3 +715,48 @@ export type SystemEntityType =
   | 'interface'
   | 'stage'
   | 'touchpoint';
+// FIX: Add missing types for PositioningPage
+export interface FlywheelStrategy {
+  flywheelId: string;
+  flywheelName: string;
+  strategicRank: number;
+  positioningWeOwn: string;
+  bottleneckProblem: string;
+  servesSegments: string;
+  strategicAction: string;
+  velocityCompounding: string;
+  fixInvestment: string;
+  killCriteria: string;
+}
+
+export interface SegmentPositioning {
+  segment: string;
+  segmentName: string;
+  tagline: string;
+  ourPov: string;
+  shiftFrom: string;
+  shiftTo: string;
+}
+
+export interface FunnelStage {
+  stageId: string;
+  flywheelId: string;
+  stage: string;
+  hubName: string;
+  ownerName: string;
+  currentConv: string;
+  targetConv: string;
+  bottleneck: string;
+  interfaceChannel: string;
+}
+
+export interface InterfaceMap {
+  flywheel: string;
+  interfaceId: string;
+  interfaceName: string;
+  channelName: string;
+  hubName: string;
+  ownerName: string;
+  status: string;
+  channelId: string;
+}

@@ -72,7 +72,6 @@ const navigationTabs: Record<
   ],
   '/strategy': [
     { name: 'System Map', href: 'dashboard', icon: PresentationChartLineIcon },
-    { name: 'Positioning', href: 'positioning', icon: LightBulbIcon },
     {
       name: 'Business Units',
       href: 'business-units',

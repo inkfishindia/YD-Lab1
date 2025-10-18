@@ -1,11 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { useData } from '../../contexts/DataContext';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
-import { FlywheelStrategy, SegmentPositioning, FunnelStage, InterfaceMap } from '../../types';
-// FIX: Changed to type import as SystemEntityType is only used for type annotations.
-import type { SystemEntityType } from '../system/SystemMapPage';
+// FIX: Add missing type imports from the types file and correct SystemEntityType import.
+import {
+  FlywheelStrategy,
+  SegmentPositioning,
+  FunnelStage,
+  InterfaceMap,
+} from '../../types';
+import type { SystemEntityType } from '../../types';
 
 const DetailCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <Card className="!p-0">
