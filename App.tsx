@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useState } from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import CommandPalette from './components/CommandPalette';
@@ -12,83 +12,196 @@ import {
   SpreadsheetConfigProvider,
   useSpreadsheetConfig,
 } from './contexts/SpreadsheetConfigContext';
-import AdminPage from './pages/AdminPage';
-import DelegationWorkflowsPage from './pages/admin/DelegationWorkflowsPage';
-import FinancialTrackingPage from './pages/admin/FinancialTrackingPage';
-import HubsFunctionsPage from './pages/admin/HubsFunctionsPage';
-import PlatformsIntegrationsPage from './pages/admin/PlatformsIntegrationsPage';
-import RoleManagementPage from './pages/admin/RoleManagementPage';
-import SheetHealthCheckPage from './pages/admin/SheetHealthCheckPage';
-import CommandCenterPage from './pages/CommandCenterPage';
-import DashboardPage from './pages/command-center/DashboardPage';
-import ExecutiveDashboardPage from './pages/command-center/ExecutiveDashboardPage';
-import CreativePage from './pages/CreativePage';
-import CompetitorAnalysisPage from './pages/creative/CompetitorAnalysisPage';
-import CustomerJourneyPage from './pages/creative/CustomerJourneyPage';
-import DesignSystemPage from './pages/creative/DesignSystemPage';
-import ExperienceStorePage from './pages/creative/ExperienceStorePage';
-import VisualMoodPage from './pages/creative/VisualMoodPage';
-import ExecutionPage from './pages/ExecutionPage';
-import ProgramsViewPage from './pages/execution/ProgramsViewPage';
-import MarketingPage from './pages/MarketingPage';
-import CampaignsTabs from './pages/marketing/CampaignsTabs';
-import CampaignCalendarPage from './pages/marketing/campaigns/CampaignCalendarPage';
-import CampaignDetailPage from './pages/marketing/campaigns/CampaignDetailPage';
-import PerformanceDashboardPage from './pages/marketing/campaigns/PerformanceDashboardPage';
-import AllInterfacesPage from './pages/marketing/channels/AllInterfacesPage';
-import BudgetAllocationPage from './pages/marketing/channels/BudgetAllocationPage';
-import ChannelsListPage from './pages/marketing/channels/ChannelsListPage';
-import InterfacePerformancePage from './pages/marketing/channels/InterfacePerformancePage';
-import ContentPipelineTabs from './pages/marketing/ContentPipelineTabs';
-import AssetDetailPage from './pages/marketing/content/AssetDetailPage';
-import ContentKanbanPage from './pages/marketing/content/ContentKanbanPage';
-import ContentLibraryPage from './pages/marketing/content/ContentLibraryPage';
-import InterfacesTabs from './pages/marketing/InterfacesTabs';
-import ProfilePage from './pages/ProfilePage';
-import MySettingsPage from './pages/profile/MySettingsPage';
-import NotificationsPage from './pages/profile/NotificationsPage';
-import PreferencesPage from './pages/profile/PreferencesPage';
-import RevenuePage from './pages/RevenuePage';
-import AccountsTabs from './pages/revenue/AccountsTabs';
-import Account360ViewPage from './pages/revenue/accounts/Account360ViewPage';
-import AccountHealthPage from './pages/revenue/accounts/AccountHealthPage';
-import AllAccountsPage from './pages/revenue/accounts/AllAccountsPage';
-import LeadsTabs from './pages/revenue/LeadsTabs';
-import LeadDetailPage from './pages/revenue/leads/LeadDetailPage';
-import LeadInboxPage from './pages/revenue/leads/LeadInboxPage';
-import LeadScoringPage from './pages/revenue/leads/LeadScoringPage';
-import OpportunitiesTabs from './pages/revenue/OpportunitiesTabs';
-import DealForecastPage from './pages/revenue/opportunities/DealForecastPage';
-import OpportunityDetailPage from './pages/revenue/opportunities/OpportunityDetailPage';
-import PipelineViewPage from './pages/revenue/opportunities/PipelineViewPage';
-import ProductsTabs from './pages/revenue/ProductsTabs';
-import InventoryStatusPage from './pages/revenue/products/InventoryStatusPage';
-import ProductCatalogPage from './pages/revenue/products/ProductCatalogPage';
-import ProductDetailPage from './pages/revenue/products/ProductDetailPage';
-import StrategyPage from './pages/StrategyPage';
-import BriefsTabs from './pages/strategy/BriefsTabs';
-import ActiveDecisionsPage from './pages/strategy/briefs/ActiveDecisionsPage';
-import DecisionArchivePage from './pages/strategy/briefs/DecisionArchivePage';
-import DecisionDetailPage from './pages/strategy/briefs/DecisionDetailPage';
-import BusinessUnitsTabs from './pages/strategy/BusinessUnitsTabs';
-import BUDetailPage from './pages/strategy/business-units/BUDetailPage';
-import BUMaturityTrackerPage from './pages/strategy/business-units/BUMaturityTrackerPage';
-import BUPerformancePage from './pages/strategy/business-units/BUPerformancePage';
-import CustomerSegmentsPage from './pages/strategy/foundation/CustomerSegmentsPage';
-import FlywheelsMapPage from './pages/strategy/foundation/FlywheelsMapPage';
-import MetricsTabs from './pages/strategy/MetricsTabs';
-import ExecutiveScorecardPage from './pages/strategy/metrics/ExecutiveScorecardPage';
-import MetricTargetsPage from './pages/strategy/metrics/MetricTargetsPage';
-import WeeklyBusinessReviewPage from './pages/strategy/metrics/WeeklyBusinessReviewPage';
-import PositioningPage from './pages/strategy/PositioningPage';
-import SystemPage from './pages/SystemPage';
-import SystemMapPage from './pages/system/SystemMapPage';
-import ToolsPage from './pages/ToolsPage';
-import AIAssistantPage from './pages/tools/AIAssistantPage';
-import BrainDumpPage from './pages/tools/BrainDumpPage';
-import CalendarPage from './pages/tools/CalendarPage';
-import InboxPage from './pages/tools/InboxPage';
-import NotesDocsPage from './pages/tools/NotesDocsPage';
+
+// Lazy-loaded page components
+const AdminPage = React.lazy(() => import('./pages/AdminPage'));
+const DelegationWorkflowsPage = React.lazy(
+  () => import('./pages/admin/DelegationWorkflowsPage'),
+);
+const FinancialTrackingPage = React.lazy(
+  () => import('./pages/admin/FinancialTrackingPage'),
+);
+const HubsFunctionsPage = React.lazy(
+  () => import('./pages/admin/HubsFunctionsPage'),
+);
+const PlatformsIntegrationsPage = React.lazy(
+  () => import('./pages/admin/PlatformsIntegrationsPage'),
+);
+const RoleManagementPage = React.lazy(
+  () => import('./pages/admin/RoleManagementPage'),
+);
+const SheetHealthCheckPage = React.lazy(
+  () => import('./pages/admin/SheetHealthCheckPage'),
+);
+const CommandCenterPage = React.lazy(() => import('./pages/CommandCenterPage'));
+const DashboardPage = React.lazy(
+  () => import('./pages/command-center/DashboardPage'),
+);
+const ExecutiveDashboardPage = React.lazy(
+  () => import('./pages/command-center/ExecutiveDashboardPage'),
+);
+const CreativePage = React.lazy(() => import('./pages/CreativePage'));
+const CompetitorAnalysisPage = React.lazy(
+  () => import('./pages/creative/CompetitorAnalysisPage'),
+);
+const CustomerJourneyPage = React.lazy(
+  () => import('./pages/creative/CustomerJourneyPage'),
+);
+const DesignSystemPage = React.lazy(
+  () => import('./pages/creative/DesignSystemPage'),
+);
+const ExperienceStorePage = React.lazy(
+  () => import('./pages/creative/ExperienceStorePage'),
+);
+const VisualMoodPage = React.lazy(
+  () => import('./pages/creative/VisualMoodPage'),
+);
+const ExecutionPage = React.lazy(() => import('./pages/ExecutionPage'));
+const ProgramsViewPage = React.lazy(
+  () => import('./pages/execution/ProgramsViewPage'),
+);
+const MarketingPage = React.lazy(() => import('./pages/MarketingPage'));
+const CampaignsTabs = React.lazy(
+  () => import('./pages/marketing/CampaignsTabs'),
+);
+const CampaignCalendarPage = React.lazy(
+  () => import('./pages/marketing/campaigns/CampaignCalendarPage'),
+);
+const CampaignDetailPage = React.lazy(
+  () => import('./pages/marketing/campaigns/CampaignDetailPage'),
+);
+const PerformanceDashboardPage = React.lazy(
+  () => import('./pages/marketing/campaigns/PerformanceDashboardPage'),
+);
+const AllInterfacesPage = React.lazy(
+  () => import('./pages/marketing/channels/AllInterfacesPage'),
+);
+const BudgetAllocationPage = React.lazy(
+  () => import('./pages/marketing/channels/BudgetAllocationPage'),
+);
+const ChannelsListPage = React.lazy(
+  () => import('./pages/marketing/channels/ChannelsListPage'),
+);
+const InterfacePerformancePage = React.lazy(
+  () => import('./pages/marketing/channels/InterfacePerformancePage'),
+);
+const ContentPipelineTabs = React.lazy(
+  () => import('./pages/marketing/ContentPipelineTabs'),
+);
+const AssetDetailPage = React.lazy(
+  () => import('./pages/marketing/content/AssetDetailPage'),
+);
+const ContentKanbanPage = React.lazy(
+  () => import('./pages/marketing/content/ContentKanbanPage'),
+);
+const ContentLibraryPage = React.lazy(
+  () => import('./pages/marketing/content/ContentLibraryPage'),
+);
+const InterfacesTabs = React.lazy(
+  () => import('./pages/marketing/InterfacesTabs'),
+);
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const MySettingsPage = React.lazy(
+  () => import('./pages/profile/MySettingsPage'),
+);
+const NotificationsPage = React.lazy(
+  () => import('./pages/profile/NotificationsPage'),
+);
+const PreferencesPage = React.lazy(
+  () => import('./pages/profile/PreferencesPage'),
+);
+const RevenuePage = React.lazy(() => import('./pages/RevenuePage'));
+const AccountsTabs = React.lazy(() => import('./pages/revenue/AccountsTabs'));
+const Account360ViewPage = React.lazy(
+  () => import('./pages/revenue/accounts/Account360ViewPage'),
+);
+const AccountHealthPage = React.lazy(
+  () => import('./pages/revenue/accounts/AccountHealthPage'),
+);
+const AllAccountsPage = React.lazy(
+  () => import('./pages/revenue/accounts/AllAccountsPage'),
+);
+const LeadsTabs = React.lazy(() => import('./pages/revenue/LeadsTabs'));
+const LeadDetailPage = React.lazy(
+  () => import('./pages/revenue/leads/LeadDetailPage'),
+);
+const LeadInboxPage = React.lazy(
+  () => import('./pages/revenue/leads/LeadInboxPage'),
+);
+const LeadScoringPage = React.lazy(
+  () => import('./pages/revenue/leads/LeadScoringPage'),
+);
+const OpportunitiesTabs = React.lazy(
+  () => import('./pages/revenue/OpportunitiesTabs'),
+);
+const DealForecastPage = React.lazy(
+  () => import('./pages/revenue/opportunities/DealForecastPage'),
+);
+const OpportunityDetailPage = React.lazy(
+  () => import('./pages/revenue/opportunities/OpportunityDetailPage'),
+);
+const PipelineViewPage = React.lazy(
+  () => import('./pages/revenue/opportunities/PipelineViewPage'),
+);
+const ProductsTabs = React.lazy(() => import('./pages/revenue/ProductsTabs'));
+const InventoryStatusPage = React.lazy(
+  () => import('./pages/revenue/products/InventoryStatusPage'),
+);
+const ProductCatalogPage = React.lazy(
+  () => import('./pages/revenue/products/ProductCatalogPage'),
+);
+const ProductDetailPage = React.lazy(
+  () => import('./pages/revenue/products/ProductDetailPage'),
+);
+const StrategyPage = React.lazy(() => import('./pages/StrategyPage'));
+const BriefsTabs = React.lazy(() => import('./pages/strategy/BriefsTabs'));
+const ActiveDecisionsPage = React.lazy(
+  () => import('./pages/strategy/briefs/ActiveDecisionsPage'),
+);
+const DecisionArchivePage = React.lazy(
+  () => import('./pages/strategy/briefs/DecisionArchivePage'),
+);
+const DecisionDetailPage = React.lazy(
+  () => import('./pages/strategy/briefs/DecisionDetailPage'),
+);
+const BusinessUnitsTabs = React.lazy(
+  () => import('./pages/strategy/BusinessUnitsTabs'),
+);
+const BUDetailPage = React.lazy(
+  () => import('./pages/strategy/business-units/BUDetailPage'),
+);
+const BUMaturityTrackerPage = React.lazy(
+  () => import('./pages/strategy/business-units/BUMaturityTrackerPage'),
+);
+const BUPerformancePage = React.lazy(
+  () => import('./pages/strategy/business-units/BUPerformancePage'),
+);
+const FlywheelsMapPage = React.lazy(
+  () => import('./pages/strategy/foundation/FlywheelsMapPage'),
+);
+const MetricsTabs = React.lazy(() => import('./pages/strategy/MetricsTabs'));
+const ExecutiveScorecardPage = React.lazy(
+  () => import('./pages/strategy/metrics/ExecutiveScorecardPage'),
+);
+const MetricTargetsPage = React.lazy(
+  () => import('./pages/strategy/metrics/MetricTargetsPage'),
+);
+const WeeklyBusinessReviewPage = React.lazy(
+  () => import('./pages/strategy/metrics/WeeklyBusinessReviewPage'),
+);
+const PositioningPage = React.lazy(
+  () => import('./pages/strategy/PositioningPage'),
+);
+const SystemPage = React.lazy(() => import('./pages/SystemPage'));
+const SystemMapPage = React.lazy(() => import('./pages/system/SystemMapPage'));
+const ToolsPage = React.lazy(() => import('./pages/ToolsPage'));
+const AIAssistantPage = React.lazy(
+  () => import('./pages/tools/AIAssistantPage'),
+);
+const BrainDumpPage = React.lazy(() => import('./pages/tools/BrainDumpPage'));
+const CalendarPage = React.lazy(() => import('./pages/tools/CalendarPage'));
+const InboxPage = React.lazy(() => import('./pages/tools/InboxPage'));
+const NotesDocsPage = React.lazy(() => import('./pages/tools/NotesDocsPage'));
 
 const App: React.FC = () => {
   return (
@@ -234,189 +347,252 @@ const MainLayout: React.FC<{
       >
         <Header onSearchClick={openCommandPalette} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-900 p-4 md:p-6 lg:p-8">
-          {unconfigured ? (
-            <Routes>
-              <Route
-                path="/admin/integrations"
-                element={<PlatformsIntegrationsPage />}
-              />
-              <Route path="*" element={<ConfigurationNeeded />} />
-            </Routes>
-          ) : (
-            <Routes>
-              <Route
-                path="/"
-                element={<Navigate to="/command-center/dashboard" replace />}
-              />
-
-              {/* COMMAND CENTER */}
-              <Route path="/command-center" element={<CommandCenterPage />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<DashboardPage />} />
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-full">
+                <div className="text-white text-xl animate-pulse">
+                  Loading Page...
+                </div>
+              </div>
+            }
+          >
+            {unconfigured ? (
+              <Routes>
                 <Route
-                  path="executive-dashboard"
-                  element={<ExecutiveDashboardPage />}
-                />
-              </Route>
-
-              {/* EXECUTION */}
-              <Route path="/execution" element={<ExecutionPage />}>
-                <Route index element={<ProgramsViewPage />} />
-              </Route>
-
-              {/* MARKETING */}
-              <Route path="/marketing" element={<MarketingPage />}>
-                <Route index element={<Navigate to="campaigns" replace />} />
-                <Route path="campaigns" element={<CampaignsTabs />}>
-                  <Route index element={<Navigate to="calendar" replace />} />
-                  <Route path="calendar" element={<CampaignCalendarPage />} />
-                  <Route path="detail" element={<CampaignDetailPage />} />
-                  <Route
-                    path="performance"
-                    element={<PerformanceDashboardPage />}
-                  />
-                </Route>
-                <Route path="content" element={<ContentPipelineTabs />}>
-                  <Route index element={<Navigate to="kanban" replace />} />
-                  <Route path="kanban" element={<ContentKanbanPage />} />
-                  <Route path="asset" element={<AssetDetailPage />} />
-                  <Route path="library" element={<ContentLibraryPage />} />
-                </Route>
-                <Route path="interfaces" element={<InterfacesTabs />}>
-                  <Route index element={<Navigate to="all" replace />} />
-                  <Route path="all" element={<AllInterfacesPage />} />
-                  <Route path="channels" element={<ChannelsListPage />} />
-                  <Route
-                    path="performance"
-                    element={<InterfacePerformancePage />}
-                  />
-                  <Route path="budget" element={<BudgetAllocationPage />} />
-                </Route>
-              </Route>
-
-              {/* CREATIVE */}
-              <Route path="/creative" element={<CreativePage />}>
-                <Route index element={<Navigate to="ydc-map" replace />} />
-                <Route path="ydc-map" element={<DesignSystemPage />} />
-                <Route
-                  path="competitor-analysis"
-                  element={<CompetitorAnalysisPage />}
-                />
-                <Route path="visual-mood" element={<VisualMoodPage />} />
-                <Route
-                  path="experience-store"
-                  element={<ExperienceStorePage />}
-                />
-                <Route
-                  path="customer-journey"
-                  element={<CustomerJourneyPage />}
-                />
-              </Route>
-
-              {/* REVENUE */}
-              <Route path="/revenue" element={<RevenuePage />}>
-                <Route index element={<Navigate to="leads" replace />} />
-                <Route path="leads" element={<LeadsTabs />}>
-                  <Route index element={<Navigate to="inbox" replace />} />
-                  <Route path="inbox" element={<LeadInboxPage />} />
-                  <Route path="detail" element={<LeadDetailPage />} />
-                  <Route path="scoring" element={<LeadScoringPage />} />
-                </Route>
-                <Route path="opportunities" element={<OpportunitiesTabs />}>
-                  <Route index element={<Navigate to="pipeline" replace />} />
-                  <Route path="pipeline" element={<PipelineViewPage />} />
-                  <Route path="detail" element={<OpportunityDetailPage />} />
-                  <Route path="forecast" element={<DealForecastPage />} />
-                </Route>
-                <Route path="accounts" element={<AccountsTabs />}>
-                  <Route index element={<Navigate to="all" replace />} />
-                  <Route path="all" element={<AllAccountsPage />} />
-                  <Route path="view-360" element={<Account360ViewPage />} />
-                  <Route path="health" element={<AccountHealthPage />} />
-                </Route>
-                <Route path="products" element={<ProductsTabs />}>
-                  <Route index element={<Navigate to="catalog" replace />} />
-                  <Route path="catalog" element={<ProductCatalogPage />} />
-                  <Route path="detail" element={<ProductDetailPage />} />
-                  <Route path="inventory" element={<InventoryStatusPage />} />
-                </Route>
-              </Route>
-
-              {/* STRATEGY */}
-              <Route path="/strategy" element={<StrategyPage />}>
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<FlywheelsMapPage />} />
-                <Route path="positioning" element={<PositioningPage />} />
-                <Route path="business-units" element={<BusinessUnitsTabs />}>
-                  <Route index element={<Navigate to="performance" replace />} />
-                  <Route path="performance" element={<BUPerformancePage />} />
-                  <Route path="detail" element={<BUDetailPage />} />
-                  <Route path="maturity" element={<BUMaturityTrackerPage />} />
-                </Route>
-                <Route path="metrics" element={<MetricsTabs />}>
-                  <Route index element={<Navigate to="scorecard" replace />} />
-                  <Route
-                    path="scorecard"
-                    element={<ExecutiveScorecardPage />}
-                  />
-                  <Route path="review" element={<WeeklyBusinessReviewPage />} />
-                  <Route path="targets" element={<MetricTargetsPage />} />
-                </Route>
-                <Route path="briefs" element={<BriefsTabs />}>
-                  <Route index element={<Navigate to="active" replace />} />
-                  <Route path="active" element={<ActiveDecisionsPage />} />
-                  <Route path="detail" element={<DecisionDetailPage />} />
-                  <Route path="archive" element={<DecisionArchivePage />} />
-                </Route>
-              </Route>
-
-              {/* SYSTEM */}
-              <Route path="/system" element={<SystemPage />}>
-                <Route index element={<Navigate to="map" replace />} />
-                <Route path="map" element={<SystemMapPage />} />
-              </Route>
-
-              {/* TOOLS */}
-              <Route path="/tools" element={<ToolsPage />}>
-                <Route index element={<Navigate to="braindump" replace />} />
-                <Route path="braindump" element={<BrainDumpPage />} />
-                <Route path="ai-assistant" element={<AIAssistantPage />} />
-                <Route path="inbox" element={<InboxPage />} />
-                <Route path="calendar" element={<CalendarPage />} />
-                <Route path="notes" element={<NotesDocsPage />} />
-              </Route>
-
-              {/* ADMIN */}
-              <Route path="/admin" element={<AdminPage />}>
-                <Route index element={<Navigate to="integrations" replace />} />
-                <Route
-                  path="integrations"
+                  path="/admin/integrations"
                   element={<PlatformsIntegrationsPage />}
                 />
+                <Route path="*" element={<ConfigurationNeeded />} />
+              </Routes>
+            ) : (
+              <Routes>
                 <Route
-                  path="health-check"
-                  element={<SheetHealthCheckPage />}
+                  path="/"
+                  element={<Navigate to="/command-center/dashboard" replace />}
                 />
-                <Route path="hubs" element={<HubsFunctionsPage />} />
-                <Route path="financials" element={<FinancialTrackingPage />} />
-                <Route path="workflows" element={<DelegationWorkflowsPage />} />
-              </Route>
 
-              {/* PROFILE */}
-              <Route path="/profile" element={<ProfilePage />}>
-                <Route index element={<Navigate to="settings" replace />} />
-                <Route path="settings" element={<MySettingsPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="preferences" element={<PreferencesPage />} />
-                <Route path="roles" element={<RoleManagementPage />} />
-              </Route>
+                {/* COMMAND CENTER */}
+                <Route path="/command-center" element={<CommandCenterPage />}>
+                  <Route index element={<Navigate to="dashboard" replace />} />
+                  <Route path="dashboard" element={<DashboardPage />} />
+                  <Route
+                    path="executive-dashboard"
+                    element={<ExecutiveDashboardPage />}
+                  />
+                </Route>
 
-              <Route
-                path="*"
-                element={<Navigate to="/command-center/dashboard" replace />}
-              />
-            </Routes>
-          )}
+                {/* EXECUTION */}
+                <Route path="/execution" element={<ExecutionPage />}>
+                  <Route index element={<ProgramsViewPage />} />
+                </Route>
+
+                {/* MARKETING */}
+                <Route path="/marketing" element={<MarketingPage />}>
+                  <Route index element={<Navigate to="campaigns" replace />} />
+                  <Route path="campaigns" element={<CampaignsTabs />}>
+                    <Route
+                      index
+                      element={<Navigate to="calendar" replace />}
+                    />
+                    <Route
+                      path="calendar"
+                      element={<CampaignCalendarPage />}
+                    />
+                    <Route path="detail" element={<CampaignDetailPage />} />
+                    <Route
+                      path="performance"
+                      element={<PerformanceDashboardPage />}
+                    />
+                  </Route>
+                  <Route path="content" element={<ContentPipelineTabs />}>
+                    <Route index element={<Navigate to="kanban" replace />} />
+                    <Route path="kanban" element={<ContentKanbanPage />} />
+                    <Route path="asset" element={<AssetDetailPage />} />
+                    <Route path="library" element={<ContentLibraryPage />} />
+                  </Route>
+                  <Route path="interfaces" element={<InterfacesTabs />}>
+                    <Route index element={<Navigate to="all" replace />} />
+                    <Route path="all" element={<AllInterfacesPage />} />
+                    <Route path="channels" element={<ChannelsListPage />} />
+                    <Route
+                      path="performance"
+                      element={<InterfacePerformancePage />}
+                    />
+                    <Route path="budget" element={<BudgetAllocationPage />} />
+                  </Route>
+                </Route>
+
+                {/* CREATIVE */}
+                <Route path="/creative" element={<CreativePage />}>
+                  <Route index element={<Navigate to="ydc-map" replace />} />
+                  <Route path="ydc-map" element={<DesignSystemPage />} />
+                  <Route
+                    path="competitor-analysis"
+                    element={<CompetitorAnalysisPage />}
+                  />
+                  <Route path="visual-mood" element={<VisualMoodPage />} />
+                  <Route
+                    path="experience-store"
+                    element={<ExperienceStorePage />}
+                  />
+                  <Route
+                    path="customer-journey"
+                    element={<CustomerJourneyPage />}
+                  />
+                </Route>
+
+                {/* REVENUE */}
+                <Route path="/revenue" element={<RevenuePage />}>
+                  <Route index element={<Navigate to="leads" replace />} />
+                  <Route path="leads" element={<LeadsTabs />}>
+                    <Route index element={<Navigate to="inbox" replace />} />
+                    <Route path="inbox" element={<LeadInboxPage />} />
+                    <Route path="detail" element={<LeadDetailPage />} />
+                    <Route path="scoring" element={<LeadScoringPage />} />
+                  </Route>
+                  <Route path="opportunities" element={<OpportunitiesTabs />}>
+                    <Route
+                      index
+                      element={<Navigate to="pipeline" replace />}
+                    />
+                    <Route path="pipeline" element={<PipelineViewPage />} />
+                    <Route
+                      path="detail"
+                      element={<OpportunityDetailPage />}
+                    />
+                    <Route path="forecast" element={<DealForecastPage />} />
+                  </Route>
+                  <Route path="accounts" element={<AccountsTabs />}>
+                    <Route index element={<Navigate to="all" replace />} />
+                    <Route path="all" element={<AllAccountsPage />} />
+                    <Route
+                      path="view-360"
+                      element={<Account360ViewPage />}
+                    />
+                    <Route path="health" element={<AccountHealthPage />} />
+                  </Route>
+                  <Route path="products" element={<ProductsTabs />}>
+                    <Route index element={<Navigate to="catalog" replace />} />
+                    <Route path="catalog" element={<ProductCatalogPage />} />
+                    <Route path="detail" element={<ProductDetailPage />} />
+                    <Route
+                      path="inventory"
+                      element={<InventoryStatusPage />}
+                    />
+                  </Route>
+                </Route>
+
+                {/* STRATEGY */}
+                <Route path="/strategy" element={<StrategyPage />}>
+                  <Route
+                    index
+                    element={<Navigate to="dashboard" replace />}
+                  />
+                  <Route path="dashboard" element={<FlywheelsMapPage />} />
+                  <Route path="positioning" element={<PositioningPage />} />
+                  <Route path="business-units" element={<BusinessUnitsTabs />}>
+                    <Route
+                      index
+                      element={<Navigate to="performance" replace />}
+                    />
+                    <Route
+                      path="performance"
+                      element={<BUPerformancePage />}
+                    />
+                    <Route path="detail" element={<BUDetailPage />} />
+                    <Route
+                      path="maturity"
+                      element={<BUMaturityTrackerPage />}
+                    />
+                  </Route>
+                  <Route path="metrics" element={<MetricsTabs />}>
+                    <Route
+                      index
+                      element={<Navigate to="scorecard" replace />}
+                    />
+                    <Route
+                      path="scorecard"
+                      element={<ExecutiveScorecardPage />}
+                    />
+                    <Route
+                      path="review"
+                      element={<WeeklyBusinessReviewPage />}
+                    />
+                    <Route path="targets" element={<MetricTargetsPage />} />
+                  </Route>
+                  <Route path="briefs" element={<BriefsTabs />}>
+                    <Route index element={<Navigate to="active" replace />} />
+                    <Route path="active" element={<ActiveDecisionsPage />} />
+                    <Route path="detail" element={<DecisionDetailPage />} />
+                    <Route path="archive" element={<DecisionArchivePage />} />
+                  </Route>
+                </Route>
+
+                {/* SYSTEM */}
+                <Route path="/system" element={<SystemPage />}>
+                  <Route index element={<Navigate to="map" replace />} />
+                  <Route path="map" element={<SystemMapPage />} />
+                </Route>
+
+                {/* TOOLS */}
+                <Route path="/tools" element={<ToolsPage />}>
+                  <Route
+                    index
+                    element={<Navigate to="braindump" replace />}
+                  />
+                  <Route path="braindump" element={<BrainDumpPage />} />
+                  <Route path="ai-assistant" element={<AIAssistantPage />} />
+                  <Route path="inbox" element={<InboxPage />} />
+                  <Route path="calendar" element={<CalendarPage />} />
+                  <Route path="notes" element={<NotesDocsPage />} />
+                </Route>
+
+                {/* ADMIN */}
+                <Route path="/admin" element={<AdminPage />}>
+                  <Route
+                    index
+                    element={<Navigate to="integrations" replace />}
+                  />
+                  <Route
+                    path="integrations"
+                    element={<PlatformsIntegrationsPage />}
+                  />
+                  <Route
+                    path="health-check"
+                    element={<SheetHealthCheckPage />}
+                  />
+                  <Route path="hubs" element={<HubsFunctionsPage />} />
+                  <Route
+                    path="financials"
+                    element={<FinancialTrackingPage />}
+                  />
+                  <Route
+                    path="workflows"
+                    element={<DelegationWorkflowsPage />}
+                  />
+                </Route>
+
+                {/* PROFILE */}
+                <Route path="/profile" element={<ProfilePage />}>
+                  <Route index element={<Navigate to="settings" replace />} />
+                  <Route path="settings" element={<MySettingsPage />} />
+                  <Route
+                    path="notifications"
+                    element={<NotificationsPage />}
+                  />
+                  <Route path="preferences" element={<PreferencesPage />} />
+                  <Route path="roles" element={<RoleManagementPage />} />
+                </Route>
+
+                <Route
+                  path="*"
+                  element={
+                    <Navigate to="/command-center/dashboard" replace />
+                  }
+                />
+              </Routes>
+            )}
+          </Suspense>
         </main>
       </div>
     </div>
