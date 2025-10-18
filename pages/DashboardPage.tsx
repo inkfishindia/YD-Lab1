@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { useData } from '../../contexts/DataContext';
@@ -65,11 +64,11 @@ const DashboardPage: React.FC = () => {
         </Card>
         <Card>
           <h4 className="text-gray-400 text-sm font-medium">Active People</h4>
-          <p className="text-3xl font-bold text-white mt-1">{people.filter(p => p.is_active).length}</p>
+          <p className="text-3xl font-bold text-white mt-1">{people.filter(p => p.is_active !== false).length}</p>
         </Card>
         <Card>
             <h4 className="text-gray-400 text-sm font-medium">Total Planned Budget</h4>
-            <p className="text-3xl font-bold text-white mt-1">${projects.reduce((sum, p) => sum + p.budget_planned, 0).toLocaleString()}</p>
+            <p className="text-3xl font-bold text-white mt-1">₹{projects.reduce((sum, p) => sum + p.budget_planned, 0).toLocaleString()}</p>
         </Card>
       </div>
       
@@ -111,7 +110,7 @@ const DashboardPage: React.FC = () => {
                 <ResponsiveContainer>
                     <BarChart data={projectBudgetData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <XAxis dataKey="name" stroke="#999999" fontSize={12} tickLine={false} axisLine={false} />
-                        <YAxis stroke="#999999" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${Number(value)/1000}k`} />
+                        <YAxis stroke="#999999" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `₹${Number(value)/1000}k`} />
                         <Tooltip contentStyle={{ backgroundColor: '#1e1e1e', border: '1px solid #2d2d2d' }} cursor={{fill: 'rgba(255, 255, 255, 0.1)'}} />
                         <Legend />
                         <Bar dataKey="Planned" fill="#2563eb" radius={[4, 4, 0, 0]} />

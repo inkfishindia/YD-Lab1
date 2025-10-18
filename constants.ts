@@ -1,40 +1,65 @@
-
 // FIX: Changed `import type` to `import` because enums are used as values.
 import { Priority, Status, HealthStatus, LeadStatus, OpportunityStage } from './types';
 
 export const STATUS_COLORS: Record<Status, string> = {
-  [Status.NotStarted]: 'bg-gray-500',
-  [Status.InProgress]: 'bg-blue-500',
-  [Status.Completed]: 'bg-green-500',
-  [Status.OnHold]: 'bg-yellow-500',
-  [Status.Cancelled]: 'bg-red-500',
+  [Status.NotStarted]: 'bg-gray-700 text-gray-300',
+  [Status.InProgress]: 'bg-blue-800/50 text-blue-300',
+  [Status.Completed]: 'bg-green-800/50 text-green-300',
+  [Status.OnHold]: 'bg-yellow-800/50 text-yellow-300',
+  [Status.Cancelled]: 'bg-red-800/50 text-red-300',
 };
 
 export const PRIORITY_COLORS: Record<Priority, string> = {
-  [Priority.Low]: 'bg-green-500',
-  [Priority.Medium]: 'bg-yellow-500',
-  [Priority.High]: 'bg-red-500',
-  [Priority.Critical]: 'bg-purple-500',
+  [Priority.Low]: 'bg-green-800/50 text-green-300',
+  [Priority.Medium]: 'bg-yellow-800/50 text-yellow-300',
+  [Priority.High]: 'bg-red-800/50 text-red-300',
+  [Priority.Critical]: 'bg-purple-800/50 text-purple-300',
 };
 
 export const HEALTH_STATUS_COLORS: Record<HealthStatus, string> = {
-  [HealthStatus.OnTrack]: 'bg-green-500',
-  [HealthStatus.AtRisk]: 'bg-yellow-500',
-  [HealthStatus.OffTrack]: 'bg-red-500',
+  [HealthStatus.OnTrack]: 'bg-green-800/50 text-green-300',
+  [HealthStatus.AtRisk]: 'bg-yellow-800/50 text-yellow-300',
+  [HealthStatus.OffTrack]: 'bg-red-800/50 text-red-300',
 };
 
 export const LEAD_STATUS_COLORS: Record<LeadStatus, string> = {
-    [LeadStatus.New]: 'bg-blue-500',
-    [LeadStatus.Contacted]: 'bg-yellow-500',
-    [LeadStatus.Qualified]: 'bg-green-500',
-    [LeadStatus.Disqualified]: 'bg-gray-500',
+    [LeadStatus.New]: 'bg-blue-800/50 text-blue-300',
+    [LeadStatus.Contacted]: 'bg-yellow-800/50 text-yellow-300',
+    [LeadStatus.Qualified]: 'bg-green-800/50 text-green-300',
+    [LeadStatus.Disqualified]: 'bg-gray-700 text-gray-300',
 };
 
 export const OPPORTUNITY_STAGE_COLORS: Record<OpportunityStage, string> = {
-    [OpportunityStage.Prospecting]: 'bg-gray-500',
-    [OpportunityStage.Qualification]: 'bg-blue-500',
-    [OpportunityStage.Proposal]: 'bg-purple-500',
-    [OpportunityStage.Negotiation]: 'bg-yellow-500',
-    [OpportunityStage.ClosedWon]: 'bg-green-500',
-    [OpportunityStage.ClosedLost]: 'bg-red-500',
+    [OpportunityStage.Prospecting]: 'bg-gray-700 text-gray-300',
+    [OpportunityStage.Qualification]: 'bg-blue-800/50 text-blue-300',
+    [OpportunityStage.Proposal]: 'bg-purple-800/50 text-purple-300',
+    [OpportunityStage.Negotiation]: 'bg-yellow-800/50 text-yellow-300',
+    [OpportunityStage.ClosedWon]: 'bg-green-800/50 text-green-300',
+    [OpportunityStage.ClosedLost]: 'bg-red-800/50 text-red-300',
+};
+
+export const SYSTEM_STATUS_COLORS: Record<string, string> = {
+  // Validation Status
+  'VALIDATED': 'bg-green-500',
+  'EMERGING': 'bg-yellow-500',
+  'DEPRECATED': 'bg-gray-600',
+
+  // General Status
+  'Active': 'bg-green-500',
+  'Live': 'bg-green-500',
+  'On Track': 'bg-green-500',
+  'In Development': 'bg-blue-500',
+  'Planning': 'bg-blue-500',
+  'Inactive': 'bg-gray-600',
+  'At Risk': 'bg-yellow-500',
+  'Planned': 'bg-yellow-500',
+
+  // Severity/Priority
+  'Critical': 'bg-purple-500',
+  'High': 'bg-red-500',
+  'Medium': 'bg-yellow-500',
+  'Low': 'bg-green-500',
+    
+  // Binary status
+  'Yes': 'bg-red-500',
 };

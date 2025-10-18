@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
-import type { Person, Project, Task, BusinessUnit } from '../../types';
+import { Person, Project, Task, BusinessUnit } from '../../types';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import { STATUS_COLORS } from '../../constants';
@@ -13,6 +12,7 @@ import TaskFormModal from '../../components/forms/TaskFormModal';
 const ExecutiveDashboardPage: React.FC = () => {
     const { 
         businessUnits, addBusinessUnit, updateBusinessUnit, deleteBusinessUnit,
+        // FIX: Add missing properties to destructuring from useData context.
         projects, addProject, updateProject, deleteProject,
         tasks, addTask, updateTask, deleteTask,
         people 
@@ -50,21 +50,23 @@ const ExecutiveDashboardPage: React.FC = () => {
         setBuModal({isOpen: false, data: null});
     };
     const handleSaveProject = (data: Omit<Project, 'project_id'> | Project) => {
-        const payload = 'project_id' in data ? data : { ...data, business_unit_id: selectedBuId! };
+        // FIX: The business_unit_id property expects a string array. Encapsulate selectedBuId in an array.
+        const payload = 'project_id' in data ? data : { ...data, business_unit_id: [selectedBuId!] };
         if ('project_id' in payload) updateProject(payload);
-        else addProject(payload);
+        else addProject(payload as Omit<Project, 'project_id'>);
         setProjectModal({isOpen: false, data: null});
     };
     const handleSaveTask = (data: Omit<Task, 'task_id'> | Task) => {
         const payload = 'task_id' in data ? data : { ...data, project_id: selectedProjectId! };
         if ('task_id' in payload) updateTask(payload);
-        else addTask(payload);
+        else addTask(payload as Omit<Task, 'task_id'>);
         setTaskModal({isOpen: false, data: null});
     };
 
     const filteredProjects = useMemo(() => {
         if (!selectedBuId) return [];
-        return projects.filter(p => p.business_unit_id === selectedBuId);
+        // FIX: Use .includes() to check if the string ID is present in the string array.
+        return projects.filter(p => p.business_unit_id.includes(selectedBuId));
     }, [selectedBuId, projects]);
 
     const filteredTasks = useMemo(() => {

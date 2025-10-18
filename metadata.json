@@ -1,5 +1,5 @@
 {
-  "name": "YD Lab",
+  "name": "YD.Lab-test",
   "description": "An internal company application for managing people, projects, tasks, and strategy. Provides a centralized, interactive dashboard for all operational data with full CRUD capabilities.",
   "requestFramePermissions": []
 }

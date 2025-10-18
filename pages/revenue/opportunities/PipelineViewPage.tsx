@@ -133,7 +133,7 @@ const PipelineViewPage: React.FC = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(opp.owner_user_id)}</td>
                 <td className="px-6 py-4 whitespace-nowrap"><Badge text={opp.stage} colorClass={OPPORTUNITY_STAGE_COLORS[opp.stage]} /></td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-semibold">${opp.amount.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-white font-semibold">₹{opp.amount.toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{opp.close_date}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                   <button onClick={() => openModal(opp)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>

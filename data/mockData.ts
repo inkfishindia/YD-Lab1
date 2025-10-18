@@ -1,5 +1,6 @@
 
-import { Person, Project, Task, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role, BuiltInTool, Agent, Hub, Interface, Channel } from '../types';
+
+import { Person, BusinessUnit, Flywheel, Priority, Status, HealthStatus, Lead, Opportunity, Account, LeadStatus, OpportunityStage, BrainDump, Role, BuiltInTool, Agent, Hub, Interface, Channel, CustomerSegment } from '../types';
 
 export const mockRoles: Role[] = [
   { role_name: 'Admin', permissions: ['*:*'] },
@@ -15,29 +16,19 @@ export const mockPeople: Person[] = [
   { user_id: 'mock_user_4', full_name: 'David Lee', email: 'david.l@example.com', department: 'Engineering', role_title: 'Frontend Developer', is_active: true, manager_id: 'mock_user_1', role_name: 'Contributor' },
 ];
 
-export const mockProjects: Project[] = [
-  { project_id: 'mock_proj_1', project_name: 'Q3 Mobile App Relaunch', business_unit_id: 'mock_bu_1', owner_user_id: 'mock_user_2', priority: Priority.High, status: Status.InProgress, start_date: '2024-07-01', target_end_date: '2024-09-30', budget_planned: 50000, budget_spent: 22000 },
-  { project_id: 'mock_proj_2', project_name: 'Internal Design System', business_unit_id: 'mock_bu_2', owner_user_id: 'mock_user_1', priority: Priority.Medium, status: Status.Completed, start_date: '2024-04-15', target_end_date: '2024-08-01', budget_planned: 35000, budget_spent: 34500 },
-  { project_id: 'mock_proj_3', project_name: 'Data Analytics Dashboard', business_unit_id: 'mock_bu_2', owner_user_id: 'mock_user_1', priority: Priority.Critical, status: Status.OnHold, start_date: '2024-06-01', target_end_date: '2024-10-31', budget_planned: 75000, budget_spent: 15000 },
-];
-
-export const mockTasks: Task[] = [
-  { task_id: 'mock_task_1', title: 'Finalize login screen UI', project_id: 'mock_proj_1', assignee_user_id: 'mock_user_3', status: Status.InProgress, priority: Priority.High, estimate_hours: 8, due_date: '2024-08-15' },
-  { task_id: 'mock_task_2', title: 'API integration for user profiles', project_id: 'mock_proj_1', assignee_user_id: 'mock_user_1', status: Status.InProgress, priority: Priority.Critical, estimate_hours: 24, due_date: '2024-08-20' },
-  { task_id: 'mock_task_3', title: 'User acceptance testing plan', project_id: 'mock_proj_1', assignee_user_id: 'mock_user_2', status: Status.NotStarted, priority: Priority.Medium, estimate_hours: 16, due_date: '2024-09-01' },
-  { task_id: 'mock_task_4', title: 'Document color palette', project_id: 'mock_proj_2', assignee_user_id: 'mock_user_3', status: Status.Completed, priority: Priority.Low, estimate_hours: 4, due_date: '2024-07-30' },
-  { task_id: 'mock_task_5', title: 'Setup CI/CD pipeline for analytics service', project_id: 'mock_proj_3', assignee_user_id: 'mock_user_1', status: Status.OnHold, priority: Priority.High, estimate_hours: 32, due_date: '2024-09-15' },
-  { task_id: 'mock_task_6', title: 'Create wireframes for dashboard widgets', project_id: 'mock_proj_3', assignee_user_id: 'mock_user_3', status: Status.NotStarted, priority: Priority.Medium, estimate_hours: 12, due_date: '2024-08-25' },
+export const mockCustomerSegments: CustomerSegment[] = [
+    { customer_segment: 'SMB', purpose: 'Empower small businesses', vission: 'To be the #1 tool for SMBs', mission: 'Provide easy-to-use software', expression: 'Friendly and approachable', psychological_job_to_be_done: 'Help me feel in control', behavioral_truth: 'They value simplicity', brand_position_for_them: 'Your simple growth partner', messaging_tone: 'Encouraging', design_pov: 'Clean and intuitive', flywheel_id: 'mock_fw_1' },
+    { customer_segment: 'Enterprise', purpose: 'Drive large-scale efficiency', vission: 'To power the Fortune 500', mission: 'Deliver robust, scalable solutions', expression: 'Professional and reliable', psychological_job_to_be_done: 'Make my team look good', behavioral_truth: 'They need security and support', brand_position_for_them: 'The secure, scalable choice', messaging_tone: 'Confident', design_pov: 'Data-dense and powerful', flywheel_id: 'mock_fw_2' },
 ];
 
 export const mockFlywheels: Flywheel[] = [
-    { flywheel_id: 'mock_fw_1', flywheel_name: 'Self-Service Acquisition', customer_type: 'SMB', motion: 'Product-Led Growth', primary_channels: ['SEO', 'Content Marketing'], target_revenue: 1000000 },
-    { flywheel_id: 'mock_fw_2', flywheel_name: 'Enterprise Sales Motion', customer_type: 'Enterprise', motion: 'Sales-Led', primary_channels: ['Outbound Sales', 'Partnerships'], target_revenue: 5000000 },
+    { flywheel_id: 'mock_fw_1', flywheel_name: 'Self-Service Acquisition', customer_type: 'SMB', motion: 'Product-Led Growth', primary_channels: ['SEO', 'Content Marketing'], target_revenue: 1000000, description: 'Users sign up and convert on their own.', interface: 'Website', customer_acquisition_motion: 'Inbound leads from organic search and blog content.', notes: 'SEO is key here.', order_size: 'Small', hub_dependencies: ['HUB-02'], key_metrics: ['Sign-ups', 'Conversion Rate'], revenue_driver: 1, revenue_model: 1, what_drives_growth: 'Content Velocity', economics: [], target_orders: 10000, avg_cac: 50, avg_ltv: 500, conversion_rate_pct: 2.5 },
+    { flywheel_id: 'mock_fw_2', flywheel_name: 'Enterprise Sales Motion', customer_type: 'Enterprise', motion: 'Sales-Led', primary_channels: ['Outbound Sales', 'Partnerships'], target_revenue: 5000000, description: 'High-touch sales process for large accounts.', interface: 'Sales Team', customer_acquisition_motion: 'SDRs source leads and AEs close deals.', notes: '', order_size: 'Large', hub_dependencies: [], key_metrics: ['SQLs', 'Close Rate'], revenue_driver: 1, revenue_model: 1, what_drives_growth: 'AE Headcount', economics: [], target_orders: 100, avg_cac: 5000, avg_ltv: 100000, conversion_rate_pct: 20 },
 ];
 
 export const mockBusinessUnits: BusinessUnit[] = [
-    { bu_id: 'mock_bu_1', bu_name: 'Consumer Mobile', bu_type: 'Mobile App', owner_user_id: 'mock_user_2', health_status: HealthStatus.OnTrack, priority_level: Priority.High, primary_flywheel_id: 'mock_fw_1' },
-    { bu_id: 'mock_bu_2', bu_name: 'Enterprise Platform', bu_type: 'Web Platform', owner_user_id: 'mock_user_1', health_status: HealthStatus.AtRisk, priority_level: Priority.Medium, primary_flywheel_id: 'mock_fw_2', upsell_flywheel_id: 'mock_fw_1' },
+    { bu_id: 'mock_bu_1', bu_name: 'Consumer Mobile', bu_type: 'Mobile App', owner_user_id: 'mock_user_2', health_status: HealthStatus.OnTrack, priority_level: Priority.High, primary_flywheel_id: 'mock_fw_1', customerType: 'SMB', order_volume_range: '1-10', offering: 'Mobile App', platform_type: 'iOS/Android', interface: 'App Store', pricing_model: 'Subscription', avg_order_value: 99, target_margin_pct: 60, tech_build: 'Native', sales_motion: 'PLG', support_type: 'Email', pricing_logic: 'Tiered', current_revenue: 750000, current_orders: 7500, variance_pct: '5%', growth_rate_required: 10, status: 'Active' },
+    { bu_id: 'mock_bu_2', bu_name: 'Enterprise Platform', bu_type: 'Web Platform', owner_user_id: 'mock_user_1', health_status: HealthStatus.AtRisk, priority_level: Priority.Medium, primary_flywheel_id: 'mock_fw_2', upsell_flywheel_id: 'mock_fw_1', customerType: 'Enterprise', order_volume_range: '100+', offering: 'Web Platform', platform_type: 'Web', interface: 'Direct Sales', pricing_model: 'Contract', avg_order_value: 50000, target_margin_pct: 75, tech_build: 'Web App', sales_motion: 'SLG', support_type: 'Dedicated', pricing_logic: 'Per Seat', current_revenue: 3200000, current_orders: 64, variance_pct: '-10%', growth_rate_required: 25, status: 'Active' },
 ];
 
 export const mockAccounts: Account[] = [
@@ -122,6 +113,13 @@ export const mockInterfaces: Interface[] = [
         bu_ids_served: ['mock_bu_1'],
         interface_owner: 'mock_user_2',
         monthly_budget: 15000,
+        channel_id: 'CH_1',
+        interface_goal: 'Generate inbound leads',
+        cost_model: 0,
+        avg_cac: 20,
+        avg_conversion_rate: 3,
+        interface_status: 'Active',
+        notes: 'Content is performing well.',
     },
     {
         interface_id: 'mock_if_2',
@@ -132,6 +130,13 @@ export const mockInterfaces: Interface[] = [
         bu_ids_served: ['mock_bu_2'],
         interface_owner: 'mock_user_1',
         monthly_budget: 25000,
+        channel_id: 'CH_2',
+        interface_goal: 'Book demos with enterprise clients',
+        cost_model: 0,
+        avg_cac: 250,
+        avg_conversion_rate: 10,
+        interface_status: 'Active',
+        notes: '',
     },
     {
         interface_id: 'mock_if_3',
@@ -142,11 +147,18 @@ export const mockInterfaces: Interface[] = [
         bu_ids_served: ['mock_bu_1', 'mock_bu_2'],
         interface_owner: 'mock_user_2',
         monthly_budget: 10000,
+        channel_id: 'CH_3',
+        interface_goal: 'Drive referrals',
+        cost_model: 0,
+        avg_cac: 100,
+        avg_conversion_rate: 15,
+        interface_status: 'Active',
+        notes: '',
     }
 ];
 
 export const mockChannels: Channel[] = [
   { channel_id: 'CH_1', channel_type: 'Owned', channel_name: 'Website', interfaces: 'mock_if_1', focus: 'Lead Gen & SEO' },
   { channel_id: 'CH_2', channel_type: 'Paid Social', channel_name: 'Facebook Ads', interfaces: 'mock_if_2', focus: 'Brand Awareness' },
-  { channel_id: 'CH_3', channel_type: 'Paid Search', channel_name: 'Google Ads', interfaces: '', focus: 'Direct Conversions' },
+  { channel_id: 'CH_3', channel_type: 'Paid Search', channel_name: 'Google Ads', interfaces: 'mock_if_3', focus: 'Direct Conversions' },
 ];

@@ -1,17 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { useSpreadsheetConfig } from '../../contexts/SpreadsheetConfigContext';
 
 const PlatformsIntegrationsPage: React.FC = () => {
-    const { spreadsheetIds, saveSpreadsheetIds, isConfigured } = useSpreadsheetConfig();
+    const { spreadsheetIds, saveSheetConfiguration, isConfigured } = useSpreadsheetConfig();
     const [localIds, setLocalIds] = useState({
-        EXECUTION: '',
         STRATEGY: '',
         PARTNERS: '',
         YDS_APP: '',
         MANIFEST: '',
+        YDC_BASE: '',
+        POSITIONING_FRAMEWORK: '',
+        YDS_MANAGEMENT: '',
     });
     const [isSaved, setIsSaved] = useState(false);
 
@@ -27,7 +28,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        saveSpreadsheetIds(localIds);
+        saveSheetConfiguration({ ids: localIds });
         setIsSaved(true);
         // Optional: Add a timeout to hide the saved message
         setTimeout(() => setIsSaved(false), 3000);
@@ -69,11 +70,13 @@ const PlatformsIntegrationsPage: React.FC = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                    {renderInputField("EXECUTION", "Execution Spreadsheet ID", "Contains sheets for People, Projects, Tasks, and Roles.")}
+                    {renderInputField("YDS_MANAGEMENT", "YDS Management Spreadsheet ID", "Contains the new Program, Project, Milestone, and Task hierarchy.")}
                     {renderInputField("STRATEGY", "Strategy Spreadsheet ID", "Contains sheets for Business Units and Flywheels.")}
                     {renderInputField("PARTNERS", "Partners/Revenue Spreadsheet ID", "Contains sheets for Leads, Opportunities, and Accounts.")}
-                    {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like BrainDump and Logs.")}
+                    {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like People, BrainDump and Logs.")}
                     {renderInputField("MANIFEST", "Manifest Spreadsheet ID", "Contains sheets for Built in Tools and Agents.")}
+                    {renderInputField("YDC_BASE", "YDC - Base Spreadsheet ID", "Contains the interconnected data for the System Map.")}
+                    {renderInputField("POSITIONING_FRAMEWORK", "Positioning Framework Spreadsheet ID", "Contains strategic data for flywheels, segments, and funnels.")}
                     
                     <div className="flex items-center gap-4">
                         <Button type="submit">Save Configuration</Button>

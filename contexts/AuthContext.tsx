@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { API_KEY, GOOGLE_CLIENT_ID } from '../api-keys';
 
@@ -20,13 +19,14 @@ interface IAuthContext {
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.metadata.readonly';
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
 const DISCOVERY_DOCS = [
     "https://sheets.googleapis.com/$discovery/rest?version=v4",
     "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
     "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
     "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
 ];
+const LOCAL_STORAGE_KEY = 'google_auth_session';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
@@ -36,6 +36,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [initError, setInitError] = useState<string | null>(null);
 
   const signOut = useCallback(() => {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
     const token = (window as any).gapi?.client?.getToken();
     if (token && (window as any).google?.accounts?.oauth2) {
       (window as any).google.accounts.oauth2.revoke(token.access_token, () => {});
@@ -56,13 +57,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           throw new Error(`Failed to fetch profile: ${profileResponse.status}`);
         }
         const profile = await profileResponse.json();
-        setCurrentUser({
+        const user = {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
           imageUrl: profile.picture,
-        });
+        };
+        setCurrentUser(user);
         setIsSignedIn(true);
+
+        // Persist session to localStorage
+        const expiresAt = Date.now() + (tokenResponse.expires_in * 1000);
+        const session = {
+            accessToken: tokenResponse.access_token,
+            expiresAt,
+            user,
+        };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
+
       } catch (error) {
         console.error("Error fetching user profile:", error);
         signOut();
@@ -96,6 +108,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           apiKey: API_KEY,
           discoveryDocs: DISCOVERY_DOCS,
         }).then(() => {
+          // GAPI client is ready. Check for a stored session.
+          /* Temporarily disabled for testing logged-out state
+          try {
+            const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if (storedSession) {
+              const session = JSON.parse(storedSession);
+              // Check if session is expired
+              if (session && session.accessToken && session.expiresAt > Date.now()) {
+                // Restore session
+                (window as any).gapi.client.setToken({ access_token: session.accessToken });
+                setCurrentUser(session.user);
+                setIsSignedIn(true);
+              } else {
+                // Clear expired session
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
+              }
+            }
+          } catch (e) {
+            console.error("Could not restore session:", e);
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
+          }
+          */
+
           gapiReady = true;
           checkAndFinalizeLoading();
         }).catch((e: any) => {

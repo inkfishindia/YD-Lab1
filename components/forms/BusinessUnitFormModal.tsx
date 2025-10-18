@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
-import type { BusinessUnit } from '../../types';
+import { BusinessUnit, Person, Flywheel } from '../../types';
 import { Priority, HealthStatus } from '../../types';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -12,28 +12,51 @@ interface BusinessUnitFormModalProps {
   businessUnit: BusinessUnit | null;
 }
 
+// FIX: Create a helper function to provide a complete, default BusinessUnit object
+// This ensures that new business units have all required fields.
+const getInitialFormData = (people: Person[], flywheels: Flywheel[]): Omit<BusinessUnit, 'bu_id'> => ({
+    bu_name: '',
+    bu_type: '',
+    customerType: '',
+    order_volume_range: '',
+    offering: '',
+    platform_type: '',
+    interface: '',
+    pricing_model: '',
+    primary_flywheel_id: flywheels[0]?.flywheel_id || '',
+    upsell_flywheel_id: '',
+    avg_order_value: 0,
+    target_margin_pct: 0,
+    tech_build: '',
+    sales_motion: '',
+    support_type: '',
+    pricing_logic: '',
+    owner_user_id: people[0]?.user_id || '',
+    current_revenue: 0,
+    current_orders: 0,
+    variance_pct: '0%',
+    health_status: HealthStatus.OnTrack,
+    growth_rate_required: 0,
+    priority_level: Priority.Medium,
+    status: 'Active',
+});
+
 const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ isOpen, onClose, onSave, businessUnit }) => {
     const { people, flywheels } = useData();
-    const [formData, setFormData] = useState({
-        bu_name: '',
-        bu_type: '',
-        owner_user_id: '',
-        health_status: HealthStatus.OnTrack,
-        priority_level: Priority.Medium,
-        primary_flywheel_id: '',
-        upsell_flywheel_id: '',
-    });
+    // FIX: Initialize state with a complete BusinessUnit object to match the required type.
+    const [formData, setFormData] = useState<Omit<BusinessUnit, 'bu_id'>>(getInitialFormData(people, flywheels));
 
     useEffect(() => {
-        setFormData({
-            bu_name: businessUnit?.bu_name || '',
-            bu_type: businessUnit?.bu_type || '',
-            owner_user_id: businessUnit?.owner_user_id || (people[0]?.user_id || ''),
-            health_status: businessUnit?.health_status || HealthStatus.OnTrack,
-            priority_level: businessUnit?.priority_level || Priority.Medium,
-            primary_flywheel_id: businessUnit?.primary_flywheel_id || (flywheels[0]?.flywheel_id || ''),
-            upsell_flywheel_id: businessUnit?.upsell_flywheel_id || '',
-        });
+        if (isOpen) {
+            if (businessUnit) {
+                // For editing, populate the form with all fields from the existing business unit.
+                const { bu_id, ...editableData } = businessUnit;
+                setFormData(editableData);
+            } else {
+                // For a new entry, reset the form to its initial state.
+                setFormData(getInitialFormData(people, flywheels));
+            }
+        }
     }, [businessUnit, people, flywheels, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -42,6 +65,7 @@ const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ isOpen, o
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        // FIX: The formData is now guaranteed to be a complete object, satisfying the 'onSave' prop's type.
         onSave(businessUnit ? { ...formData, bu_id: businessUnit.bu_id } : formData);
     };
 
@@ -82,7 +106,7 @@ const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ isOpen, o
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Upsell Flywheel (Optional)</label>
-                    <select name="upsell_flywheel_id" value={formData.upsell_flywheel_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                    <select name="upsell_flywheel_id" value={formData.upsell_flywheel_id || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">None</option>
                         {flywheels.map(fw => <option key={fw.flywheel_id} value={fw.flywheel_id}>{fw.flywheel_name}</option>)}
                     </select>

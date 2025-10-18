@@ -1,74 +1,115 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 
-const LOCAL_STORAGE_KEY = 'yd_labs_spreadsheet_ids';
+const LOCAL_STORAGE_KEY = 'yd_labs_spreadsheet_config';
 
 export interface SpreadsheetIds {
-  EXECUTION: string;
   STRATEGY: string;
   PARTNERS: string;
   YDS_APP: string;
   MANIFEST: string;
+  YDC_BASE: string;
+  POSITIONING_FRAMEWORK: string;
+  YDS_MANAGEMENT: string;
 }
+
+export type SheetMappings = Record<string, Record<string, string>>;
+export type SheetRelations = Record<string, Record<string, string>>;
+export type SheetDataTypes = Record<string, Record<string, 'string' | 'number' | 'boolean' | 'string_array'>>;
+
 
 interface ISpreadsheetConfigContext {
   spreadsheetIds: SpreadsheetIds;
+  sheetMappings: SheetMappings;
+  sheetRelations: SheetRelations;
+  sheetDataTypes: SheetDataTypes;
   isConfigured: boolean;
   isConfigLoading: boolean;
-  saveSpreadsheetIds: (ids: SpreadsheetIds) => void;
+  saveSheetConfiguration: (config: {
+    ids?: SpreadsheetIds;
+    mappings?: SheetMappings;
+    relations?: SheetRelations;
+    dataTypes?: SheetDataTypes;
+  }) => void;
 }
 
 const SpreadsheetConfigContext = createContext<ISpreadsheetConfigContext | undefined>(undefined);
 
 const initialIds: SpreadsheetIds = {
-  EXECUTION: '',
-  STRATEGY: '',
-  PARTNERS: '',
-  YDS_APP: '',
-  MANIFEST: '',
+  STRATEGY: '1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc',
+  PARTNERS: '1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs',
+  YDS_APP: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
+  MANIFEST: '1it8OLmtuBJIiO7AMnGata5Utn6O3CiVxazpoFjAZHjc',
+  YDC_BASE: '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY',
+  POSITIONING_FRAMEWORK: '1XPUQiompJVoAsnLvFoP3zxxsejRTZPe_yydsGoQU-qo',
+  YDS_MANAGEMENT: '1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA',
 };
 
 export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [spreadsheetIds, setSpreadsheetIds] = useState<SpreadsheetIds>(initialIds);
+  const [sheetMappings, setSheetMappings] = useState<SheetMappings>({});
+  const [sheetRelations, setSheetRelations] = useState<SheetRelations>({});
+  const [sheetDataTypes, setSheetDataTypes] = useState<SheetDataTypes>({});
   const [isConfigured, setIsConfigured] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
 
   useEffect(() => {
     try {
-      const storedIdsJson = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedIdsJson) {
-        const storedIds = JSON.parse(storedIdsJson);
-        if (storedIds.EXECUTION && storedIds.STRATEGY && storedIds.PARTNERS && storedIds.YDS_APP && storedIds.MANIFEST) {
-          setSpreadsheetIds(storedIds);
-          setIsConfigured(true);
+      const storedConfigJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedConfigJson) {
+        const { ids, mappings, relations, dataTypes } = JSON.parse(storedConfigJson);
+        if (ids) {
+            // Merge stored IDs with initial IDs to ensure new fields are present
+            const mergedIds = { ...initialIds, ...ids };
+            setSpreadsheetIds(mergedIds);
+            if (mergedIds.STRATEGY && mergedIds.PARTNERS && mergedIds.YDS_APP && mergedIds.MANIFEST && mergedIds.YDC_BASE && mergedIds.POSITIONING_FRAMEWORK && mergedIds.YDS_MANAGEMENT) {
+              setIsConfigured(true);
+            }
         }
+        if (mappings) setSheetMappings(mappings);
+        if (relations) setSheetRelations(relations);
+        if (dataTypes) setSheetDataTypes(dataTypes);
       }
     } catch (error) {
-      console.error("Failed to load spreadsheet IDs from local storage:", error);
+      console.error("Failed to load spreadsheet config from local storage:", error);
     } finally {
       setIsConfigLoading(false);
     }
   }, []);
 
-  const saveSpreadsheetIds = useCallback((ids: SpreadsheetIds) => {
+  const saveSheetConfiguration = useCallback((config: { ids?: SpreadsheetIds; mappings?: SheetMappings; relations?: SheetRelations; dataTypes?: SheetDataTypes }) => {
     try {
-      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(ids));
-      setSpreadsheetIds(ids);
-      // FIX: The result of chained `&&` on strings is a string, not a boolean.
-      // Explicitly convert the truthy/falsy value to a boolean before setting the state.
-      const allIdsPresent = !!(ids.EXECUTION && ids.STRATEGY && ids.PARTNERS && ids.YDS_APP && ids.MANIFEST);
-      setIsConfigured(allIdsPresent);
+        const newIds = config.ids ?? spreadsheetIds;
+        const newMappings = config.mappings ?? sheetMappings;
+        const newRelations = config.relations ?? sheetRelations;
+        const newDataTypes = config.dataTypes ?? sheetDataTypes;
+        
+        const newConfig = { ids: newIds, mappings: newMappings, relations: newRelations, dataTypes: newDataTypes };
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newConfig));
+        
+        if (config.ids) {
+            setSpreadsheetIds(newIds);
+            const allIdsPresent = !!(newIds.STRATEGY && newIds.PARTNERS && newIds.YDS_APP && newIds.MANIFEST && newIds.YDC_BASE && newIds.POSITIONING_FRAMEWORK && newIds.YDS_MANAGEMENT);
+            setIsConfigured(allIdsPresent);
+        }
+        if (config.mappings) setSheetMappings(newMappings);
+        if (config.relations) setSheetRelations(newRelations);
+        if (config.dataTypes) setSheetDataTypes(newDataTypes);
+
     } catch (error) {
-      console.error("Failed to save spreadsheet IDs to local storage:", error);
-      alert("Could not save settings. Your browser might be in private mode or has storage disabled.");
+        console.error("Failed to save configuration to local storage:", error);
+        alert("Could not save settings. Your browser might be in private mode or has storage disabled.");
     }
-  }, []);
+  }, [spreadsheetIds, sheetMappings, sheetRelations, sheetDataTypes]);
+
 
   const value = {
     spreadsheetIds,
+    sheetMappings,
+    sheetRelations,
+    sheetDataTypes,
     isConfigured,
     isConfigLoading,
-    saveSpreadsheetIds,
+    saveSheetConfiguration,
   };
 
   return (

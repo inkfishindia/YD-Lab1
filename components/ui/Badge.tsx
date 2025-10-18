@@ -3,14 +3,19 @@ import React from 'react';
 interface BadgeProps {
   text: string;
   colorClass: string;
+  size?: 'sm' | 'md';
 }
 
-const Badge: React.FC<BadgeProps> = ({ text, colorClass }) => {
+const Badge: React.FC<BadgeProps> = ({ text, colorClass, size = 'md' }) => {
+  const sizeClasses = {
+    sm: 'px-2 py-0.5 text-xs',
+    md: 'px-2.5 py-1 text-sm'
+  };
+
   return (
-    <div className="inline-flex items-center">
-      <span className={`w-2 h-2 mr-2 rounded-full ${colorClass}`}></span>
-      <span className="text-sm text-gray-300">{text}</span>
-    </div>
+    <span className={`inline-flex items-center font-semibold rounded-full ${sizeClasses[size]} ${colorClass}`}>
+      {text}
+    </span>
   );
 };
 

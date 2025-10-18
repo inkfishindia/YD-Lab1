@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Person, Role } from '../../../types';
@@ -27,7 +26,7 @@ const TeamDirectoryPage: React.FC = () => {
     }
     if (filters.department) {
       filterablePeople = filterablePeople.filter(p =>
-        p.department.toLowerCase().includes(filters.department.toLowerCase())
+        p.department?.toLowerCase().includes(filters.department.toLowerCase())
       );
     }
     return filterablePeople;
@@ -143,8 +142,8 @@ const TeamDirectoryPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{person.role_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{person.department}</td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${person.is_active ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300'}`}>
-                    {person.is_active ? 'Active' : 'Inactive'}
+                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${person.is_active !== false ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300'}`}>
+                    {person.is_active !== false ? 'Active' : 'Inactive'}
                   </span>
                 </td>
                 {canWrite && (
@@ -211,23 +210,23 @@ const PersonFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (
                       <input type="text" name="full_name" value={formData.full_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required />
                   </div>
                   <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email</label>
-                      <input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required />
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-300">Email (Used as User ID)</label>
+                      <input type="email" name="email" value={formData.email} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required disabled={!!person}/>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                       <label htmlFor="department" className="block text-sm font-medium text-gray-300">Department</label>
-                      <input type="text" name="department" value={formData.department} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required />
+                      <input type="text" name="department" value={formData.department} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" />
                   </div>
                   <div>
                       <label htmlFor="role_title" className="block text-sm font-medium text-gray-300">Role Title</label>
-                      <input type="text" name="role_title" value={formData.role_title} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required />
+                      <input type="text" name="role_title" value={formData.role_title} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" />
                   </div>
                 </div>
                 <div>
                     <label htmlFor="role_name" className="block text-sm font-medium text-gray-300">App Role</label>
-                    <select name="role_name" value={formData.role_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white" required>
+                    <select name="role_name" value={formData.role_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-white">
                         <option value="" disabled>Select a role</option>
                         {roles.map(role => <option key={role.role_name} value={role.role_name}>{role.role_name}</option>)}
                     </select>
