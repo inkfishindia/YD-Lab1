@@ -1,6 +1,21 @@
 import { SheetConfig } from '../sheetConfig';
 import { LogEntry } from '../types';
 
+// FIX: Add and export SheetMappingInfo type to resolve import error in SheetHealthCheckPage.
+export interface SheetMappingInfo {
+  configName: string;
+  spreadsheetId: string;
+  gid: string;
+  sheetName: string;
+  fieldDetails: {
+    appField: string;
+    defaultHeader: string;
+    dataType: string;
+  }[];
+  actualHeaders: string[];
+  error: string | null;
+}
+
 // --- Type Helper Utilities ---
 
 const safeParseFloat = (val: any): number => {
@@ -393,3 +408,35 @@ export async function deleteEntity<T>(
 }
 
 // --- Workspace API Functions ---
+// FIX: Add fetchUnreadGmailCount function for DashboardPage.
+export async function fetchUnreadGmailCount(): Promise<number> {
+  try {
+    const response = await (window as any).gapi.client.gmail.users.labels.get({
+      userId: 'me',
+      id: 'UNREAD',
+    });
+    return response.result.messagesUnread || 0;
+  } catch (error) {
+    console.error('Error fetching unread Gmail count:', error);
+    throw new Error('Could not fetch Gmail data. Check API permissions.');
+  }
+}
+
+// FIX: Add fetchNextCalendarEvent function for DashboardPage.
+export async function fetchNextCalendarEvent(): Promise<any | null> {
+  try {
+    const response = await (window as any).gapi.client.calendar.events.list({
+      calendarId: 'primary',
+      timeMin: new Date().toISOString(),
+      showDeleted: false,
+      singleEvents: true,
+      maxResults: 1,
+      orderBy: 'startTime',
+    });
+    const events = response.result.items;
+    return events.length > 0 ? events[0] : null;
+  } catch (error) {
+    console.error('Error fetching next calendar event:', error);
+    throw new Error('Could not fetch Calendar data. Check API permissions.');
+  }
+}
