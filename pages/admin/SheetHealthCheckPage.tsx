@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSpreadsheetConfig, SpreadsheetIds } from '../../contexts/SpreadsheetConfigContext';
 import type { SheetMappings, SheetRelations, SheetDataTypes } from '../../contexts/SpreadsheetConfigContext';
-import { groupedSheetConfigs, allSheetConfigs, SheetConfig } from '../../sheetConfig';
+import { groupedSheetConfigs, allSheetConfigs, SheetConfig, predefinedRelations } from '../../sheetConfig';
 import type { SheetMappingInfo } from '../../services/googleSheetService';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
@@ -10,43 +10,6 @@ import { useData } from '../../contexts/DataContext';
 
 type MappingStatus = 'OK' | 'Unmapped';
 const DATA_TYPE_OPTIONS: Array<'string' | 'number' | 'boolean' | 'string_array'> = ['string', 'number', 'boolean', 'string_array'];
-
-const predefinedRelations: Record<string, Record<string, string>> = {
-    'Projects': {
-        owner_user_id: 'People',
-        business_unit_id: 'Business Units',
-    },
-    'Tasks': {
-        project_id: 'Projects',
-        assignee_user_id: 'People',
-    },
-    'Business Units': {
-        owner_user_id: 'People',
-        primary_flywheel_id: 'Flywheels',
-        upsell_flywheel_id: 'Flywheels',
-    },
-    'Hubs': {
-        owner_user_id: 'People',
-    },
-    'Interfaces': {
-        channel_id: 'Channels',
-        flywheel_id: 'Flywheels',
-        interface_owner: 'People',
-    },
-    'Leads': {
-        sdr_owner_fk: 'People',
-    },
-    'Opportunities': {
-        account_id: 'Accounts',
-        owner_user_id: 'People',
-    },
-    'Accounts': {
-        owner_user_id: 'People',
-    },
-    'Customer Segments': {
-        flywheel_id: 'Flywheels',
-    }
-};
 
 const SheetHealthCheckPage: React.FC = () => {
     const { spreadsheetIds, sheetMappings, sheetRelations, sheetDataTypes, saveSheetConfiguration, isConfigured } = useSpreadsheetConfig();
@@ -59,8 +22,6 @@ const SheetHealthCheckPage: React.FC = () => {
     const [isSaved, setIsSaved] = useState(false);
     const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
     const [relationStatus, setRelationStatus] = useState<Record<string, { status: 'ok' | 'error', errors: string[] }>>({});
-    const premappingDone = useRef(false);
-    const relationsPremapped = useRef(false);
     
     const runChecks = useCallback(async () => {
         setIsLoading(true);
@@ -93,7 +54,6 @@ const SheetHealthCheckPage: React.FC = () => {
                 const headersResponse = await (window as any).gapi.client.sheets.spreadsheets.values.batchGet({ spreadsheetId, ranges: headerRanges });
                 const headerValueRanges = headersResponse.result.valueRanges || [];
                 
-                // FIX: Refactor headersMap creation to be more explicit and imperative to avoid potential type inference issues.
                 const headersMap = new Map<string, string[]>();
                 headerValueRanges.forEach((vr: any, index: number) => {
                     const headers = vr?.values?.[0];
@@ -198,6 +158,7 @@ const SheetHealthCheckPage: React.FC = () => {
     const handleSave = () => {
         saveSheetConfiguration({ mappings: localMappings, relations: localRelations, dataTypes: localDataTypes });
         setIsSaved(true);
+        dataContext.refreshData();
         setTimeout(() => setIsSaved(false), 3000);
     };
 
@@ -206,23 +167,26 @@ const SheetHealthCheckPage: React.FC = () => {
     const handleMappingChange = (configName: string, appField: string, newHeader: string) => {
         setLocalMappings(prev => {
             const newConf = { ...(prev[configName] || {}) };
-            if (newHeader) {
-                newConf[appField] = newHeader;
-            } else {
-                delete newConf[appField];
-            }
+            if (newHeader) newConf[appField] = newHeader;
+            else delete newConf[appField];
             return { ...prev, [configName]: newConf };
         });
+    };
+
+    const handleRelationChange = (configName: string, appField: string, targetSheet: string) => {
+      setLocalRelations(prev => {
+          const newConf = { ...(prev[configName] || {}) };
+          if (targetSheet) newConf[appField] = targetSheet;
+          else delete newConf[appField];
+          return { ...prev, [configName]: newConf };
+      });
     };
     
     const handleDataTypeChange = (configName: string, appField: string, newType: string) => {
         setLocalDataTypes(prev => {
             const newConf = { ...(prev[configName] || {}) };
-            if (newType) {
-                newConf[appField] = newType as any;
-            } else {
-                delete newConf[appField];
-            }
+            if (newType) newConf[appField] = newType as any;
+            else delete newConf[appField];
             return { ...prev, [configName]: newConf };
         });
     };
@@ -233,10 +197,10 @@ const SheetHealthCheckPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-semibold text-white">Sheet Health Check & Mapping</h1>
+                <h1 className="text-2xl font-semibold text-white">Schema Editor & Health Check</h1>
                 <div className="flex items-center gap-4">
-                    <Button onClick={handleSave}>Save Mappings</Button>
-                    {isSaved && <span className="text-green-400">Configuration saved!</span>}
+                    <Button onClick={handleSave}>Save Mappings & Relations</Button>
+                    {isSaved && <span className="text-green-400">Configuration saved & data refreshed!</span>}
                 </div>
             </div>
 
@@ -267,6 +231,8 @@ const SheetHealthCheckPage: React.FC = () => {
                                             return !info.actualHeaders.includes(headerToFind);
                                         }) ? 'Unmapped' : 'OK';
 
+                                    const relStatus = relationStatus[configName];
+
                                     return (
                                         <div key={configName} className="p-4 bg-gray-950/50 border border-gray-700 rounded-lg">
                                             <div className="flex items-center gap-3">
@@ -279,20 +245,20 @@ const SheetHealthCheckPage: React.FC = () => {
                                                 <p className="mt-2 text-sm text-red-400">{info.error}</p>
                                             ) : (
                                                 <table className="mt-4 w-full text-sm text-left table-fixed">
-                                                    <thead><tr className="text-xs text-gray-500 uppercase"><th className="pb-2 w-1/4">App Field</th><th className="pb-2 w-1/4">Default Header</th><th className="pb-2 w-1/3">Sheet Header Mapping</th><th className="pb-2 w-1/6">Data Type</th><th className="pb-2 text-center">Status</th></tr></thead>
+                                                    <thead><tr className="text-xs text-gray-500 uppercase"><th className="pb-2 w-[15%]">App Field</th><th className="pb-2 w-[25%]">Sheet Header</th><th className="pb-2 w-[15%]">Data Type</th><th className="pb-2 w-[30%]">Relation</th><th className="pb-2 text-center w-[15%]">Status</th></tr></thead>
                                                     <tbody>
                                                         {info.fieldDetails.map(field => {
                                                              const customMapping = localMappings[configName]?.[field.appField];
                                                              const headerToUse = customMapping || field.defaultHeader;
                                                              const mappingStatus: MappingStatus = info.actualHeaders.includes(headerToUse) ? 'OK' : 'Unmapped';
                                                              const currentDataType = localDataTypes[configName]?.[field.appField] || field.dataType;
+                                                             const currentRelation = localRelations[configName]?.[field.appField] || predefinedRelations[configName]?.[field.appField] || '';
                                                             return (
                                                                 <tr key={field.appField} className="border-t border-gray-800">
                                                                     <td className="py-2 pr-4"><span className="font-mono text-gray-300">{field.appField}</span></td>
-                                                                    <td className="py-2 pr-4"><span className="text-gray-500">{field.defaultHeader}</span></td>
                                                                     <td className="py-2 pr-4">
                                                                         <select value={customMapping || ''} onChange={(e) => handleMappingChange(configName, field.appField, e.target.value)} className={`w-full bg-gray-800 border rounded-md text-white text-xs py-1 px-2 ${mappingStatus === 'Unmapped' ? 'border-red-500' : 'border-gray-700'}`}>
-                                                                            <option value="">-- Use Default --</option>
+                                                                            <option value="">-- Use Default: {field.defaultHeader} --</option>
                                                                             {info.actualHeaders.map(h => <option key={h} value={h}>{h}</option>)}
                                                                         </select>
                                                                     </td>
@@ -301,7 +267,12 @@ const SheetHealthCheckPage: React.FC = () => {
                                                                             {DATA_TYPE_OPTIONS.map(dt => <option key={dt} value={dt}>{dt}</option>)}
                                                                         </select>
                                                                     </td>
-                                                                    {/* FIX: Replaced `title` prop on SVG components with a `span` wrapper to provide a tooltip, resolving TS error. */}
+                                                                    <td className="py-2 pr-4">
+                                                                        <select value={currentRelation} onChange={(e) => handleRelationChange(configName, field.appField, e.target.value)} className="w-full bg-gray-800 border border-gray-700 rounded-md text-white text-xs py-1 px-2">
+                                                                             <option value="">-- No Relation --</option>
+                                                                             {Object.keys(allSheetConfigs).sort().map(name => <option key={name} value={name}>{name}</option>)}
+                                                                        </select>
+                                                                    </td>
                                                                     <td className="py-2 pl-4 text-center">
                                                                         {mappingStatus === 'OK' ? <span title="Mapped"><CheckCircleIcon className="w-5 h-5 text-green-500 mx-auto" /></span> : <span title="Not mapped"><ExclamationTriangleIcon className="w-5 h-5 text-yellow-500 mx-auto" /></span>}
                                                                     </td>
@@ -310,6 +281,15 @@ const SheetHealthCheckPage: React.FC = () => {
                                                         })}
                                                     </tbody>
                                                 </table>
+                                            )}
+                                            {relStatus && relStatus.status === 'error' && (
+                                                <div className="mt-3 p-3 bg-red-900/30 border border-red-500/30 rounded-lg">
+                                                    <h4 className="font-semibold text-red-400">Relational Integrity Errors</h4>
+                                                    <ul className="list-disc list-inside text-xs text-red-300 mt-2 max-h-24 overflow-y-auto">
+                                                        {relStatus.errors.slice(0, 5).map((err, i) => <li key={i}>{err}</li>)}
+                                                        {relStatus.errors.length > 5 && <li>...and {relStatus.errors.length - 5} more.</li>}
+                                                    </ul>
+                                                </div>
                                             )}
                                         </div>
                                     );

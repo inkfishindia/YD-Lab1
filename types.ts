@@ -705,6 +705,7 @@ export interface DecisionLog {
   impact: string;
 }
 
+// This is the single source of truth for entity types used in the System Map.
 export type SystemEntityType =
   | 'segment'
   | 'flywheel'

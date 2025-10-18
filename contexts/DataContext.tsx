@@ -206,6 +206,7 @@ interface IDataContext {
   ) => Promise<void>;
   updateSystemPlatform: (platform: SystemPlatform) => Promise<void>;
   deleteSystemPlatform: (id: string) => Promise<void>;
+  refreshData: () => Promise<void>;
 }
 
 const DataContext = createContext<IDataContext | undefined>(undefined);
@@ -336,92 +337,101 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured]);
 
+  const refreshData = useCallback(async () => {
+    const shouldFetchData = isSignedIn && isConfigured && dynamicConfigs;
+    if (!shouldFetchData) {
+      console.warn(
+        'Refresh called, but preconditions not met (not signed in or configured).',
+      );
+      return;
+    }
+
+    setLoading(true);
+    setDataError(null);
+    try {
+      // Group configs by spreadsheet ID to batch requests efficiently.
+      const configsBySpreadsheet: Record<
+        string,
+        { key: string; config: SheetConfig<any> }[]
+      > = {};
+      for (const [key, sheetConfig] of Object.entries(dynamicConfigs)) {
+        if (!sheetConfig || !sheetConfig.spreadsheetId) continue;
+        const { spreadsheetId } = sheetConfig;
+        if (!configsBySpreadsheet[spreadsheetId]) {
+          configsBySpreadsheet[spreadsheetId] = [];
+        }
+        configsBySpreadsheet[spreadsheetId].push({ key, config: sheetConfig });
+      }
+
+      let combinedData: Record<string, any[]> = {};
+      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
+
+      // Fetch spreadsheets sequentially to avoid rate-limiting.
+      for (const [spreadsheetId, configs] of Object.entries(
+        configsBySpreadsheet,
+      )) {
+        const result = await sheetService.batchFetchAndParseSheetData(
+          spreadsheetId,
+          configs,
+        );
+        combinedData = { ...combinedData, ...result };
+        await delay(1500); // Wait 1.5 seconds between each spreadsheet to stay within per-minute quotas.
+      }
+
+      // Set all data states after all fetches are complete.
+      setPeople(combinedData.people || []);
+      setBusinessUnits(combinedData.businessUnits || []);
+      setFlywheels(combinedData.flywheels || []);
+      setLeads(combinedData.leads || []);
+      setOpportunities(combinedData.opportunities || []);
+      setAccounts(combinedData.accounts || []);
+      setBrainDumps(combinedData.braindumps || []);
+      setRoles(combinedData.roles || []);
+      setHubs(combinedData.hubs || []);
+      setInterfaces(combinedData.interfaces || []);
+      setChannels(combinedData.channels || []);
+      setCustomerSegments(combinedData.customerSegments || []);
+
+      setSystemSegments(combinedData.systemSegments || []);
+      setSystemFlywheels(combinedData.systemFlywheels || []);
+      setSystemBusinessUnits(combinedData.systemBusinessUnits || []);
+      setSystemChannels(combinedData.systemChannels || []);
+      setSystemInterfaces(combinedData.systemInterfaces || []);
+      setSystemHubs(combinedData.systemHubs || []);
+      setSystemPeople(combinedData.systemPeople || []);
+      setSystemStages(combinedData.systemStages || []);
+      setSystemTouchpoints(combinedData.systemTouchpoints || []);
+      setSystemPlatforms(combinedData.systemPlatforms || []);
+
+      setPrograms(combinedData.programs || []);
+      setMgmtProjects(combinedData.mgmtProjects || []);
+      setMilestones(combinedData.milestones || []);
+      setMgmtTasks(combinedData.mgmtTasks || []);
+      setMgmtHubs(combinedData.mgmtHubs || []);
+      setWeeklyUpdates(combinedData.weeklyUpdates || []);
+      setDecisionLogs(combinedData.decisionLogs || []);
+    } catch (error: any) {
+      console.error('Failed to fetch data from Google Sheets:', error);
+      // Try to parse GAPI error for more specific user feedback
+      const gapiError = error.result?.error;
+      let errorMessage =
+        'Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.';
+      if (gapiError) {
+        errorMessage = `Failed to access spreadsheet. Check permissions or ID. Error: ${gapiError.message}`;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      setDataError(new Error(errorMessage));
+    } finally {
+      setLoading(false);
+    }
+  }, [isSignedIn, isConfigured, dynamicConfigs]);
+
   useEffect(() => {
     const shouldFetchData = isSignedIn && isConfigured && dynamicConfigs;
 
     if (shouldFetchData) {
-      const fetchData = async () => {
-        setLoading(true);
-        setDataError(null);
-        try {
-          // Group configs by spreadsheet ID to batch requests efficiently.
-          const configsBySpreadsheet: Record<
-            string,
-            { key: string; config: SheetConfig<any> }[]
-          > = {};
-          for (const [key, sheetConfig] of Object.entries(dynamicConfigs)) {
-            if (!sheetConfig || !sheetConfig.spreadsheetId) continue;
-            const { spreadsheetId } = sheetConfig;
-            if (!configsBySpreadsheet[spreadsheetId]) {
-              configsBySpreadsheet[spreadsheetId] = [];
-            }
-            configsBySpreadsheet[spreadsheetId].push({ key, config: sheetConfig });
-          }
-
-          let combinedData: Record<string, any[]> = {};
-          const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
-
-          // Fetch spreadsheets sequentially to avoid rate-limiting.
-          for (const [spreadsheetId, configs] of Object.entries(
-            configsBySpreadsheet,
-          )) {
-            const result = await sheetService.batchFetchAndParseSheetData(
-              spreadsheetId,
-              configs,
-            );
-            combinedData = { ...combinedData, ...result };
-            await delay(1500); // Wait 1.5 seconds between each spreadsheet to stay within per-minute quotas.
-          }
-
-          // Set all data states after all fetches are complete.
-          setPeople(combinedData.people || []);
-          setBusinessUnits(combinedData.businessUnits || []);
-          setFlywheels(combinedData.flywheels || []);
-          setLeads(combinedData.leads || []);
-          setOpportunities(combinedData.opportunities || []);
-          setAccounts(combinedData.accounts || []);
-          setBrainDumps(combinedData.braindumps || []);
-          setRoles(combinedData.roles || []);
-          setHubs(combinedData.hubs || []);
-          setInterfaces(combinedData.interfaces || []);
-          setChannels(combinedData.channels || []);
-          setCustomerSegments(combinedData.customerSegments || []);
-
-          setSystemSegments(combinedData.systemSegments || []);
-          setSystemFlywheels(combinedData.systemFlywheels || []);
-          setSystemBusinessUnits(combinedData.systemBusinessUnits || []);
-          setSystemChannels(combinedData.systemChannels || []);
-          setSystemInterfaces(combinedData.systemInterfaces || []);
-          setSystemHubs(combinedData.systemHubs || []);
-          setSystemPeople(combinedData.systemPeople || []);
-          setSystemStages(combinedData.systemStages || []);
-          setSystemTouchpoints(combinedData.systemTouchpoints || []);
-          setSystemPlatforms(combinedData.systemPlatforms || []);
-
-          setPrograms(combinedData.programs || []);
-          setMgmtProjects(combinedData.mgmtProjects || []);
-          setMilestones(combinedData.milestones || []);
-          setMgmtTasks(combinedData.mgmtTasks || []);
-          setMgmtHubs(combinedData.mgmtHubs || []);
-          setWeeklyUpdates(combinedData.weeklyUpdates || []);
-          setDecisionLogs(combinedData.decisionLogs || []);
-        } catch (error: any) {
-          console.error('Failed to fetch data from Google Sheets:', error);
-          // Try to parse GAPI error for more specific user feedback
-          const gapiError = error.result?.error;
-          let errorMessage =
-            'Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.';
-          if (gapiError) {
-            errorMessage = `Failed to access spreadsheet. Check permissions or ID. Error: ${gapiError.message}`;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          setDataError(new Error(errorMessage));
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchData();
+      refreshData();
     } else {
       if (!isSignedIn) {
         setPeople(mockPeople);
@@ -451,7 +461,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       }
       setLoading(false);
     }
-  }, [isSignedIn, isConfigured, dynamicConfigs]);
+  }, [isSignedIn, isConfigured, dynamicConfigs, refreshData]);
 
   const addPerson = useCallback(
     async (person: Omit<Person, 'user_id'>) => {
@@ -1238,6 +1248,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     addSystemPlatform,
     updateSystemPlatform,
     deleteSystemPlatform,
+    refreshData,
   };
 
   return (

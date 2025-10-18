@@ -10,7 +10,8 @@ import {
 } from '../../components/Icons';
 import type { SystemHub } from '../../types';
 
-export type SystemEntityType = 'segment' | 'flywheel' | 'bu' | 'channel' | 'hub' | 'person' | 'interface' | 'stage' | 'touchpoint';
+// Centralized entity type definition imported from types.ts
+import type { SystemEntityType } from '../../types';
 
 // Helper to parse currency strings
 const parseCurrency = (val: any): number => {

@@ -3,8 +3,9 @@ import { useData } from '../../contexts/DataContext';
 import type { Program, MgmtProject, Milestone, MgmtTask, SystemPerson, SystemSegment, Priority, SystemPlatform, SystemChannel, SystemHub } from '../../types';
 import Badge from '../../components/ui/Badge';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
-import { CloseIcon, TargetIcon, ExclamationTriangleIcon, FolderIcon, ClipboardCheckIcon, UsersIcon, MegaphoneIcon, Squares2X2Icon } from '../../components/Icons';
+import { CloseIcon, TargetIcon, ExclamationTriangleIcon, FolderIcon, ClipboardCheckIcon, UsersIcon, MegaphoneIcon, Squares2X2Icon, ChevronDownIcon } from '../../components/Icons';
 import Tooltip from '../../components/ui/Tooltip';
+import Button from '../../components/ui/Button';
 
 // --- SKELETON COMPONENTS ---
 
@@ -798,7 +799,7 @@ const ProgramsViewPage: React.FC = () => {
     
 
     return (
-        <div className="h-full flex flex-col gap-4 overflow-y-auto pr-2 pb-4">
+        <div className="flex flex-col gap-4 pr-2 pb-4">
             <Tooltip content={activeTooltip.content} targetRect={activeTooltip.targetRect} />
 
             {/* --- TOP: SEGMENTS --- */}
@@ -827,14 +828,14 @@ const ProgramsViewPage: React.FC = () => {
                 )}
             </div>
 
-            <div className="w-full h-px bg-gray-800"></div>
+            <div className="w-full h-px bg-gray-800 flex-shrink-0"></div>
 
             {/* --- MIDDLE: PROGRAMS, PROJECTS, TASKS --- */}
-            <div className="flex-1 flex flex-col gap-4 min-h-0">
+            <div className="flex flex-col gap-4">
                 <div className="text-center">
                     <h2 className="text-xl font-semibold text-white">Programs, Projects & Tasks</h2>
                 </div>
-                <div className="flex-1 flex gap-4 min-h-0">
+                <div className="flex gap-4 h-[70vh]">
                     <div className="w-2/3 flex-1 flex flex-col h-full">
                         <div className="flex-1 flex justify-center gap-4 overflow-x-auto pb-4 px-1">
                             {loading ? <>
@@ -872,49 +873,50 @@ const ProgramsViewPage: React.FC = () => {
                 </div>
             </div>
 
-            <div className="w-full h-px bg-gray-800"></div>
+            <div className="w-full h-px bg-gray-800 flex-shrink-0"></div>
             
             {/* --- BOTTOM: HUBS, PEOPLE, CHANNELS, PLATFORMS --- */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 flex-shrink-0 pt-4">
-                {/* LEFT COLUMN */}
-                <div className="space-y-6">
-                    <div className="flex-shrink-0">
-                        <div className="text-center mb-2">
-                            <h2 className="text-xl font-semibold text-white">Channels</h2>
+            <div className="flex-shrink-0 pt-2">
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 pt-4">
+                    {/* LEFT COLUMN */}
+                    <div className="space-y-6">
+                        <div className="flex-shrink-0">
+                            <div className="text-center mb-2">
+                                <h2 className="text-xl font-semibold text-white">Channels</h2>
+                            </div>
+                            {loading ? <RowSkeleton /> : (
+                                <ChannelRow channels={systemChannels} selectedId={selection?.type === 'channel' ? selection.id : null} onSelect={handleSelect} />
+                            )}
                         </div>
-                        {loading ? <RowSkeleton /> : (
-                            <ChannelRow channels={systemChannels} selectedId={selection?.type === 'channel' ? selection.id : null} onSelect={handleSelect} />
-                        )}
-                    </div>
-                    <div className="flex-shrink-0">
-                        <div className="text-center mb-2">
-                            <h2 className="text-xl font-semibold text-white">Platforms</h2>
+                        <div className="flex-shrink-0">
+                            <div className="text-center mb-2">
+                                <h2 className="text-xl font-semibold text-white">Platforms</h2>
+                            </div>
+                            {loading ? <RowSkeleton /> : (
+                                <PlatformRow platforms={systemPlatforms} selectedId={selection?.type === 'platform' ? selection.id : null} onSelect={handleSelect} />
+                            )}
                         </div>
-                        {loading ? <RowSkeleton /> : (
-                            <PlatformRow platforms={systemPlatforms} selectedId={selection?.type === 'platform' ? selection.id : null} onSelect={handleSelect} />
-                        )}
                     </div>
-                </div>
 
-                {/* RIGHT COLUMN */}
-                <div className="flex flex-col">
-                    <div className="text-center mb-2">
-                        <h2 className="text-xl font-semibold text-white">Hubs & People</h2>
+                    {/* RIGHT COLUMN */}
+                    <div className="flex flex-col">
+                        <div className="text-center mb-2">
+                            <h2 className="text-xl font-semibold text-white">Hubs & People</h2>
+                        </div>
+                        {loading ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><SkeletonCard className="h-48"/><SkeletonCard className="h-48"/></div> : (
+                            <HubsAndPeopleSection
+                                hubs={systemHubs}
+                                people={sortedPeople}
+                                selection={selection}
+                                onSelect={handleSelect}
+                                isFiltered={selectionData.isFiltered}
+                                highlightedHubIds={selectionData.highlights.hubs}
+                                highlightedPersonIds={selectionData.highlights.people}
+                            />
+                        )}
                     </div>
-                    {loading ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><SkeletonCard className="h-48"/><SkeletonCard className="h-48"/></div> : (
-                        <HubsAndPeopleSection
-                            hubs={systemHubs}
-                            people={sortedPeople}
-                            selection={selection}
-                            onSelect={handleSelect}
-                            isFiltered={selectionData.isFiltered}
-                            highlightedHubIds={selectionData.highlights.hubs}
-                            highlightedPersonIds={selectionData.highlights.people}
-                        />
-                    )}
                 </div>
             </div>
-
 
             <DetailPane detail={detailPane} onClose={handleClosePane} onSelect={handleCardClick} />
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useData } from '../../contexts/DataContext';
-// FIX: Changed to type import as SystemEntityType is only used for type annotations.
-import type { SystemEntityType } from '../../pages/system/SystemMapPage';
+// FIX: Changed to type import from central types.ts file for consistency.
+import type { SystemEntityType } from '../../types';
 import Card from '../ui/Card';
 
 // Import all focus components

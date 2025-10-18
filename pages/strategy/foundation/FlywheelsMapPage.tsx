@@ -12,8 +12,7 @@ import Badge from '../../../components/ui/Badge';
 import { PRIORITY_COLORS, SYSTEM_STATUS_COLORS } from '../../../constants';
 import type { Priority } from '../../../types';
 
-import type { SystemBusinessUnit, SystemFlywheel, SystemSegment, SystemChannel, SystemHub, SystemPerson, SystemPlatform } from '../../../types';
-import type { SystemEntityType } from '../../../pages/system/SystemMapPage';
+import type { SystemBusinessUnit, SystemFlywheel, SystemSegment, SystemChannel, SystemHub, SystemPerson, SystemPlatform, SystemEntityType } from '../../../types';
 
 // Form Modals for System Data
 import SystemSegmentFormModal from '../../../components/forms/system-map/SystemSegmentFormModal';
@@ -464,21 +463,6 @@ const FlywheelsMapPage: React.FC = () => {
     const handleOpenModal = (type: SystemEntityType, data: any = null) => setModalState({ type, isOpen: true, data });
     const handleCloseModal = () => setModalState({ type: null, isOpen: false, data: null });
     
-    const handleSave = (type: SystemEntityType, data: any) => {
-        const idKeyMap: Record<SystemEntityType, string> = { segment: 'segment_id', flywheel: 'flywheel_id', bu: 'bu_id', channel: 'channel_id', hub: 'hub_id', person: 'person_id', interface: 'interface_id', stage: 'stage_id', touchpoint: 'touchpoint_id' };
-        const idKey = idKeyMap[type];
-        const isEditing = modalState.data && modalState.data[idKey];
-
-        switch(type) {
-            case 'segment': isEditing ? data.updateSystemSegment(data) : data.addSystemSegment(data); break;
-            case 'flywheel': isEditing ? data.updateSystemFlywheel(data) : data.addSystemFlywheel(data); break;
-            case 'bu': isEditing ? data.updateSystemBusinessUnit(data) : data.addSystemBusinessUnit(data); break;
-            case 'hub': isEditing ? data.updateSystemHub(data) : data.addSystemHub(data); break;
-            case 'person': isEditing ? data.updateSystemPerson(data) : data.addSystemPerson(data); break;
-        }
-        handleCloseModal();
-    };
-
     const hubOrder = [
         "Digital Platform",
         "Production & Fulfillment",
@@ -766,7 +750,7 @@ const FlywheelsMapPage: React.FC = () => {
                                                 </div>
                                             </div>
                                             {/* People Grid */}
-                                            <div className="p-2 grid grid-cols-2 gap-1 flex-1 items-start [&>:last-child:nth-child(odd)]:col-span-2">
+                                            <div className="p-2 grid grid-cols-2 gap-1 flex-1 items-start content-start [&>:last-child:nth-child(odd)]:col-span-2">
                                                 {relatedPeople.map(person => {
                                                     const personIsSelected = selection?.type === 'person' && selection.id === person.person_id;
                                                     const personIsHighlighted = highlightedIds.person.has(person.person_id);

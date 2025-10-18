@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 
+import { useAuth } from '../contexts/AuthContext';
 import {
   BeakerIcon,
   BriefcaseIcon,
@@ -49,6 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   setPinned,
   collapsedWidth,
 }) => {
+  const { isSignedIn } = useAuth();
   const isResizing = useRef(false);
   const [isAppMenuOpen, setAppMenuOpen] = useState(false);
   const appMenuRef = useRef<HTMLDivElement>(null);
@@ -118,6 +120,26 @@ const Sidebar: React.FC<SidebarProps> = ({
     fixed top-0 left-0 h-full z-40
   `;
 
+  const navItems = [
+    { to: '/command-center', icon: HomeIcon, label: 'COMMAND CENTER' },
+    {
+      to: '/strategy',
+      icon: PresentationChartLineIcon,
+      label: 'STRATEGY',
+    },
+    { to: '/system', icon: BriefcaseIcon, label: 'SYSTEM' },
+    { to: '/execution', icon: FolderIcon, label: 'EXECUTION' },
+    { to: '/marketing', icon: MegaphoneIcon, label: 'MARKETING' },
+    { to: '/creative', icon: BeakerIcon, label: 'CREATIVE' },
+    { to: '/revenue', icon: CurrencyDollarIcon, label: 'REVENUE' },
+    { to: '/tools', icon: WrenchScrewdriverIcon, label: 'TOOLS' },
+    { to: '/admin', icon: Cog6ToothIcon, label: 'ADMIN', requiresAuth: true },
+  ];
+
+  const filteredNavItems = navItems.filter(
+    (item) => !item.requiresAuth || isSignedIn,
+  );
+
   return (
     <>
       <div
@@ -141,21 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           className="flex-1 px-4 py-4 space-y-2 overflow-y-auto overflow-x-hidden"
           onClick={handleOverlayClick}
         >
-          {[
-            { to: '/command-center', icon: HomeIcon, label: 'COMMAND CENTER' },
-            {
-              to: '/strategy',
-              icon: PresentationChartLineIcon,
-              label: 'STRATEGY',
-            },
-            { to: '/system', icon: BriefcaseIcon, label: 'SYSTEM' },
-            { to: '/execution', icon: FolderIcon, label: 'EXECUTION' },
-            { to: '/marketing', icon: MegaphoneIcon, label: 'MARKETING' },
-            { to: '/creative', icon: BeakerIcon, label: 'CREATIVE' },
-            { to: '/revenue', icon: CurrencyDollarIcon, label: 'REVENUE' },
-            { to: '/tools', icon: WrenchScrewdriverIcon, label: 'TOOLS' },
-            { to: '/admin', icon: Cog6ToothIcon, label: 'ADMIN' },
-          ].map((item) => (
+          {filteredNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

@@ -464,6 +464,9 @@ export const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
     />
   </svg>
 );
+export const RefreshIcon = createOutlineIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 16.023c1.863-1.863 3.001-4.38 3.001-7.172 0-5.523-4.477-10-10-10S2.024 3.328 2.024 8.851c0 2.792 1.138 5.309 3.001 7.172m11.002 0a10.003 10.003 0 01-11.002 0m11.002 0h-4.25m4.25 0v-4.25" />
+);
 export const ScaleIcon = createOutlineIcon(
   <path
     strokeLinecap="round"

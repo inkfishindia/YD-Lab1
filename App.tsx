@@ -384,6 +384,7 @@ const MainLayout: React.FC<{
                 {/* EXECUTION */}
                 <Route path="/execution" element={<ExecutionPage />}>
                   <Route index element={<ProgramsViewPage />} />
+                  <Route path="*" element={<ProgramsViewPage />} />
                 </Route>
 
                 {/* MARKETING */}
@@ -489,6 +490,7 @@ const MainLayout: React.FC<{
                     element={<Navigate to="dashboard" replace />}
                   />
                   <Route path="dashboard" element={<FlywheelsMapPage />} />
+                  <Route path="positioning" element={<PositioningPage />} />
                   <Route path="business-units" element={<BusinessUnitsTabs />}>
                     <Route
                       index

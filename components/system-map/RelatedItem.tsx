@@ -1,7 +1,7 @@
 import React from 'react';
 import { TargetIcon, RocketLaunchIcon, BuildingStorefrontIcon, MegaphoneIcon, ComputerDesktopIcon, Squares2X2Icon, UserGroupIcon, QueueListIcon, CursorArrowRaysIcon } from '../Icons';
-// FIX: Changed to type import as SystemEntityType is only used for type annotations.
-import type { SystemEntityType } from '../../pages/system/SystemMapPage';
+// FIX: Changed to type import from central types.ts file for consistency.
+import type { SystemEntityType } from '../../types';
 
 const iconMap: Record<string, React.ElementType> = {
     segment: TargetIcon,

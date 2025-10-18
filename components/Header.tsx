@@ -33,6 +33,7 @@ import {
   PencilIcon,
   BuildingStorefrontIcon,
   QueueListIcon,
+  RefreshIcon,
 } from './Icons';
 
 interface HeaderProps {
@@ -118,7 +119,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
   const { isSignedIn, currentUser, signIn, signOut } = useAuth();
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const { hasPermission } = usePermissions();
-  const { loading: dataLoading, dataError } = useData();
+  const { refreshData, loading: dataLoading, dataError } = useData();
 
   const canCreateSomething = hasPermission('people:write');
   const canManageRoles = hasPermission('roles:write');
@@ -152,12 +153,36 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
     setDropdownOpen(false);
   };
 
+  const handleRefresh = () => {
+    if (!dataLoading) {
+      refreshData();
+    }
+  };
+
   return (
     <header className="flex-shrink-0 bg-gray-950 border-b border-gray-800 flex flex-col">
       {/* --- Top Row --- */}
       <div className="flex items-center justify-between h-16 px-6">
         <div className="flex items-center">
-          <h1 className="text-xl font-semibold text-white">{getTitle()}</h1>
+          <button
+            onClick={handleRefresh}
+            disabled={dataLoading || !isSignedIn}
+            title={
+              isSignedIn ? 'Refresh data from Google Sheets' : 'Sign in to refresh data'
+            }
+            className="flex items-center gap-2 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <h1 className="text-xl font-semibold text-white">
+              {getTitle()}
+            </h1>
+            {isSignedIn && (
+              <RefreshIcon
+                className={`w-5 h-5 text-gray-400 ${
+                  dataLoading ? 'animate-spin' : ''
+                }`}
+              />
+            )}
+          </button>
         </div>
 
         <div className="flex items-center space-x-4">
