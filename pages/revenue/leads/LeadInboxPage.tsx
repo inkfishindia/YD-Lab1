@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
-import type { Lead } from '../../../types';
+import type { Lead, Person } from '../../../types';
 import { LeadStatus } from '../../../types';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
@@ -135,31 +134,37 @@ const LeadInboxPage: React.FC = () => {
   );
 };
 
+const getInitialLeadData = (people: Person[]): Omit<Lead, 'lead_id'> => ({
+    date: new Date().toISOString().split('T')[0],
+    full_name: '',
+    email: '',
+    phone: '',
+    brand: '',
+    source_channel: '',
+    created_at: new Date().toISOString(),
+    status_stage: LeadStatus.New,
+    sdr_owner_fk: people[0]?.user_id || '',
+    last_activity_date: new Date().toISOString().split('T')[0],
+    lead_score: '',
+    disqualified_reason: '',
+    source_campaign_fk: '',
+});
+
+
 const LeadFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (data: any) => void, lead: Lead | null}> = ({ isOpen, onClose, onSave, lead }) => {
     const { people } = useData();
-    const [formData, setFormData] = useState({
-        full_name: lead?.full_name || '',
-        email: lead?.email || '',
-        phone: lead?.phone || '',
-        brand: lead?.brand || '',
-        source_channel: lead?.source_channel || '',
-        status_stage: lead?.status_stage || LeadStatus.New,
-        sdr_owner_fk: lead?.sdr_owner_fk || '',
-        date: lead?.date || new Date().toISOString().split('T')[0],
-    });
+    const [formData, setFormData] = useState(getInitialLeadData(people));
 
     React.useEffect(() => {
-        setFormData({
-            full_name: lead?.full_name || '',
-            email: lead?.email || '',
-            phone: lead?.phone || '',
-            brand: lead?.brand || '',
-            source_channel: lead?.source_channel || '',
-            status_stage: lead?.status_stage || LeadStatus.New,
-            sdr_owner_fk: lead?.sdr_owner_fk || (people[0]?.user_id || ''),
-            date: lead?.date || new Date().toISOString().split('T')[0],
-        });
-    }, [lead, people]);
+        if (isOpen) {
+            if (lead) {
+                const { lead_id, ...editableData } = lead;
+                setFormData({ ...getInitialLeadData(people), ...editableData });
+            } else {
+                setFormData(getInitialLeadData(people));
+            }
+        }
+    }, [lead, people, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -167,15 +172,7 @@ const LeadFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (da
     
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const submissionData = {
-            ...formData,
-            created_at: lead?.created_at || new Date().toISOString(),
-            last_activity_date: lead?.last_activity_date || new Date().toISOString().split('T')[0],
-            lead_score: lead?.lead_score || '',
-            disqualified_reason: lead?.disqualified_reason || '',
-            source_campaign_fk: lead?.source_campaign_fk || '',
-        };
-        onSave(lead ? { ...submissionData, lead_id: lead.lead_id } : submissionData);
+        onSave(lead ? { ...formData, lead_id: lead.lead_id } : formData);
     };
 
     return (

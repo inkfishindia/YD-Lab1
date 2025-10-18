@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Channel } from '../../types';
 import Modal from '../ui/Modal';
@@ -11,22 +10,24 @@ interface ChannelFormModalProps {
   channel: Channel | null;
 }
 
+const getInitialFormData = (): Omit<Channel, 'channel_id'> => ({
+    channel_name: '',
+    channel_type: '',
+    interfaces: '',
+    focus: '',
+});
+
 const ChannelFormModal: React.FC<ChannelFormModalProps> = ({ isOpen, onClose, onSave, channel }) => {
-    const [formData, setFormData] = useState({
-        channel_name: '',
-        channel_type: '',
-        interfaces: '',
-        focus: '',
-    });
+    const [formData, setFormData] = useState(getInitialFormData());
 
     useEffect(() => {
         if (isOpen) {
-            setFormData({
-                channel_name: channel?.channel_name || '',
-                channel_type: channel?.channel_type || '',
-                interfaces: channel?.interfaces || '',
-                focus: channel?.focus || '',
-            });
+            if (channel) {
+                const { channel_id, ...editableData } = channel;
+                setFormData(editableData);
+            } else {
+                setFormData(getInitialFormData());
+            }
         }
     }, [channel, isOpen]);
 

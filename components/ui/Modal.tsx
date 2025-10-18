@@ -1,5 +1,5 @@
-
 import React, { ReactNode } from 'react';
+
 import { CloseIcon } from '../Icons';
 
 interface ModalProps {
@@ -27,9 +27,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
             <CloseIcon className="w-6 h-6" />
           </button>
         </div>
-        <div className="p-6">
-          {children}
-        </div>
+        <div className="p-6">{children}</div>
       </div>
     </div>
   );

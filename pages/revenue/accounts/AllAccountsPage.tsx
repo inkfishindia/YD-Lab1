@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
-import type { Account } from '../../../types';
+import type { Account, Person } from '../../../types';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
 import { PlusIcon, EditIcon, TrashIcon, SortIcon } from '../../../components/Icons';
@@ -143,23 +142,27 @@ const AllAccountsPage: React.FC = () => {
   );
 };
 
+const getInitialAccountData = (people: Person[]): Omit<Account, 'account_id'> => ({
+    account_name: '',
+    industry: '',
+    website: '',
+    owner_user_id: people[0]?.user_id || '',
+});
+
 const AccountFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (data: any) => void, account: Account | null}> = ({ isOpen, onClose, onSave, account }) => {
     const { people } = useData();
-    const [formData, setFormData] = useState({
-        account_name: account?.account_name || '',
-        industry: account?.industry || '',
-        website: account?.website || '',
-        owner_user_id: account?.owner_user_id || '',
-    });
+    const [formData, setFormData] = useState(getInitialAccountData(people));
 
     React.useEffect(() => {
-        setFormData({
-            account_name: account?.account_name || '',
-            industry: account?.industry || '',
-            website: account?.website || '',
-            owner_user_id: account?.owner_user_id || (people[0]?.user_id || ''),
-        });
-    }, [account, people]);
+        if (isOpen) {
+            if (account) {
+                const { account_id, ...editableData } = account;
+                setFormData(editableData);
+            } else {
+                setFormData(getInitialAccountData(people));
+            }
+        }
+    }, [account, people, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));

@@ -1,12 +1,78 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
-// FIX: Add Project and Task to imports for data mapping.
-import { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, Role, LogEntry, BuiltInTool, Agent, Hub, Interface, Channel, CustomerSegment, SystemSegment, SystemFlywheel, SystemBusinessUnit, SystemChannel, SystemInterface, SystemHub, SystemPerson, SystemStage, SystemTouchpoint, FlywheelStrategy, SegmentPositioning, FunnelStage, InterfaceMap, Program, MgmtProject, Milestone, MgmtTask, MgmtHub, WeeklyUpdate, DecisionLog, Priority, Status, SystemPlatform } from '../types';
-import { useAuth } from './AuthContext';
-import * as sheetService from '../services/googleSheetService';
-import { mockPeople, mockBusinessUnits, mockFlywheels, mockLeads, mockOpportunities, mockAccounts, mockBrainDumps, mockRoles, mockBuiltInTools, mockAgents, mockHubs, mockInterfaces, mockChannels, mockCustomerSegments } from '../data/mockData';
-import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
+
 import * as config from '../sheetConfig';
 import { SheetConfig } from '../sheetConfig';
+// FIX: Add Project and Task to imports for data mapping.
+import {
+  Person,
+  Project,
+  Task,
+  BusinessUnit,
+  Flywheel,
+  Lead,
+  Opportunity,
+  Account,
+  BrainDump,
+  Role,
+  LogEntry,
+  BuiltInTool,
+  Agent,
+  Hub,
+  Interface,
+  Channel,
+  CustomerSegment,
+  SystemSegment,
+  SystemFlywheel,
+  SystemBusinessUnit,
+  SystemChannel,
+  SystemInterface,
+  SystemHub,
+  SystemPerson,
+  SystemStage,
+  SystemTouchpoint,
+  FlywheelStrategy,
+  SegmentPositioning,
+  FunnelStage,
+  InterfaceMap,
+  Program,
+  MgmtProject,
+  Milestone,
+  MgmtTask,
+  MgmtHub,
+  WeeklyUpdate,
+  DecisionLog,
+  Priority,
+  Status,
+  SystemPlatform,
+} from '../types';
+import {
+  mockPeople,
+  mockBusinessUnits,
+  mockFlywheels,
+  mockLeads,
+  mockOpportunities,
+  mockAccounts,
+  mockBrainDumps,
+  mockRoles,
+  mockBuiltInTools,
+  mockAgents,
+  mockHubs,
+  mockInterfaces,
+  mockChannels,
+  mockCustomerSegments,
+} from '../data/mockData';
+import * as sheetService from '../services/googleSheetService';
+
+import { useAuth } from './AuthContext';
+import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
 
 interface IDataContext {
   people: Person[];
@@ -56,7 +122,9 @@ interface IDataContext {
   addLead: (lead: Omit<Lead, 'lead_id'>) => Promise<void>;
   updateLead: (lead: Lead) => Promise<void>;
   deleteLead: (leadId: string) => Promise<void>;
-  addOpportunity: (opportunity: Omit<Opportunity, 'opportunity_id'>) => Promise<void>;
+  addOpportunity: (
+    opportunity: Omit<Opportunity, 'opportunity_id'>,
+  ) => Promise<void>;
   updateOpportunity: (opportunity: Opportunity) => Promise<void>;
   deleteOpportunity: (opportunityId: string) => Promise<void>;
   addAccount: (account: Omit<Account, 'account_id'>) => Promise<void>;
@@ -100,19 +168,29 @@ interface IDataContext {
   deleteTask: (taskId: string) => Promise<void>;
 
   // System CRUD
-  addSystemSegment: (segment: Omit<SystemSegment, 'segment_id'>) => Promise<void>;
+  addSystemSegment: (
+    segment: Omit<SystemSegment, 'segment_id'>,
+  ) => Promise<void>;
   updateSystemSegment: (segment: SystemSegment) => Promise<void>;
   deleteSystemSegment: (id: string) => Promise<void>;
-  addSystemFlywheel: (flywheel: Omit<SystemFlywheel, 'flywheel_id'>) => Promise<void>;
+  addSystemFlywheel: (
+    flywheel: Omit<SystemFlywheel, 'flywheel_id'>,
+  ) => Promise<void>;
   updateSystemFlywheel: (flywheel: SystemFlywheel) => Promise<void>;
   deleteSystemFlywheel: (id: string) => Promise<void>;
-  addSystemBusinessUnit: (bu: Omit<SystemBusinessUnit, 'bu_id'>) => Promise<void>;
+  addSystemBusinessUnit: (
+    bu: Omit<SystemBusinessUnit, 'bu_id'>,
+  ) => Promise<void>;
   updateSystemBusinessUnit: (bu: SystemBusinessUnit) => Promise<void>;
   deleteSystemBusinessUnit: (id: string) => Promise<void>;
-  addSystemChannel: (channel: Omit<SystemChannel, 'channel_id'>) => Promise<void>;
+  addSystemChannel: (
+    channel: Omit<SystemChannel, 'channel_id'>,
+  ) => Promise<void>;
   updateSystemChannel: (channel: SystemChannel) => Promise<void>;
   deleteSystemChannel: (id: string) => Promise<void>;
-  addSystemInterface: (iface: Omit<SystemInterface, 'interface_id'>) => Promise<void>;
+  addSystemInterface: (
+    iface: Omit<SystemInterface, 'interface_id'>,
+  ) => Promise<void>;
   updateSystemInterface: (iface: SystemInterface) => Promise<void>;
   deleteSystemInterface: (id: string) => Promise<void>;
   addSystemHub: (hub: Omit<SystemHub, 'hub_id'>) => Promise<void>;
@@ -124,22 +202,29 @@ interface IDataContext {
   addSystemStage: (stage: Omit<SystemStage, 'stage_id'>) => Promise<void>;
   updateSystemStage: (stage: SystemStage) => Promise<void>;
   deleteSystemStage: (id: string) => Promise<void>;
-  addSystemTouchpoint: (touchpoint: Omit<SystemTouchpoint, 'touchpoint_id'>) => Promise<void>;
+  addSystemTouchpoint: (
+    touchpoint: Omit<SystemTouchpoint, 'touchpoint_id'>,
+  ) => Promise<void>;
   updateSystemTouchpoint: (touchpoint: SystemTouchpoint) => Promise<void>;
   deleteSystemTouchpoint: (id: string) => Promise<void>;
-  addSystemPlatform: (platform: Omit<SystemPlatform, 'platform_id'>) => Promise<void>;
+  addSystemPlatform: (
+    platform: Omit<SystemPlatform, 'platform_id'>,
+  ) => Promise<void>;
   updateSystemPlatform: (platform: SystemPlatform) => Promise<void>;
   deleteSystemPlatform: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<IDataContext | undefined>(undefined);
 
-export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const DataProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const { isSignedIn } = useAuth();
-  const { spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured } = useSpreadsheetConfig();
+  const { spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured } =
+    useSpreadsheetConfig();
   const [loading, setLoading] = useState(true);
   const [dataError, setDataError] = useState<Error | null>(null);
-  
+
   // Data states
   const [people, setPeople] = useState<Person[]>([]);
   const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([]);
@@ -154,25 +239,37 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [hubs, setHubs] = useState<Hub[]>([]);
   const [interfaces, setInterfaces] = useState<Interface[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [customerSegments, setCustomerSegments] = useState<CustomerSegment[]>([]);
-  
+  const [customerSegments, setCustomerSegments] = useState<CustomerSegment[]>(
+    [],
+  );
+
   // System Data states
   const [systemSegments, setSystemSegments] = useState<SystemSegment[]>([]);
   const [systemFlywheels, setSystemFlywheels] = useState<SystemFlywheel[]>([]);
-  const [systemBusinessUnits, setSystemBusinessUnits] = useState<SystemBusinessUnit[]>([]);
+  const [systemBusinessUnits, setSystemBusinessUnits] = useState<
+    SystemBusinessUnit[]
+  >([]);
   const [systemChannels, setSystemChannels] = useState<SystemChannel[]>([]);
-  const [systemInterfaces, setSystemInterfaces] = useState<SystemInterface[]>([]);
+  const [systemInterfaces, setSystemInterfaces] = useState<SystemInterface[]>(
+    [],
+  );
   const [systemHubs, setSystemHubs] = useState<SystemHub[]>([]);
   const [systemPeople, setSystemPeople] = useState<SystemPerson[]>([]);
   const [systemStages, setSystemStages] = useState<SystemStage[]>([]);
-  const [systemTouchpoints, setSystemTouchpoints] = useState<SystemTouchpoint[]>([]);
+  const [systemTouchpoints, setSystemTouchpoints] = useState<SystemTouchpoint[]>(
+    [],
+  );
   const [systemPlatforms, setSystemPlatforms] = useState<SystemPlatform[]>([]);
 
-  const [flywheelStrategies, setFlywheelStrategies] = useState<FlywheelStrategy[]>([]);
-  const [segmentPositionings, setSegmentPositionings] = useState<SegmentPositioning[]>([]);
+  const [flywheelStrategies, setFlywheelStrategies] = useState<
+    FlywheelStrategy[]
+  >([]);
+  const [segmentPositionings, setSegmentPositionings] = useState<
+    SegmentPositioning[]
+  >([]);
   const [funnelStages, setFunnelStages] = useState<FunnelStage[]>([]);
   const [interfaceMaps, setInterfaceMaps] = useState<InterfaceMap[]>([]);
-  
+
   // YDS Management states
   const [programs, setPrograms] = useState<Program[]>([]);
   const [mgmtProjects, setMgmtProjects] = useState<MgmtProject[]>([]);
@@ -190,7 +287,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const defaultConfig = configFn(spreadsheetIds);
       const customMappings = sheetMappings[configName];
       const customDataTypes = sheetDataTypes[configName];
-      
+
       const newColumns = JSON.parse(JSON.stringify(defaultConfig.columns)); // Deep copy
 
       if (customMappings) {
@@ -203,52 +300,52 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (customDataTypes) {
         Object.entries(customDataTypes).forEach(([appField, dataType]) => {
-            if (newColumns[appField]) {
-                newColumns[appField].type = dataType;
-            }
+          if (newColumns[appField]) {
+            newColumns[appField].type = dataType;
+          }
         });
       }
 
       mappedConfigs[configName] = { ...defaultConfig, columns: newColumns };
     });
-    
+
     return {
-        people: mappedConfigs['People'],
-        businessUnits: mappedConfigs['Business Units'],
-        flywheels: mappedConfigs['Flywheels'],
-        leads: mappedConfigs['Leads'],
-        opportunities: mappedConfigs['Opportunities'],
-        accounts: mappedConfigs['Accounts'],
-        braindumps: mappedConfigs['BrainDump'],
-        roles: mappedConfigs['Roles'],
-        logs: mappedConfigs['Logs'],
-        builtInTools: mappedConfigs['Built-in Tools'],
-        agents: mappedConfigs['Agents'],
-        hubs: mappedConfigs['Hubs'],
-        interfaces: mappedConfigs['Interfaces'],
-        channels: mappedConfigs['Channels'],
-        customerSegments: mappedConfigs['Customer Segments'],
-        systemSegments: mappedConfigs['SystemSegments'],
-        systemFlywheels: mappedConfigs['SystemFlywheels'],
-        systemBusinessUnits: mappedConfigs['SystemBusinessUnits'],
-        systemChannels: mappedConfigs['SystemChannels'],
-        systemInterfaces: mappedConfigs['SystemInterfaces'],
-        systemHubs: mappedConfigs['SystemHubs'],
-        systemPeople: mappedConfigs['SystemPeople'],
-        systemStages: mappedConfigs['SystemStages'],
-        systemTouchpoints: mappedConfigs['SystemTouchpoints'],
-        systemPlatforms: mappedConfigs['SystemPlatforms'],
-        flywheelStrategies: mappedConfigs['Flywheel Strategies'],
-        segmentPositionings: mappedConfigs['Segment Positionings'],
-        funnelStages: mappedConfigs['Funnel Stages'],
-        interfaceMaps: mappedConfigs['Interface Maps'],
-        programs: mappedConfigs['Programs'],
-        mgmtProjects: mappedConfigs['MgmtProjects'],
-        milestones: mappedConfigs['Milestones'],
-        mgmtTasks: mappedConfigs['MgmtTasks'],
-        mgmtHubs: mappedConfigs['MgmtHubs'],
-        weeklyUpdates: mappedConfigs['WeeklyUpdates'],
-        decisionLogs: mappedConfigs['DecisionLogs'],
+      people: mappedConfigs['People'],
+      businessUnits: mappedConfigs['Business Units'],
+      flywheels: mappedConfigs['Flywheels'],
+      leads: mappedConfigs['Leads'],
+      opportunities: mappedConfigs['Opportunities'],
+      accounts: mappedConfigs['Accounts'],
+      braindumps: mappedConfigs['BrainDump'],
+      roles: mappedConfigs['Roles'],
+      logs: mappedConfigs['Logs'],
+      builtInTools: mappedConfigs['Built-in Tools'],
+      agents: mappedConfigs['Agents'],
+      hubs: mappedConfigs['Hubs'],
+      interfaces: mappedConfigs['Interfaces'],
+      channels: mappedConfigs['Channels'],
+      customerSegments: mappedConfigs['Customer Segments'],
+      systemSegments: mappedConfigs['SystemSegments'],
+      systemFlywheels: mappedConfigs['SystemFlywheels'],
+      systemBusinessUnits: mappedConfigs['SystemBusinessUnits'],
+      systemChannels: mappedConfigs['SystemChannels'],
+      systemInterfaces: mappedConfigs['SystemInterfaces'],
+      systemHubs: mappedConfigs['SystemHubs'],
+      systemPeople: mappedConfigs['SystemPeople'],
+      systemStages: mappedConfigs['SystemStages'],
+      systemTouchpoints: mappedConfigs['SystemTouchpoints'],
+      systemPlatforms: mappedConfigs['SystemPlatforms'],
+      flywheelStrategies: mappedConfigs['Flywheel Strategies'],
+      segmentPositionings: mappedConfigs['Segment Positionings'],
+      funnelStages: mappedConfigs['Funnel Stages'],
+      interfaceMaps: mappedConfigs['Interface Maps'],
+      programs: mappedConfigs['Programs'],
+      mgmtProjects: mappedConfigs['MgmtProjects'],
+      milestones: mappedConfigs['Milestones'],
+      mgmtTasks: mappedConfigs['MgmtTasks'],
+      mgmtHubs: mappedConfigs['MgmtHubs'],
+      weeklyUpdates: mappedConfigs['WeeklyUpdates'],
+      decisionLogs: mappedConfigs['DecisionLogs'],
     };
   }, [spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured]);
 
@@ -261,7 +358,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setDataError(null);
         try {
           // Group configs by spreadsheet ID to batch requests efficiently.
-          const configsBySpreadsheet: Record<string, { key: string, config: SheetConfig<any> }[]> = {};
+          const configsBySpreadsheet: Record<
+            string,
+            { key: string; config: SheetConfig<any> }[]
+          > = {};
           for (const [key, sheetConfig] of Object.entries(dynamicConfigs)) {
             if (!sheetConfig || !sheetConfig.spreadsheetId) continue;
             const { spreadsheetId } = sheetConfig;
@@ -270,15 +370,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }
             configsBySpreadsheet[spreadsheetId].push({ key, config: sheetConfig });
           }
-          
+
           let combinedData: Record<string, any[]> = {};
-          const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+          const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
           // Fetch spreadsheets sequentially to avoid rate-limiting.
-          for (const [spreadsheetId, configs] of Object.entries(configsBySpreadsheet)) {
-              const result = await sheetService.batchFetchAndParseSheetData(spreadsheetId, configs);
-              combinedData = { ...combinedData, ...result };
-              await delay(1500); // Wait 1.5 seconds between each spreadsheet to stay within per-minute quotas.
+          for (const [spreadsheetId, configs] of Object.entries(
+            configsBySpreadsheet,
+          )) {
+            const result = await sheetService.batchFetchAndParseSheetData(
+              spreadsheetId,
+              configs,
+            );
+            combinedData = { ...combinedData, ...result };
+            await delay(1500); // Wait 1.5 seconds between each spreadsheet to stay within per-minute quotas.
           }
 
           // Set all data states after all fetches are complete.
@@ -296,7 +401,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setInterfaces(combinedData.interfaces || []);
           setChannels(combinedData.channels || []);
           setCustomerSegments(combinedData.customerSegments || []);
-          
+
           setSystemSegments(combinedData.systemSegments || []);
           setSystemFlywheels(combinedData.systemFlywheels || []);
           setSystemBusinessUnits(combinedData.systemBusinessUnits || []);
@@ -307,7 +412,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setSystemStages(combinedData.systemStages || []);
           setSystemTouchpoints(combinedData.systemTouchpoints || []);
           setSystemPlatforms(combinedData.systemPlatforms || []);
-          
+
           setFlywheelStrategies(combinedData.flywheelStrategies || []);
           setSegmentPositionings(combinedData.segmentPositionings || []);
           setFunnelStages(combinedData.funnelStages || []);
@@ -320,368 +425,656 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setMgmtHubs(combinedData.mgmtHubs || []);
           setWeeklyUpdates(combinedData.weeklyUpdates || []);
           setDecisionLogs(combinedData.decisionLogs || []);
-
         } catch (error: any) {
-            console.error("Failed to fetch data from Google Sheets:", error);
-            // Try to parse GAPI error for more specific user feedback
-            const gapiError = error.result?.error;
-            let errorMessage = "Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.";
-            if (gapiError) {
-                errorMessage = `Failed to access spreadsheet. Check permissions or ID. Error: ${gapiError.message}`;
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-            setDataError(new Error(errorMessage));
+          console.error('Failed to fetch data from Google Sheets:', error);
+          // Try to parse GAPI error for more specific user feedback
+          const gapiError = error.result?.error;
+          let errorMessage =
+            'Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.';
+          if (gapiError) {
+            errorMessage = `Failed to access spreadsheet. Check permissions or ID. Error: ${gapiError.message}`;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          setDataError(new Error(errorMessage));
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
       };
       fetchData();
     } else {
-        if (!isSignedIn) {
-            setPeople(mockPeople);
-            setBusinessUnits(mockBusinessUnits);
-            setFlywheels(mockFlywheels);
-            setLeads(mockLeads);
-            setOpportunities(mockOpportunities);
-            setAccounts(mockAccounts);
-            setBrainDumps(mockBrainDumps);
-            setRoles(mockRoles);
-            setBuiltInTools(mockBuiltInTools);
-            setAgents(mockAgents);
-            setHubs(mockHubs);
-            setInterfaces(mockInterfaces);
-            setChannels(mockChannels);
-            setCustomerSegments(mockCustomerSegments);
-            setFlywheelStrategies([]);
-            setSegmentPositionings([]);
-            setFunnelStages([]);
-            setInterfaceMaps([]);
-            setPrograms([]);
-            setMgmtProjects([]);
-            setMilestones([]);
-            setMgmtTasks([]);
-            setMgmtHubs([]);
-            setWeeklyUpdates([]);
-            setDecisionLogs([]);
-        }
-        setLoading(false);
+      if (!isSignedIn) {
+        setPeople(mockPeople);
+        setBusinessUnits(mockBusinessUnits);
+        setFlywheels(mockFlywheels);
+        setLeads(mockLeads);
+        setOpportunities(mockOpportunities);
+        setAccounts(mockAccounts);
+        setBrainDumps(mockBrainDumps);
+        setRoles(mockRoles);
+        setBuiltInTools(mockBuiltInTools);
+        setAgents(mockAgents);
+        setHubs(mockHubs);
+        setInterfaces(mockInterfaces);
+        setChannels(mockChannels);
+        setCustomerSegments(mockCustomerSegments);
+        setFlywheelStrategies([]);
+        setSegmentPositionings([]);
+        setFunnelStages([]);
+        setInterfaceMaps([]);
+        setPrograms([]);
+        setMgmtProjects([]);
+        setMilestones([]);
+        setMgmtTasks([]);
+        setMgmtHubs([]);
+        setWeeklyUpdates([]);
+        setDecisionLogs([]);
+      }
+      setLoading(false);
     }
   }, [isSignedIn, isConfigured, dynamicConfigs]);
 
-  const addPerson = useCallback(async (person: Omit<Person, 'user_id'>) => {
-    if (!dynamicConfigs?.people) throw new Error("People config not ready");
-    // The user_id and email are the same, derived from the form's email field.
-    const newPerson: Person = { ...person, user_id: person.email, is_active: person.is_active ?? true };
-    await sheetService.appendEntity(dynamicConfigs.people, newPerson);
-    setPeople(prev => [...prev, newPerson]);
-  }, [dynamicConfigs]);
+  const addPerson = useCallback(
+    async (person: Omit<Person, 'user_id'>) => {
+      if (!dynamicConfigs?.people) throw new Error('People config not ready');
+      // The user_id and email are the same, derived from the form's email field.
+      const newPerson: Person = {
+        ...person,
+        user_id: person.email,
+        is_active: person.is_active ?? true,
+      };
+      await sheetService.appendEntity(dynamicConfigs.people, newPerson);
+      setPeople((prev) => [...prev, newPerson]);
+    },
+    [dynamicConfigs],
+  );
 
-  const updatePerson = useCallback(async (person: Person) => {
-    if (!dynamicConfigs?.people) throw new Error("People config not ready");
-    await sheetService.updateEntity(dynamicConfigs.people, person);
-    setPeople(prev => prev.map(p => p.user_id === person.user_id ? person : p));
-  }, [dynamicConfigs]);
+  const updatePerson = useCallback(
+    async (person: Person) => {
+      if (!dynamicConfigs?.people) throw new Error('People config not ready');
+      await sheetService.updateEntity(dynamicConfigs.people, person);
+      setPeople((prev) =>
+        prev.map((p) => (p.user_id === person.user_id ? person : p)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const deletePerson = useCallback(async (userId: string) => {
-    if (!dynamicConfigs?.people) throw new Error("People config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.people, userId);
-    setPeople(prev => prev.filter(p => p.user_id !== userId));
-  }, [dynamicConfigs]);
+  const deletePerson = useCallback(
+    async (userId: string) => {
+      if (!dynamicConfigs?.people) throw new Error('People config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.people, userId);
+      setPeople((prev) => prev.filter((p) => p.user_id !== userId));
+    },
+    [dynamicConfigs],
+  );
 
-  const addRole = useCallback(async (role: Role) => {
-    if (!dynamicConfigs?.roles) throw new Error("Roles config not ready");
-    if (roles.some(r => r.role_name.toLowerCase() === role.role_name.toLowerCase())) {
+  const addRole = useCallback(
+    async (role: Role) => {
+      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
+      if (
+        roles.some(
+          (r) => r.role_name.toLowerCase() === role.role_name.toLowerCase(),
+        )
+      ) {
         throw new Error(`Role "${role.role_name}" already exists.`);
-    }
-    await sheetService.appendEntity(dynamicConfigs.roles, role);
-    setRoles(prev => [...prev, role]);
-  }, [dynamicConfigs, roles]);
+      }
+      await sheetService.appendEntity(dynamicConfigs.roles, role);
+      setRoles((prev) => [...prev, role]);
+    },
+    [dynamicConfigs, roles],
+  );
 
-  const updateRole = useCallback(async (role: Role) => {
-    if (!dynamicConfigs?.roles) throw new Error("Roles config not ready");
-    await sheetService.updateEntity(dynamicConfigs.roles, role);
-    setRoles(prev => prev.map(r => r.role_name === role.role_name ? role : r));
-  }, [dynamicConfigs]);
+  const updateRole = useCallback(
+    async (role: Role) => {
+      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
+      await sheetService.updateEntity(dynamicConfigs.roles, role);
+      setRoles((prev) =>
+        prev.map((r) => (r.role_name === role.role_name ? role : r)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteRole = useCallback(async (roleName: string) => {
-    if (!dynamicConfigs?.roles) throw new Error("Roles config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.roles, roleName);
-    setRoles(prev => prev.filter(r => r.role_name !== roleName));
-  }, [dynamicConfigs]);
+  const deleteRole = useCallback(
+    async (roleName: string) => {
+      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.roles, roleName);
+      setRoles((prev) => prev.filter((r) => r.role_name !== roleName));
+    },
+    [dynamicConfigs],
+  );
 
-  const addLead = useCallback(async (lead: Omit<Lead, 'lead_id'>) => {
-    if (!dynamicConfigs?.leads) throw new Error("Leads config not ready");
-    const newLead = await sheetService.createEntity(dynamicConfigs.leads, lead);
-    setLeads(prev => [...prev, newLead]);
-  }, [dynamicConfigs]);
+  const addLead = useCallback(
+    async (lead: Omit<Lead, 'lead_id'>) => {
+      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
+      const newLead = await sheetService.createEntity(dynamicConfigs.leads, lead);
+      setLeads((prev) => [...prev, newLead]);
+    },
+    [dynamicConfigs],
+  );
 
-  const updateLead = useCallback(async (lead: Lead) => {
-    if (!dynamicConfigs?.leads) throw new Error("Leads config not ready");
-    await sheetService.updateEntity(dynamicConfigs.leads, lead);
-    setLeads(prev => prev.map(l => l.lead_id === lead.lead_id ? lead : l));
-  }, [dynamicConfigs]);
+  const updateLead = useCallback(
+    async (lead: Lead) => {
+      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
+      await sheetService.updateEntity(dynamicConfigs.leads, lead);
+      setLeads((prev) =>
+        prev.map((l) => (l.lead_id === lead.lead_id ? lead : l)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteLead = useCallback(async (leadId: string) => {
-    if (!dynamicConfigs?.leads) throw new Error("Leads config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.leads, leadId);
-    setLeads(prev => prev.filter(l => l.lead_id !== leadId));
-  }, [dynamicConfigs]);
-  
-  const addOpportunity = useCallback(async (opportunity: Omit<Opportunity, 'opportunity_id'>) => {
-    if (!dynamicConfigs?.opportunities) throw new Error("Opportunities config not ready");
-    const newOpp = await sheetService.createEntity(dynamicConfigs.opportunities, opportunity);
-    setOpportunities(prev => [...prev, newOpp]);
-  }, [dynamicConfigs]);
+  const deleteLead = useCallback(
+    async (leadId: string) => {
+      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.leads, leadId);
+      setLeads((prev) => prev.filter((l) => l.lead_id !== leadId));
+    },
+    [dynamicConfigs],
+  );
 
-  const updateOpportunity = useCallback(async (opportunity: Opportunity) => {
-    if (!dynamicConfigs?.opportunities) throw new Error("Opportunities config not ready");
-    await sheetService.updateEntity(dynamicConfigs.opportunities, opportunity);
-    setOpportunities(prev => prev.map(o => o.opportunity_id === opportunity.opportunity_id ? opportunity : o));
-  }, [dynamicConfigs]);
+  const addOpportunity = useCallback(
+    async (opportunity: Omit<Opportunity, 'opportunity_id'>) => {
+      if (!dynamicConfigs?.opportunities)
+        throw new Error('Opportunities config not ready');
+      const newOpp = await sheetService.createEntity(
+        dynamicConfigs.opportunities,
+        opportunity,
+      );
+      setOpportunities((prev) => [...prev, newOpp]);
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteOpportunity = useCallback(async (opportunityId: string) => {
-    if (!dynamicConfigs?.opportunities) throw new Error("Opportunities config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.opportunities, opportunityId);
-    setOpportunities(prev => prev.filter(o => o.opportunity_id !== opportunityId));
-  }, [dynamicConfigs]);
+  const updateOpportunity = useCallback(
+    async (opportunity: Opportunity) => {
+      if (!dynamicConfigs?.opportunities)
+        throw new Error('Opportunities config not ready');
+      await sheetService.updateEntity(dynamicConfigs.opportunities, opportunity);
+      setOpportunities((prev) =>
+        prev.map((o) =>
+          o.opportunity_id === opportunity.opportunity_id ? opportunity : o,
+        ),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const addAccount = useCallback(async (account: Omit<Account, 'account_id'>) => {
-    if (!dynamicConfigs?.accounts) throw new Error("Accounts config not ready");
-    const newAccount = await sheetService.createEntity(dynamicConfigs.accounts, account);
-    setAccounts(prev => [...prev, newAccount]);
-  }, [dynamicConfigs]);
+  const deleteOpportunity = useCallback(
+    async (opportunityId: string) => {
+      if (!dynamicConfigs?.opportunities)
+        throw new Error('Opportunities config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.opportunities, opportunityId);
+      setOpportunities((prev) =>
+        prev.filter((o) => o.opportunity_id !== opportunityId),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const updateAccount = useCallback(async (account: Account) => {
-    if (!dynamicConfigs?.accounts) throw new Error("Accounts config not ready");
-    await sheetService.updateEntity(dynamicConfigs.accounts, account);
-    setAccounts(prev => prev.map(a => a.account_id === account.account_id ? account : a));
-  }, [dynamicConfigs]);
+  const addAccount = useCallback(
+    async (account: Omit<Account, 'account_id'>) => {
+      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
+      const newAccount = await sheetService.createEntity(
+        dynamicConfigs.accounts,
+        account,
+      );
+      setAccounts((prev) => [...prev, newAccount]);
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteAccount = useCallback(async (accountId: string) => {
-    if (!dynamicConfigs?.accounts) throw new Error("Accounts config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.accounts, accountId);
-    setAccounts(prev => prev.filter(a => a.account_id !== accountId));
-  }, [dynamicConfigs]);
+  const updateAccount = useCallback(
+    async (account: Account) => {
+      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
+      await sheetService.updateEntity(dynamicConfigs.accounts, account);
+      setAccounts((prev) =>
+        prev.map((a) => (a.account_id === account.account_id ? account : a)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const addBrainDump = useCallback(async (item: Omit<BrainDump, 'braindump_id'>) => {
-    if (!dynamicConfigs?.braindumps) throw new Error("BrainDump config not ready");
-    const newItem = await sheetService.createEntity(dynamicConfigs.braindumps, item);
-    setBrainDumps(prev => [...prev, newItem]);
-  }, [dynamicConfigs]);
+  const deleteAccount = useCallback(
+    async (accountId: string) => {
+      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.accounts, accountId);
+      setAccounts((prev) => prev.filter((a) => a.account_id !== accountId));
+    },
+    [dynamicConfigs],
+  );
 
-  const updateBrainDump = useCallback(async (item: BrainDump) => {
-    if (!dynamicConfigs?.braindumps) throw new Error("BrainDump config not ready");
-    await sheetService.updateEntity(dynamicConfigs.braindumps, item);
-    setBrainDumps(prev => prev.map(bd => bd.braindump_id === item.braindump_id ? item : bd));
-  }, [dynamicConfigs]);
-  
-  const deleteBrainDump = useCallback(async (itemId: string) => {
-    if (!dynamicConfigs?.braindumps) throw new Error("BrainDump config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.braindumps, itemId);
-    setBrainDumps(prev => prev.filter(bd => bd.braindump_id !== itemId));
-  }, [dynamicConfigs]);
-  
-  const addBusinessUnit = useCallback(async (bu: Omit<BusinessUnit, 'bu_id'>) => {
-    if (!dynamicConfigs?.businessUnits) throw new Error("BusinessUnits config not ready");
-    const newBu = await sheetService.createEntity(dynamicConfigs.businessUnits, bu);
-    setBusinessUnits(prev => [...prev, newBu]);
-  }, [dynamicConfigs]);
+  const addBrainDump = useCallback(
+    async (item: Omit<BrainDump, 'braindump_id'>) => {
+      if (!dynamicConfigs?.braindumps)
+        throw new Error('BrainDump config not ready');
+      const newItem = await sheetService.createEntity(
+        dynamicConfigs.braindumps,
+        item,
+      );
+      setBrainDumps((prev) => [...prev, newItem]);
+    },
+    [dynamicConfigs],
+  );
 
-  const updateBusinessUnit = useCallback(async (bu: BusinessUnit) => {
-    if (!dynamicConfigs?.businessUnits) throw new Error("BusinessUnits config not ready");
-    await sheetService.updateEntity(dynamicConfigs.businessUnits, bu);
-    setBusinessUnits(prev => prev.map(b => b.bu_id === bu.bu_id ? bu : b));
-  }, [dynamicConfigs]);
-  
-  const deleteBusinessUnit = useCallback(async (buId: string) => {
-    if (!dynamicConfigs?.businessUnits) throw new Error("BusinessUnits config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.businessUnits, buId);
-    setBusinessUnits(prev => prev.filter(b => b.bu_id !== buId));
-  }, [dynamicConfigs]);
+  const updateBrainDump = useCallback(
+    async (item: BrainDump) => {
+      if (!dynamicConfigs?.braindumps)
+        throw new Error('BrainDump config not ready');
+      await sheetService.updateEntity(dynamicConfigs.braindumps, item);
+      setBrainDumps((prev) =>
+        prev.map((bd) => (bd.braindump_id === item.braindump_id ? item : bd)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const addBuiltInTool = useCallback(async (tool: Omit<BuiltInTool, 'tool_id'>) => {
-    if (!dynamicConfigs?.builtInTools) throw new Error("BuiltInTools config not ready");
-    const newTool = await sheetService.createEntity(dynamicConfigs.builtInTools, tool);
-    setBuiltInTools(prev => [...prev, newTool]);
-  }, [dynamicConfigs]);
+  const deleteBrainDump = useCallback(
+    async (itemId: string) => {
+      if (!dynamicConfigs?.braindumps)
+        throw new Error('BrainDump config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.braindumps, itemId);
+      setBrainDumps((prev) => prev.filter((bd) => bd.braindump_id !== itemId));
+    },
+    [dynamicConfigs],
+  );
 
-  const updateBuiltInTool = useCallback(async (tool: BuiltInTool) => {
-    if (!dynamicConfigs?.builtInTools) throw new Error("BuiltInTools config not ready");
-    await sheetService.updateEntity(dynamicConfigs.builtInTools, tool);
-    setBuiltInTools(prev => prev.map(t => t.tool_id === tool.tool_id ? tool : t));
-  }, [dynamicConfigs]);
+  const addBusinessUnit = useCallback(
+    async (bu: Omit<BusinessUnit, 'bu_id'>) => {
+      if (!dynamicConfigs?.businessUnits)
+        throw new Error('BusinessUnits config not ready');
+      const newBu = await sheetService.createEntity(
+        dynamicConfigs.businessUnits,
+        bu,
+      );
+      setBusinessUnits((prev) => [...prev, newBu]);
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteBuiltInTool = useCallback(async (toolId: string) => {
-    if (!dynamicConfigs?.builtInTools) throw new Error("BuiltInTools config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.builtInTools, toolId);
-    setBuiltInTools(prev => prev.filter(t => t.tool_id !== toolId));
-  }, [dynamicConfigs]);
-  
-  const addAgent = useCallback(async (agent: Omit<Agent, 'agent_id'>) => {
-    if (!dynamicConfigs?.agents) throw new Error("Agents config not ready");
-    const newAgent = await sheetService.createEntity(dynamicConfigs.agents, agent);
-    setAgents(prev => [...prev, newAgent]);
-  }, [dynamicConfigs]);
+  const updateBusinessUnit = useCallback(
+    async (bu: BusinessUnit) => {
+      if (!dynamicConfigs?.businessUnits)
+        throw new Error('BusinessUnits config not ready');
+      await sheetService.updateEntity(dynamicConfigs.businessUnits, bu);
+      setBusinessUnits((prev) =>
+        prev.map((b) => (b.bu_id === bu.bu_id ? bu : b)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const updateAgent = useCallback(async (agent: Agent) => {
-    if (!dynamicConfigs?.agents) throw new Error("Agents config not ready");
-    await sheetService.updateEntity(dynamicConfigs.agents, agent);
-    setAgents(prev => prev.map(a => a.agent_id === agent.agent_id ? agent : a));
-  }, [dynamicConfigs]);
+  const deleteBusinessUnit = useCallback(
+    async (buId: string) => {
+      if (!dynamicConfigs?.businessUnits)
+        throw new Error('BusinessUnits config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.businessUnits, buId);
+      setBusinessUnits((prev) => prev.filter((b) => b.bu_id !== buId));
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteAgent = useCallback(async (agentId: string) => {
-    if (!dynamicConfigs?.agents) throw new Error("Agents config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.agents, agentId);
-    setAgents(prev => prev.filter(a => a.agent_id !== agentId));
-  }, [dynamicConfigs]);
+  const addBuiltInTool = useCallback(
+    async (tool: Omit<BuiltInTool, 'tool_id'>) => {
+      if (!dynamicConfigs?.builtInTools)
+        throw new Error('BuiltInTools config not ready');
+      const newTool = await sheetService.createEntity(
+        dynamicConfigs.builtInTools,
+        tool,
+      );
+      setBuiltInTools((prev) => [...prev, newTool]);
+    },
+    [dynamicConfigs],
+  );
 
-  const addHub = useCallback(async (hub: Omit<Hub, 'hub_id'>) => {
-    if (!dynamicConfigs?.hubs) throw new Error("Hubs config not ready");
-    const newHub = await sheetService.createEntity(dynamicConfigs.hubs, hub);
-    setHubs(prev => [...prev, newHub]);
-  }, [dynamicConfigs]);
+  const updateBuiltInTool = useCallback(
+    async (tool: BuiltInTool) => {
+      if (!dynamicConfigs?.builtInTools)
+        throw new Error('BuiltInTools config not ready');
+      await sheetService.updateEntity(dynamicConfigs.builtInTools, tool);
+      setBuiltInTools((prev) =>
+        prev.map((t) => (t.tool_id === tool.tool_id ? tool : t)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const updateHub = useCallback(async (hub: Hub) => {
-    if (!dynamicConfigs?.hubs) throw new Error("Hubs config not ready");
-    await sheetService.updateEntity(dynamicConfigs.hubs, hub);
-    setHubs(prev => prev.map(h => h.hub_id === hub.hub_id ? hub : h));
-  }, [dynamicConfigs]);
+  const deleteBuiltInTool = useCallback(
+    async (toolId: string) => {
+      if (!dynamicConfigs?.builtInTools)
+        throw new Error('BuiltInTools config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.builtInTools, toolId);
+      setBuiltInTools((prev) => prev.filter((t) => t.tool_id !== toolId));
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteHub = useCallback(async (hubId: string) => {
-    if (!dynamicConfigs?.hubs) throw new Error("Hubs config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.hubs, hubId);
-    setHubs(prev => prev.filter(h => h.hub_id !== hubId));
-  }, [dynamicConfigs]);
-  
-  const addInterface = useCallback(async (iface: Omit<Interface, 'interface_id'>) => {
-    if (!dynamicConfigs?.interfaces) throw new Error("Interfaces config not ready");
-    const newIface = await sheetService.createEntity(dynamicConfigs.interfaces, iface);
-    setInterfaces(prev => [...prev, newIface]);
-  }, [dynamicConfigs]);
+  const addAgent = useCallback(
+    async (agent: Omit<Agent, 'agent_id'>) => {
+      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
+      const newAgent = await sheetService.createEntity(
+        dynamicConfigs.agents,
+        agent,
+      );
+      setAgents((prev) => [...prev, newAgent]);
+    },
+    [dynamicConfigs],
+  );
 
-  const updateInterface = useCallback(async (iface: Interface) => {
-    if (!dynamicConfigs?.interfaces) throw new Error("Interfaces config not ready");
-    await sheetService.updateEntity(dynamicConfigs.interfaces, iface);
-    setInterfaces(prev => prev.map(i => i.interface_id === iface.interface_id ? iface : i));
-  }, [dynamicConfigs]);
+  const updateAgent = useCallback(
+    async (agent: Agent) => {
+      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
+      await sheetService.updateEntity(dynamicConfigs.agents, agent);
+      setAgents((prev) =>
+        prev.map((a) => (a.agent_id === agent.agent_id ? agent : a)),
+      );
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteInterface = useCallback(async (ifaceId: string) => {
-    if (!dynamicConfigs?.interfaces) throw new Error("Interfaces config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.interfaces, ifaceId);
-    setInterfaces(prev => prev.filter(i => i.interface_id !== ifaceId));
-  }, [dynamicConfigs]);
-  
-  const addChannel = useCallback(async (channel: Omit<Channel, 'channel_id'>) => {
-    if (!dynamicConfigs?.channels) throw new Error("Channels config not ready");
-    const newChannel = await sheetService.createEntity(dynamicConfigs.channels, channel);
-    setChannels(prev => [...prev, newChannel]);
-  }, [dynamicConfigs]);
+  const deleteAgent = useCallback(
+    async (agentId: string) => {
+      if (!dynamicConfigs?.agents) throw new Error('Agents config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.agents, agentId);
+      setAgents((prev) => prev.filter((a) => a.agent_id !== agentId));
+    },
+    [dynamicConfigs],
+  );
 
-  const updateChannel = useCallback(async (channel: Channel) => {
-    if (!dynamicConfigs?.channels) throw new Error("Channels config not ready");
-    await sheetService.updateEntity(dynamicConfigs.channels, channel);
-    setChannels(prev => prev.map(c => c.channel_id === channel.channel_id ? channel : c));
-  }, [dynamicConfigs]);
+  const addHub = useCallback(
+    async (hub: Omit<Hub, 'hub_id'>) => {
+      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
+      const newHub = await sheetService.createEntity(dynamicConfigs.hubs, hub);
+      setHubs((prev) => [...prev, newHub]);
+    },
+    [dynamicConfigs],
+  );
 
-  const deleteChannel = useCallback(async (channelId: string) => {
-    if (!dynamicConfigs?.channels) throw new Error("Channels config not ready");
-    await sheetService.deleteEntity(dynamicConfigs.channels, channelId);
-    setChannels(prev => prev.filter(c => c.channel_id !== channelId));
-  }, [dynamicConfigs]);
+  const updateHub = useCallback(
+    async (hub: Hub) => {
+      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
+      await sheetService.updateEntity(dynamicConfigs.hubs, hub);
+      setHubs((prev) => prev.map((h) => (h.hub_id === hub.hub_id ? hub : h)));
+    },
+    [dynamicConfigs],
+  );
 
-  const addFlywheel = useCallback(async (flywheel: Omit<Flywheel, 'flywheel_id'>) => {
-    if (!dynamicConfigs?.flywheels) throw new Error("Flywheels config not ready");
-    const newFlywheel = await sheetService.createEntity(dynamicConfigs.flywheels, flywheel);
-    setFlywheels(prev => [...prev, newFlywheel]);
-  }, [dynamicConfigs]);
+  const deleteHub = useCallback(
+    async (hubId: string) => {
+      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.hubs, hubId);
+      setHubs((prev) => prev.filter((h) => h.hub_id !== hubId));
+    },
+    [dynamicConfigs],
+  );
 
-  const updateFlywheel = useCallback(async (flywheel: Flywheel) => {
-    if (!dynamicConfigs?.flywheels) throw new Error("Flywheels config not ready");
-    await sheetService.updateEntity(dynamicConfigs.flywheels, flywheel);
-    setFlywheels(prev => prev.map(f => f.flywheel_id === flywheel.flywheel_id ? flywheel : f));
-  }, [dynamicConfigs]);
-  
-  const addCustomerSegment = useCallback(async (segment: CustomerSegment) => {
-    if (!dynamicConfigs?.customerSegments) throw new Error("Customer Segments config not ready");
-    const { spreadsheetId, range, columns } = dynamicConfigs.customerSegments;
-    const sheetName = range.split('!')[0];
-    const headerMap = await sheetService.getHeaderMap(spreadsheetId, sheetName);
-    const rowData = sheetService.mapEntityToRowArray(segment, headerMap, columns);
+  const addInterface = useCallback(
+    async (iface: Omit<Interface, 'interface_id'>) => {
+      if (!dynamicConfigs?.interfaces)
+        throw new Error('Interfaces config not ready');
+      const newIface = await sheetService.createEntity(
+        dynamicConfigs.interfaces,
+        iface,
+      );
+      setInterfaces((prev) => [...prev, newIface]);
+    },
+    [dynamicConfigs],
+  );
 
-    await (window as any).gapi.client.sheets.spreadsheets.values.append({
+  const updateInterface = useCallback(
+    async (iface: Interface) => {
+      if (!dynamicConfigs?.interfaces)
+        throw new Error('Interfaces config not ready');
+      await sheetService.updateEntity(dynamicConfigs.interfaces, iface);
+      setInterfaces((prev) =>
+        prev.map((i) => (i.interface_id === iface.interface_id ? iface : i)),
+      );
+    },
+    [dynamicConfigs],
+  );
+
+  const deleteInterface = useCallback(
+    async (ifaceId: string) => {
+      if (!dynamicConfigs?.interfaces)
+        throw new Error('Interfaces config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.interfaces, ifaceId);
+      setInterfaces((prev) => prev.filter((i) => i.interface_id !== ifaceId));
+    },
+    [dynamicConfigs],
+  );
+
+  const addChannel = useCallback(
+    async (channel: Omit<Channel, 'channel_id'>) => {
+      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
+      const newChannel = await sheetService.createEntity(
+        dynamicConfigs.channels,
+        channel,
+      );
+      setChannels((prev) => [...prev, newChannel]);
+    },
+    [dynamicConfigs],
+  );
+
+  const updateChannel = useCallback(
+    async (channel: Channel) => {
+      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
+      await sheetService.updateEntity(dynamicConfigs.channels, channel);
+      setChannels((prev) =>
+        prev.map((c) => (c.channel_id === channel.channel_id ? channel : c)),
+      );
+    },
+    [dynamicConfigs],
+  );
+
+  const deleteChannel = useCallback(
+    async (channelId: string) => {
+      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
+      await sheetService.deleteEntity(dynamicConfigs.channels, channelId);
+      setChannels((prev) => prev.filter((c) => c.channel_id !== channelId));
+    },
+    [dynamicConfigs],
+  );
+
+  const addFlywheel = useCallback(
+    async (flywheel: Omit<Flywheel, 'flywheel_id'>) => {
+      if (!dynamicConfigs?.flywheels)
+        throw new Error('Flywheels config not ready');
+      const newFlywheel = await sheetService.createEntity(
+        dynamicConfigs.flywheels,
+        flywheel,
+      );
+      setFlywheels((prev) => [...prev, newFlywheel]);
+    },
+    [dynamicConfigs],
+  );
+
+  const updateFlywheel = useCallback(
+    async (flywheel: Flywheel) => {
+      if (!dynamicConfigs?.flywheels)
+        throw new Error('Flywheels config not ready');
+      await sheetService.updateEntity(dynamicConfigs.flywheels, flywheel);
+      setFlywheels((prev) =>
+        prev.map((f) => (f.flywheel_id === flywheel.flywheel_id ? flywheel : f)),
+      );
+    },
+    [dynamicConfigs],
+  );
+
+  const addCustomerSegment = useCallback(
+    async (segment: CustomerSegment) => {
+      if (!dynamicConfigs?.customerSegments)
+        throw new Error('Customer Segments config not ready');
+      const { spreadsheetId, range, columns } = dynamicConfigs.customerSegments;
+      const sheetName = range.split('!')[0];
+      const headerMap = await sheetService.getHeaderMap(spreadsheetId, sheetName);
+      const rowData = sheetService.mapEntityToRowArray(
+        segment,
+        headerMap,
+        columns,
+      );
+
+      await (window as any).gapi.client.sheets.spreadsheets.values.append({
         spreadsheetId,
         range: sheetName,
         valueInputOption: 'USER_ENTERED',
         insertDataOption: 'INSERT_ROWS',
         resource: { values: [rowData] },
-    });
-    setCustomerSegments(prev => [...prev, segment]);
-  }, [dynamicConfigs]);
+      });
+      setCustomerSegments((prev) => [...prev, segment]);
+    },
+    [dynamicConfigs],
+  );
 
-  const updateCustomerSegment = useCallback(async (segment: CustomerSegment) => {
-    if (!dynamicConfigs?.customerSegments) throw new Error("Customer Segments config not ready");
-    await sheetService.updateEntity(dynamicConfigs.customerSegments, segment);
-    setCustomerSegments(prev => prev.map(cs => cs.customer_segment === segment.customer_segment ? segment : cs));
-  }, [dynamicConfigs]);
+  const updateCustomerSegment = useCallback(
+    async (segment: CustomerSegment) => {
+      if (!dynamicConfigs?.customerSegments)
+        throw new Error('Customer Segments config not ready');
+      await sheetService.updateEntity(dynamicConfigs.customerSegments, segment);
+      setCustomerSegments((prev) =>
+        prev.map((cs) =>
+          cs.customer_segment === segment.customer_segment ? segment : cs,
+        ),
+      );
+    },
+    [dynamicConfigs],
+  );
 
   // --- System CRUD ---
-  const createCrudForSystemEntity = <T extends { [key: string]: any }>(configKey: string, stateSetter: React.Dispatch<React.SetStateAction<T[]>>) => {
-      const addEntity = useCallback(async (entity: Omit<T, keyof T>) => {
-          if (!dynamicConfigs?.[configKey]) throw new Error(`${configKey} config not ready`);
-          const newEntity = await sheetService.createEntity(dynamicConfigs[configKey], entity);
-          stateSetter(prev => [...prev, newEntity]);
-      }, [dynamicConfigs]);
+  const createCrudForSystemEntity = <T extends { [key: string]: any }>(
+    configKey: string,
+    stateSetter: React.Dispatch<React.SetStateAction<T[]>>,
+  ) => {
+    const addEntity = useCallback(
+      async (entity: Omit<T, keyof T>) => {
+        if (!dynamicConfigs?.[configKey])
+          throw new Error(`${configKey} config not ready`);
+        const newEntity = await sheetService.createEntity(
+          dynamicConfigs[configKey],
+          entity,
+        );
+        stateSetter((prev) => [...prev, newEntity]);
+      },
+      [dynamicConfigs],
+    );
 
-      const updateEntity = useCallback(async (entity: T) => {
-          if (!dynamicConfigs?.[configKey]) throw new Error(`${configKey} config not ready`);
-          await sheetService.updateEntity(dynamicConfigs[configKey], entity);
-          const keyField = dynamicConfigs[configKey].keyField;
-          if (typeof keyField === 'symbol') {
-            throw new Error(`Symbol key fields are not supported for ${configKey}`);
-          }
-          stateSetter(prev => prev.map(e => e[keyField] === entity[keyField] ? entity : e));
-      }, [dynamicConfigs]);
+    const updateEntity = useCallback(
+      async (entity: T) => {
+        if (!dynamicConfigs?.[configKey])
+          throw new Error(`${configKey} config not ready`);
+        await sheetService.updateEntity(dynamicConfigs[configKey], entity);
+        const keyField = dynamicConfigs[configKey].keyField;
+        if (typeof keyField === 'symbol') {
+          throw new Error(`Symbol key fields are not supported for ${configKey}`);
+        }
+        stateSetter((prev) =>
+          prev.map((e) => (e[keyField] === entity[keyField] ? entity : e)),
+        );
+      },
+      [dynamicConfigs],
+    );
 
-      const deleteEntity = useCallback(async (id: string) => {
-          if (!dynamicConfigs?.[configKey]) throw new Error(`${configKey} config not ready`);
-          await sheetService.deleteEntity(dynamicConfigs[configKey], id);
-          const keyField = dynamicConfigs[configKey].keyField;
-          if (typeof keyField === 'symbol') {
-            throw new Error(`Symbol key fields are not supported for ${configKey}`);
-          }
-          stateSetter(prev => prev.filter(e => e[keyField] !== id));
-      }, [dynamicConfigs]);
-      
-      return { addEntity, updateEntity, deleteEntity };
+    const deleteEntity = useCallback(
+      async (id: string) => {
+        if (!dynamicConfigs?.[configKey])
+          throw new Error(`${configKey} config not ready`);
+        await sheetService.deleteEntity(dynamicConfigs[configKey], id);
+        const keyField = dynamicConfigs[configKey].keyField;
+        if (typeof keyField === 'symbol') {
+          throw new Error(`Symbol key fields are not supported for ${configKey}`);
+        }
+        stateSetter((prev) => prev.filter((e) => e[keyField] !== id));
+      },
+      [dynamicConfigs],
+    );
+
+    return { addEntity, updateEntity, deleteEntity };
   };
 
-  const { addEntity: addSystemSegment, updateEntity: updateSystemSegment, deleteEntity: deleteSystemSegment } = createCrudForSystemEntity('systemSegments', setSystemSegments);
-  const { addEntity: addSystemFlywheel, updateEntity: updateSystemFlywheel, deleteEntity: deleteSystemFlywheel } = createCrudForSystemEntity('systemFlywheels', setSystemFlywheels);
-  const { addEntity: addSystemBusinessUnit, updateEntity: updateSystemBusinessUnit, deleteEntity: deleteSystemBusinessUnit } = createCrudForSystemEntity('systemBusinessUnits', setSystemBusinessUnits);
-  const { addEntity: addSystemChannel, updateEntity: updateSystemChannel, deleteEntity: deleteSystemChannel } = createCrudForSystemEntity('systemChannels', setSystemChannels);
-  const { addEntity: addSystemInterface, updateEntity: updateSystemInterface, deleteEntity: deleteSystemInterface } = createCrudForSystemEntity('systemInterfaces', setSystemInterfaces);
-  const { addEntity: addSystemHub, updateEntity: updateSystemHub, deleteEntity: deleteSystemHub } = createCrudForSystemEntity('systemHubs', setSystemHubs);
-  const { addEntity: addSystemPerson, updateEntity: updateSystemPerson, deleteEntity: deleteSystemPerson } = createCrudForSystemEntity('systemPeople', setSystemPeople);
-  const { addEntity: addSystemStage, updateEntity: updateSystemStage, deleteEntity: deleteSystemStage } = createCrudForSystemEntity('systemStages', setSystemStages);
-  const { addEntity: addSystemTouchpoint, updateEntity: updateSystemTouchpoint, deleteEntity: deleteSystemTouchpoint } = createCrudForSystemEntity('systemTouchpoints', setSystemTouchpoints);
-  const { addEntity: addSystemPlatform, updateEntity: updateSystemPlatform, deleteEntity: deleteSystemPlatform } = createCrudForSystemEntity('systemPlatforms', setSystemPlatforms);
+  const {
+    addEntity: addSystemSegment,
+    updateEntity: updateSystemSegment,
+    deleteEntity: deleteSystemSegment,
+  } = createCrudForSystemEntity('systemSegments', setSystemSegments);
+  const {
+    addEntity: addSystemFlywheel,
+    updateEntity: updateSystemFlywheel,
+    deleteEntity: deleteSystemFlywheel,
+  } = createCrudForSystemEntity('systemFlywheels', setSystemFlywheels);
+  const {
+    addEntity: addSystemBusinessUnit,
+    updateEntity: updateSystemBusinessUnit,
+    deleteEntity: deleteSystemBusinessUnit,
+  } = createCrudForSystemEntity('systemBusinessUnits', setSystemBusinessUnits);
+  const {
+    addEntity: addSystemChannel,
+    updateEntity: updateSystemChannel,
+    deleteEntity: deleteSystemChannel,
+  } = createCrudForSystemEntity('systemChannels', setSystemChannels);
+  const {
+    addEntity: addSystemInterface,
+    updateEntity: updateSystemInterface,
+    deleteEntity: deleteSystemInterface,
+  } = createCrudForSystemEntity('systemInterfaces', setSystemInterfaces);
+  const {
+    addEntity: addSystemHub,
+    updateEntity: updateSystemHub,
+    deleteEntity: deleteSystemHub,
+  } = createCrudForSystemEntity('systemHubs', setSystemHubs);
+  const {
+    addEntity: addSystemPerson,
+    updateEntity: updateSystemPerson,
+    deleteEntity: deleteSystemPerson,
+  } = createCrudForSystemEntity('systemPeople', setSystemPeople);
+  const {
+    addEntity: addSystemStage,
+    updateEntity: updateSystemStage,
+    deleteEntity: deleteSystemStage,
+  } = createCrudForSystemEntity('systemStages', setSystemStages);
+  const {
+    addEntity: addSystemTouchpoint,
+    updateEntity: updateSystemTouchpoint,
+    deleteEntity: deleteSystemTouchpoint,
+  } = createCrudForSystemEntity('systemTouchpoints', setSystemTouchpoints);
+  const {
+    addEntity: addSystemPlatform,
+    updateEntity: updateSystemPlatform,
+    deleteEntity: deleteSystemPlatform,
+  } = createCrudForSystemEntity('systemPlatforms', setSystemPlatforms);
 
   // FIX: Map new Mgmt data models to old Project/Task models for backward compatibility.
   const projects: Project[] = useMemo(() => {
     const hubBuMap = new Map<string, string[]>();
-    hubs.forEach(hub => {
+    hubs.forEach((hub) => {
       const bus: string[] = [];
-      if (hub.serves_bu1 && businessUnits[0]) bus.push(businessUnits[0].bu_id);
-      if (hub.serves_bu2 && businessUnits[1]) bus.push(businessUnits[1].bu_id);
-      if (hub.serves_bu3 && businessUnits[2]) bus.push(businessUnits[2].bu_id);
-      if (hub.serves_bu4 && businessUnits[3]) bus.push(businessUnits[3].bu_id);
-      if (hub.serves_bu5 && businessUnits[4]) bus.push(businessUnits[4].bu_id);
-      if (hub.serves_bu6 && businessUnits[5]) bus.push(businessUnits[5].bu_id);
+      if (hub.serves_bu1) {
+        const bu = businessUnits[0];
+        if (bu) bus.push(bu.bu_id);
+      }
+      if (hub.serves_bu2) {
+        const bu = businessUnits[1];
+        if (bu) bus.push(bu.bu_id);
+      }
+      if (hub.serves_bu3) {
+        const bu = businessUnits[2];
+        if (bu) bus.push(bu.bu_id);
+      }
+      if (hub.serves_bu4) {
+        const bu = businessUnits[3];
+        if (bu) bus.push(bu.bu_id);
+      }
+      if (hub.serves_bu5) {
+        const bu = businessUnits[4];
+        if (bu) bus.push(bu.bu_id);
+      }
+      if (hub.serves_bu6) {
+        const bu = businessUnits[5];
+        if (bu) bus.push(bu.bu_id);
+      }
       hubBuMap.set(hub.hub_id, bus);
     });
 
-    return mgmtProjects.map(mp => ({
+    return mgmtProjects.map((mp) => ({
       project_id: mp.project_id,
       project_name: mp.project_name,
       business_unit_id: hubBuMap.get(mp.hub_id) || [],
@@ -696,108 +1089,256 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [mgmtProjects, hubs, businessUnits]);
 
   const tasks: Task[] = useMemo(() => {
-    const milestoneProjectMap = new Map(milestones.map(m => [m.milestone_id, m.project_id]));
-    
-    return mgmtTasks.map(mt => ({
-      task_id: mt.task_id,
-      title: mt.task_name,
-      project_id: mt.project_id || milestoneProjectMap.get(mt.milestone_id) || '',
-      assignee_user_id: mt.assignee_User_id || '',
-      status: mt.status as Status,
-      priority: mt.priority as Priority,
-      estimate_hours: mt.effort_hours,
-      due_date: mt.due_date,
-    }));
+    const milestoneProjectMap = new Map(
+      milestones.map((m) => [m.milestone_id, m.project_id]),
+    );
+
+    return mgmtTasks.map((mt) => {
+      const projectIdFromMilestone = mt.milestone_id
+        ? milestoneProjectMap.get(mt.milestone_id)
+        : undefined;
+      return {
+        task_id: mt.task_id,
+        title: mt.task_name,
+        project_id: mt.project_id || projectIdFromMilestone || '',
+        assignee_user_id: mt.assignee_User_id || '',
+        status: mt.status as Status,
+        priority: mt.priority as Priority,
+        estimate_hours: mt.effort_hours,
+        due_date: mt.due_date,
+      };
+    });
   }, [mgmtTasks, milestones]);
 
   // FIX: Add mock CRUD functions for legacy projects/tasks to avoid crashes.
-  const addProject = useCallback(async (project: Omit<Project, 'project_id'>) => { console.warn("addProject is a mock function and does not save data."); return Promise.resolve(); }, []);
-  const updateProject = useCallback(async (project: Project) => { console.warn("updateProject is a mock function and does not save data."); return Promise.resolve(); }, []);
-  const deleteProject = useCallback(async (projectId: string) => { console.warn("deleteProject is a mock function and does not save data."); return Promise.resolve(); }, []);
-  const addTask = useCallback(async (task: Omit<Task, 'task_id'>) => { console.warn("addTask is a mock function and does not save data."); return Promise.resolve(); }, []);
-  const updateTask = useCallback(async (task: Task) => { console.warn("updateTask is a mock function and does not save data."); return Promise.resolve(); }, []);
-  const deleteTask = useCallback(async (taskId: string) => { console.warn("deleteTask is a mock function and does not save data."); return Promise.resolve(); }, []);
+  const addProject = useCallback(async (project: Omit<Project, 'project_id'>) => {
+    console.warn('addProject is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
+  const updateProject = useCallback(async (project: Project) => {
+    console.warn('updateProject is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
+  const deleteProject = useCallback(async (projectId: string) => {
+    console.warn('deleteProject is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
+  const addTask = useCallback(async (task: Omit<Task, 'task_id'>) => {
+    console.warn('addTask is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
+  const updateTask = useCallback(async (task: Task) => {
+    console.warn('updateTask is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
+  const deleteTask = useCallback(async (taskId: string) => {
+    console.warn('deleteTask is a mock function and does not save data.');
+    return Promise.resolve();
+  }, []);
 
-  const allData = useMemo(() => ({
-    'People': people,
-    'Business Units': businessUnits,
-    'Flywheels': flywheels,
-    'Leads': leads,
-    'Opportunities': opportunities,
-    'Accounts': accounts,
-    'BrainDump': braindumps,
-    'Roles': roles,
-    'Built-in Tools': builtInTools,
-    'Agents': agents,
-    'Hubs': hubs,
-    'Interfaces': interfaces,
-    'Channels': channels,
-    'Customer Segments': customerSegments,
-    'Projects': projects, // Add mapped projects
-    'Tasks': tasks, // Add mapped tasks
-    'SystemSegments': systemSegments,
-    'SystemFlywheels': systemFlywheels,
-    'SystemBusinessUnits': systemBusinessUnits,
-    'SystemChannels': systemChannels,
-    'SystemInterfaces': systemInterfaces,
-    'SystemHubs': systemHubs,
-    'SystemPeople': systemPeople,
-    'SystemStages': systemStages,
-    'SystemTouchpoints': systemTouchpoints,
-    'SystemPlatforms': systemPlatforms,
-    'Flywheel Strategies': flywheelStrategies,
-    'Segment Positionings': segmentPositionings,
-    'Funnel Stages': funnelStages,
-    'Interface Maps': interfaceMaps,
-    'Programs': programs,
-    'MgmtProjects': mgmtProjects,
-    'Milestones': milestones,
-    'MgmtTasks': mgmtTasks,
-    'MgmtHubs': mgmtHubs,
-    'WeeklyUpdates': weeklyUpdates,
-    'DecisionLogs': decisionLogs,
-  }), [people, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, builtInTools, agents, hubs, interfaces, channels, customerSegments, projects, tasks, systemSegments, systemFlywheels, systemBusinessUnits, systemChannels, systemInterfaces, systemHubs, systemPeople, systemStages, systemTouchpoints, systemPlatforms, flywheelStrategies, segmentPositionings, funnelStages, interfaceMaps, programs, mgmtProjects, milestones, mgmtTasks, mgmtHubs, weeklyUpdates, decisionLogs]);
+  const allData = useMemo(
+    () => ({
+      People: people,
+      'Business Units': businessUnits,
+      Flywheels: flywheels,
+      Leads: leads,
+      Opportunities: opportunities,
+      Accounts: accounts,
+      BrainDump: braindumps,
+      Roles: roles,
+      'Built-in Tools': builtInTools,
+      Agents: agents,
+      Hubs: hubs,
+      Interfaces: interfaces,
+      Channels: channels,
+      'Customer Segments': customerSegments,
+      Projects: projects, // Add mapped projects
+      Tasks: tasks, // Add mapped tasks
+      SystemSegments: systemSegments,
+      SystemFlywheels: systemFlywheels,
+      SystemBusinessUnits: systemBusinessUnits,
+      SystemChannels: systemChannels,
+      SystemInterfaces: systemInterfaces,
+      SystemHubs: systemHubs,
+      SystemPeople: systemPeople,
+      SystemStages: systemStages,
+      SystemTouchpoints: systemTouchpoints,
+      SystemPlatforms: systemPlatforms,
+      'Flywheel Strategies': flywheelStrategies,
+      'Segment Positionings': segmentPositionings,
+      'Funnel Stages': funnelStages,
+      'Interface Maps': interfaceMaps,
+      Programs: programs,
+      MgmtProjects: mgmtProjects,
+      Milestones: milestones,
+      MgmtTasks: mgmtTasks,
+      MgmtHubs: mgmtHubs,
+      WeeklyUpdates: weeklyUpdates,
+      DecisionLogs: decisionLogs,
+    }),
+    [
+      people,
+      businessUnits,
+      flywheels,
+      leads,
+      opportunities,
+      accounts,
+      braindumps,
+      roles,
+      builtInTools,
+      agents,
+      hubs,
+      interfaces,
+      channels,
+      customerSegments,
+      projects,
+      tasks,
+      systemSegments,
+      systemFlywheels,
+      systemBusinessUnits,
+      systemChannels,
+      systemInterfaces,
+      systemHubs,
+      systemPeople,
+      systemStages,
+      systemTouchpoints,
+      systemPlatforms,
+      flywheelStrategies,
+      segmentPositionings,
+      funnelStages,
+      interfaceMaps,
+      programs,
+      mgmtProjects,
+      milestones,
+      mgmtTasks,
+      mgmtHubs,
+      weeklyUpdates,
+      decisionLogs,
+    ],
+  );
 
   const value = {
-    people, businessUnits, flywheels, leads, opportunities, accounts, braindumps, roles, builtInTools, agents, hubs, interfaces, channels, customerSegments,
-    projects, tasks, // Add mapped data to context
-    systemSegments, systemFlywheels, systemBusinessUnits, systemChannels, systemInterfaces, systemHubs, systemPeople, systemStages, systemTouchpoints, systemPlatforms,
-    flywheelStrategies, segmentPositionings, funnelStages, interfaceMaps,
-    programs, mgmtProjects, milestones, mgmtTasks, mgmtHubs, weeklyUpdates, decisionLogs,
-    allData, loading, dataError,
-    addPerson, updatePerson, deletePerson,
-    addLead, updateLead, deleteLead,
-    addOpportunity, updateOpportunity, deleteOpportunity,
-    addAccount, updateAccount, deleteAccount,
-    addBrainDump, updateBrainDump, deleteBrainDump,
-    addBusinessUnit, updateBusinessUnit, deleteBusinessUnit,
-    addBuiltInTool, updateBuiltInTool, deleteBuiltInTool,
-    addAgent, updateAgent, deleteAgent,
-    addHub, updateHub, deleteHub,
-    addInterface, updateInterface, deleteInterface,
-    addChannel, updateChannel, deleteChannel,
-    addFlywheel, updateFlywheel,
-    addCustomerSegment, updateCustomerSegment,
-    addRole, updateRole, deleteRole,
+    people,
+    businessUnits,
+    flywheels,
+    leads,
+    opportunities,
+    accounts,
+    braindumps,
+    roles,
+    builtInTools,
+    agents,
+    hubs,
+    interfaces,
+    channels,
+    customerSegments,
+    projects,
+    tasks, // Add mapped data to context
+    systemSegments,
+    systemFlywheels,
+    systemBusinessUnits,
+    systemChannels,
+    systemInterfaces,
+    systemHubs,
+    systemPeople,
+    systemStages,
+    systemTouchpoints,
+    systemPlatforms,
+    flywheelStrategies,
+    segmentPositionings,
+    funnelStages,
+    interfaceMaps,
+    programs,
+    mgmtProjects,
+    milestones,
+    mgmtTasks,
+    mgmtHubs,
+    weeklyUpdates,
+    decisionLogs,
+    allData,
+    loading,
+    dataError,
+    addPerson,
+    updatePerson,
+    deletePerson,
+    addLead,
+    updateLead,
+    deleteLead,
+    addOpportunity,
+    updateOpportunity,
+    deleteOpportunity,
+    addAccount,
+    updateAccount,
+    deleteAccount,
+    addBrainDump,
+    updateBrainDump,
+    deleteBrainDump,
+    addBusinessUnit,
+    updateBusinessUnit,
+    deleteBusinessUnit,
+    addBuiltInTool,
+    updateBuiltInTool,
+    deleteBuiltInTool,
+    addAgent,
+    updateAgent,
+    deleteAgent,
+    addHub,
+    updateHub,
+    deleteHub,
+    addInterface,
+    updateInterface,
+    deleteInterface,
+    addChannel,
+    updateChannel,
+    deleteChannel,
+    addFlywheel,
+    updateFlywheel,
+    addCustomerSegment,
+    updateCustomerSegment,
+    addRole,
+    updateRole,
+    deleteRole,
     // Add mock CRUD functions to context
-    addProject, updateProject, deleteProject,
-    addTask, updateTask, deleteTask,
-    addSystemSegment, updateSystemSegment, deleteSystemSegment,
-    addSystemFlywheel, updateSystemFlywheel, deleteSystemFlywheel,
-    addSystemBusinessUnit, updateSystemBusinessUnit, deleteSystemBusinessUnit,
-    addSystemChannel, updateSystemChannel, deleteSystemChannel,
-    addSystemInterface, updateSystemInterface, deleteSystemInterface,
-    addSystemHub, updateSystemHub, deleteSystemHub,
-    addSystemPerson, updateSystemPerson, deleteSystemPerson,
-    addSystemStage, updateSystemStage, deleteSystemStage,
-    addSystemTouchpoint, updateSystemTouchpoint, deleteSystemTouchpoint,
-    addSystemPlatform, updateSystemPlatform, deleteSystemPlatform,
+    addProject,
+    updateProject,
+    deleteProject,
+    addTask,
+    updateTask,
+    deleteTask,
+    addSystemSegment,
+    updateSystemSegment,
+    deleteSystemSegment,
+    addSystemFlywheel,
+    updateSystemFlywheel,
+    deleteSystemFlywheel,
+    addSystemBusinessUnit,
+    updateSystemBusinessUnit,
+    deleteSystemBusinessUnit,
+    addSystemChannel,
+    updateSystemChannel,
+    deleteSystemChannel,
+    addSystemInterface,
+    updateSystemInterface,
+    deleteSystemInterface,
+    addSystemHub,
+    updateSystemHub,
+    deleteSystemHub,
+    addSystemPerson,
+    updateSystemPerson,
+    deleteSystemPerson,
+    addSystemStage,
+    updateSystemStage,
+    deleteSystemStage,
+    addSystemTouchpoint,
+    updateSystemTouchpoint,
+    deleteSystemTouchpoint,
+    addSystemPlatform,
+    updateSystemPlatform,
+    deleteSystemPlatform,
   };
 
   return (
-    <DataContext.Provider value={value}>
-      {children}
-    </DataContext.Provider>
+    <DataContext.Provider value={value}>{children}</DataContext.Provider>
   );
 };
 

@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Channel } from '../../../types';

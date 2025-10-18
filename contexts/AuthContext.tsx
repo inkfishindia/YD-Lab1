@@ -1,4 +1,13 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
+
+// FIX: Import API keys from api-keys.ts to resolve TypeScript error with import.meta.env.
 import { API_KEY, GOOGLE_CLIENT_ID } from '../api-keys';
 
 interface GoogleUser {
@@ -6,6 +15,14 @@ interface GoogleUser {
   name: string;
   email: string;
   imageUrl: string;
+}
+
+// Added for strict type checking
+interface GoogleProfile {
+  sub: string;
+  name: string;
+  email: string;
+  picture: string;
 }
 
 interface IAuthContext {
@@ -19,16 +36,19 @@ interface IAuthContext {
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
+const SCOPES =
+  'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
 const DISCOVERY_DOCS = [
-    "https://sheets.googleapis.com/$discovery/rest?version=v4",
-    "https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest",
-    "https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest",
-    "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"
+  'https://sheets.googleapis.com/$discovery/rest?version=v4',
+  'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest',
+  'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest',
+  'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest',
 ];
 const LOCAL_STORAGE_KEY = 'google_auth_session';
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<GoogleUser | null>(null);
@@ -39,48 +59,56 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem(LOCAL_STORAGE_KEY);
     const token = (window as any).gapi?.client?.getToken();
     if (token && (window as any).google?.accounts?.oauth2) {
-      (window as any).google.accounts.oauth2.revoke(token.access_token, () => {});
+      (window as any).google.accounts.oauth2.revoke(
+        token.access_token,
+        () => {},
+      );
     }
     (window as any).gapi?.client?.setToken(null);
     setCurrentUser(null);
     setIsSignedIn(false);
   }, []);
 
-  const handleTokenResponse = useCallback(async (tokenResponse: any) => {
-    if (tokenResponse && tokenResponse.access_token) {
-      (window as any).gapi.client.setToken(tokenResponse);
-      try {
-        const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        });
-        if (!profileResponse.ok) {
-          throw new Error(`Failed to fetch profile: ${profileResponse.status}`);
-        }
-        const profile = await profileResponse.json();
-        const user = {
-          id: profile.sub,
-          name: profile.name,
-          email: profile.email,
-          imageUrl: profile.picture,
-        };
-        setCurrentUser(user);
-        setIsSignedIn(true);
+  const handleTokenResponse = useCallback(
+    async (tokenResponse: any) => {
+      if (tokenResponse && tokenResponse.access_token) {
+        (window as any).gapi.client.setToken(tokenResponse);
+        try {
+          const profileResponse = await fetch(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            {
+              headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+            },
+          );
+          if (!profileResponse.ok) {
+            throw new Error(`Failed to fetch profile: ${profileResponse.status}`);
+          }
+          const profile: GoogleProfile = await profileResponse.json();
+          const user = {
+            id: profile.sub,
+            name: profile.name,
+            email: profile.email,
+            imageUrl: profile.picture,
+          };
+          setCurrentUser(user);
+          setIsSignedIn(true);
 
-        // Persist session to localStorage
-        const expiresAt = Date.now() + (tokenResponse.expires_in * 1000);
-        const session = {
+          // Persist session to localStorage
+          const expiresAt = Date.now() + tokenResponse.expires_in * 1000;
+          const session = {
             accessToken: tokenResponse.access_token,
             expiresAt,
             user,
-        };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
-
-      } catch (error) {
-        console.error("Error fetching user profile:", error);
-        signOut();
+          };
+          localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(session));
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          signOut();
+        }
       }
-    }
-  }, [signOut]);
+    },
+    [signOut],
+  );
 
   useEffect(() => {
     const gapiScript = document.createElement('script');
@@ -104,12 +132,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     gapiScript.onload = () => {
       (window as any).gapi.load('client', () => {
-        (window as any).gapi.client.init({
-          apiKey: API_KEY,
-          discoveryDocs: DISCOVERY_DOCS,
-        }).then(() => {
-          // GAPI client is ready. Check for a stored session.
-          /* Temporarily disabled for testing logged-out state
+        (window as any).gapi.client
+          .init({
+            // FIX: Use imported API_KEY instead of import.meta.env.
+            apiKey: API_KEY,
+            discoveryDocs: DISCOVERY_DOCS,
+          })
+          .then(() => {
+            // GAPI client is ready. Check for a stored session.
+            /* Temporarily disabled for testing logged-out state
           try {
             const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (storedSession) {
@@ -131,62 +162,75 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           }
           */
 
-          gapiReady = true;
-          checkAndFinalizeLoading();
-        }).catch((e: any) => {
-            console.error("Original GAPI client init error:", e);
+            gapiReady = true;
+            checkAndFinalizeLoading();
+          })
+          .catch((e: any) => {
+            console.error('Original GAPI client init error:', e);
 
             let detailedError = 'Could not extract detailed error message.';
             try {
-                // Attempt to access the most common error locations first
-                if (e?.result?.error?.message) {
-                    detailedError = e.result.error.message;
-                } else if (e?.message) {
-                    detailedError = e.message;
-                } else {
-                    // Fallback to stringifying the entire object safely.
-                    // This handles cases where the error is not a standard Error object.
-                    detailedError = JSON.stringify(e, null, 2);
-                }
+              // Attempt to access the most common error locations first
+              if (e?.result?.error?.message) {
+                detailedError = e.result.error.message;
+              } else if (e?.message) {
+                detailedError = e.message;
+              } else {
+                // Fallback to stringifying the entire object safely.
+                // This handles cases where the error is not a standard Error object.
+                detailedError = JSON.stringify(e, null, 2);
+              }
             } catch (stringifyError) {
-                detailedError = 'Failed to stringify the error object. Check the console for the raw object.';
+              detailedError =
+                'Failed to stringify the error object. Check the console for the raw object.';
             }
 
             let userFriendlyMessage = `Failed to initialize the Google API client. This is usually due to a configuration issue in your Google Cloud project.`;
 
-            if (detailedError.includes('API not enabled') || detailedError.includes('PERMISSION_DENIED') || detailedError.includes('API_KEY_SERVICE_BLOCKED')) {
-                userFriendlyMessage = 'Configuration Error: An API required by this application (e.g., Sheets, Calendar, Gmail, Drive) is not enabled for your API key.\n\n' +
+            if (
+              detailedError.includes('API not enabled') ||
+              detailedError.includes('PERMISSION_DENIED') ||
+              detailedError.includes('API_KEY_SERVICE_BLOCKED')
+            ) {
+              userFriendlyMessage =
+                'Configuration Error: An API required by this application (e.g., Sheets, Calendar, Gmail, Drive) is not enabled for your API key.\n\n' +
                 'To fix this, please visit the Google Cloud Console, find "APIs & Services > Library", ' +
                 'search for the required APIs, and click ENABLE for each one.';
             } else if (detailedError.includes('API key not valid')) {
-                userFriendlyMessage = 'Configuration Error: The provided API Key is not valid.\n\n' +
-                'Please double-check the `API_KEY` in your `api-keys.ts` file and ensure it has no restrictions in the Google Cloud Console.';
+              userFriendlyMessage =
+                'Configuration Error: The provided API Key is not valid.\n\n' +
+                'Please double-check the `VITE_API_KEY` in your environment file and ensure it has no restrictions in the Google Cloud Console.';
             }
-            
-            setInitError(`${userFriendlyMessage}\n\nTechnical Details:\n${detailedError}`);
-        
+
+            setInitError(
+              `${userFriendlyMessage}\n\nTechnical Details:\n${detailedError}`,
+            );
+
             gapiReady = true;
             checkAndFinalizeLoading();
-        });
+          });
       });
     };
 
     gisScript.onload = () => {
       try {
-          const client = (window as any).google.accounts.oauth2.initTokenClient({
-            client_id: GOOGLE_CLIENT_ID,
-            scope: SCOPES,
-            callback: handleTokenResponse,
-          });
-          setTokenClient(() => client);
-          gisReady = true;
-          checkAndFinalizeLoading();
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
+          // FIX: Use imported GOOGLE_CLIENT_ID instead of import.meta.env.
+          client_id: GOOGLE_CLIENT_ID,
+          scope: SCOPES,
+          callback: handleTokenResponse,
+        });
+        setTokenClient(() => client);
+        gisReady = true;
+        checkAndFinalizeLoading();
       } catch (e: any) {
-          const errorDetails = e.message || JSON.stringify(e);
-          console.error("Error initializing Google Identity Services:", errorDetails);
-          setInitError(`Failed to initialize Google Identity Services: ${errorDetails}`);
-          gisReady = true;
-          checkAndFinalizeLoading();
+        const errorDetails = e.message || JSON.stringify(e);
+        console.error('Error initializing Google Identity Services:', errorDetails);
+        setInitError(
+          `Failed to initialize Google Identity Services: ${errorDetails}`,
+        );
+        gisReady = true;
+        checkAndFinalizeLoading();
       }
     };
 
@@ -203,8 +247,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (tokenClient) {
       tokenClient.requestAccessToken({ prompt: 'consent' });
     } else {
-      console.error("Google Identity Services client not ready.");
-      setInitError("Google Sign-In client is not available. Please try refreshing the page.");
+      console.error('Google Identity Services client not ready.');
+      setInitError(
+        'Google Sign-In client is not available. Please try refreshing the page.',
+      );
     }
   };
 

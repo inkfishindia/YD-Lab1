@@ -1,7 +1,6 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
-import type { Opportunity } from '../../../types';
+import type { Opportunity, Person, Account } from '../../../types';
 import { OpportunityStage } from '../../../types';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
@@ -30,10 +29,12 @@ const PipelineViewPage: React.FC = () => {
     let sortableOpps = [...filteredOpportunities];
     if (sortConfig !== null) {
       sortableOpps.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
+        const valA = a[sortConfig.key] || '';
+        const valB = b[sortConfig.key] || '';
+        if (valA < valB) {
           return sortConfig.direction === 'ascending' ? -1 : 1;
         }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
+        if (valA > valB) {
           return sortConfig.direction === 'ascending' ? 1 : -1;
         }
         return 0;
@@ -150,27 +151,29 @@ const PipelineViewPage: React.FC = () => {
   );
 };
 
+const getInitialOpportunityData = (people: Person[], accounts: Account[]): Omit<Opportunity, 'opportunity_id'> => ({
+    opportunity_name: '',
+    account_id: accounts[0]?.account_id || '',
+    stage: OpportunityStage.Prospecting,
+    amount: 0,
+    close_date: '',
+    owner_user_id: people[0]?.user_id || '',
+});
+
 const OpportunityFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (data: any) => void, opportunity: Opportunity | null}> = ({ isOpen, onClose, onSave, opportunity }) => {
     const { people, accounts } = useData();
-    const [formData, setFormData] = useState({
-        opportunity_name: opportunity?.opportunity_name || '',
-        account_id: opportunity?.account_id || '',
-        owner_user_id: opportunity?.owner_user_id || '',
-        stage: opportunity?.stage || OpportunityStage.Prospecting,
-        amount: opportunity?.amount || 0,
-        close_date: opportunity?.close_date || '',
-    });
+    const [formData, setFormData] = useState(getInitialOpportunityData(people, accounts));
 
     React.useEffect(() => {
-        setFormData({
-            opportunity_name: opportunity?.opportunity_name || '',
-            account_id: opportunity?.account_id || (accounts[0]?.account_id || ''),
-            owner_user_id: opportunity?.owner_user_id || (people[0]?.user_id || ''),
-            stage: opportunity?.stage || OpportunityStage.Prospecting,
-            amount: opportunity?.amount || 0,
-            close_date: opportunity?.close_date || '',
-        });
-    }, [opportunity, people, accounts]);
+        if (isOpen) {
+            if (opportunity) {
+                const { opportunity_id, ...editableData } = opportunity;
+                setFormData(editableData);
+            } else {
+                setFormData(getInitialOpportunityData(people, accounts));
+            }
+        }
+    }, [opportunity, people, accounts, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;

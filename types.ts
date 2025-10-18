@@ -22,19 +22,19 @@ export enum HealthStatus {
 }
 
 export enum LeadStatus {
-    New = 'New',
-    Contacted = 'Contacted',
-    Qualified = 'Qualified',
-    Disqualified = 'Disqualified',
+  New = 'New',
+  Contacted = 'Contacted',
+  Qualified = 'Qualified',
+  Disqualified = 'Disqualified',
 }
 
 export enum OpportunityStage {
-    Prospecting = 'Prospecting',
-    Qualification = 'Qualification',
-    Proposal = 'Proposal',
-    Negotiation = 'Negotiation',
-    ClosedWon = 'Closed - Won',
-    ClosedLost = 'Closed - Lost',
+  Prospecting = 'Prospecting',
+  Qualification = 'Qualification',
+  Proposal = 'Proposal',
+  Negotiation = 'Negotiation',
+  ClosedWon = 'Closed - Won',
+  ClosedLost = 'Closed - Lost',
 }
 
 export interface Role {
@@ -97,193 +97,193 @@ export interface Task {
 }
 
 export interface BusinessUnit {
-    bu_id: string;
-    bu_name: string;
-    bu_type: string;
-    owner_user_id: string;
-    health_status: HealthStatus;
-    priority_level: Priority;
-    primary_flywheel_id: string;
-    upsell_flywheel_id?: string;
-    customerType: string;
-    order_volume_range: string;
-    offering: string;
-    platform_type: string;
-    interface: string;
-    pricing_model: string;
-    avg_order_value: number;
-    target_margin_pct: number;
-    tech_build: string;
-    sales_motion: string;
-    support_type: string;
-    pricing_logic: string;
-    current_revenue: number;
-    current_orders: number;
-    variance_pct: string;
-    growth_rate_required: number;
-    status: string;
+  bu_id: string;
+  bu_name: string;
+  bu_type: string;
+  owner_user_id: string;
+  health_status: HealthStatus;
+  priority_level: Priority;
+  primary_flywheel_id: string;
+  upsell_flywheel_id?: string;
+  customerType: string;
+  order_volume_range: string;
+  offering: string;
+  platform_type: string;
+  interface: string;
+  pricing_model: string;
+  avg_order_value: number;
+  target_margin_pct: number;
+  tech_build: string;
+  sales_motion: string;
+  support_type: string;
+  pricing_logic: string;
+  current_revenue: number;
+  current_orders: number;
+  variance_pct: string;
+  growth_rate_required: number;
+  status: string;
 }
 
 export interface CustomerSegment {
-    customer_segment: string;
-    purpose: string;
-    vission: string;
-    mission: string;
-    expression: string;
-    psychological_job_to_be_done: string;
-    behavioral_truth: string;
-    brand_position_for_them: string;
-    messaging_tone: string;
-    design_pov: string;
-    flywheel_id: string;
+  customer_segment: string;
+  purpose: string;
+  vission: string;
+  mission: string;
+  expression: string;
+  psychological_job_to_be_done: string;
+  behavioral_truth: string;
+  brand_position_for_them: string;
+  messaging_tone: string;
+  design_pov: string;
+  flywheel_id: string;
 }
 
 export interface Flywheel {
-    flywheel_id: string;
-    flywheel_name: string;
-    customer_type: string;
-    motion: string;
-    primary_channels: string[];
-    target_revenue: number;
-    description: string;
-    interface: string;
-    customer_acquisition_motion: string;
-    notes: string;
-    order_size: string;
-    hub_dependencies: string[];
-    key_metrics: string[];
-    revenue_driver: number;
-    revenue_model: number;
-    what_drives_growth: string;
-    economics: string[];
-    target_orders: number;
-    avg_cac: number;
-    avg_ltv: number;
-    conversion_rate_pct: number;
+  flywheel_id: string;
+  flywheel_name: string;
+  customer_type: string;
+  motion: string;
+  primary_channels: string[];
+  target_revenue: number;
+  description: string;
+  interface: string;
+  customer_acquisition_motion: string;
+  notes: string;
+  order_size: string;
+  hub_dependencies: string[];
+  key_metrics: string[];
+  revenue_driver: number;
+  revenue_model: number;
+  what_drives_growth: string;
+  economics: string[];
+  target_orders: number;
+  avg_cac: number;
+  avg_ltv: number;
+  conversion_rate_pct: number;
 }
 
 export interface Account {
-    account_id: string;
-    account_name: string;
-    industry: string;
-    website: string;
-    owner_user_id: string;
+  account_id: string;
+  account_name: string;
+  industry: string;
+  website: string;
+  owner_user_id: string;
 }
 
 export interface Opportunity {
-    opportunity_id: string;
-    opportunity_name: string;
-    account_id: string;
-    stage: OpportunityStage;
-    amount: number;
-    close_date: string;
-    owner_user_id: string;
+  opportunity_id: string;
+  opportunity_name: string;
+  account_id: string;
+  stage: OpportunityStage;
+  amount: number;
+  close_date: string;
+  owner_user_id: string;
 }
 
 export interface Lead {
-    lead_id: string;
-    date: string;
-    full_name: string;
-    email: string;
-    phone: string;
-    brand: string;
-    source_channel: string;
-    created_at: string;
-    status_stage: LeadStatus;
-    sdr_owner_fk: string;
-    last_activity_date: string;
-    lead_score: string;
-    disqualified_reason: string;
-    source_campaign_fk?: string;
+  lead_id: string;
+  date: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  brand: string;
+  source_channel: string;
+  created_at: string;
+  status_stage: LeadStatus;
+  sdr_owner_fk: string;
+  last_activity_date: string;
+  lead_score: string;
+  disqualified_reason: string;
+  source_campaign_fk?: string;
 }
 
 export interface BrainDump {
-    braindump_id: string;
-    timestamp: string;
-    type: string;
-    content: string;
-    user_email: string;
-    priority: Priority;
+  braindump_id: string;
+  timestamp: string;
+  type: string;
+  content: string;
+  user_email: string;
+  priority: Priority;
 }
 
 export interface LogEntry {
-    log_id: string;
-    timestamp: string;
-    log_type: string;
-    content: string;
-    user_email: string;
-    user_name: string;
-    priority: Priority;
-    assigned_to: string;
-    context: string;
-    success_criteria: string;
-    status: Status;
+  log_id: string;
+  timestamp: string;
+  log_type: string;
+  content: string;
+  user_email: string;
+  user_name: string;
+  priority: Priority;
+  assigned_to: string;
+  context: string;
+  success_criteria: string;
+  status: Status;
 }
 
 export interface BuiltInTool {
-    tool_id: string;
-    Tool: string;
-    Category: string;
-    Alternate: string;
-    Use: string;
+  tool_id: string;
+  Tool: string;
+  Category: string;
+  Alternate: string;
+  Use: string;
 }
 
 export interface Agent {
-    agent_id: string;
-    Use: string;
-    Role: string;
-    Persona: string;
-    Character: string;
-    Function: string;
-    Prompt: string;
-    Guidelines: string;
-    References: string;
+  agent_id: string;
+  Use: string;
+  Role: string;
+  Persona: string;
+  Character: string;
+  Function: string;
+  Prompt: string;
+  Guidelines: string;
+  References: string;
 }
 
 export interface Hub {
-    hub_id: string;
-    hub_name: string;
-    function_category: string;
-    owner_user_id: string;
-    what_they_enable: string;
-    serves_flywheel_ids: string[];
-    capacity_constraint: boolean;
-    hiring_priority: string;
-    monthly_budget: number;
-    serves_bu1: boolean;
-    serves_bu2: boolean;
-    serves_bu3: boolean;
-    serves_bu4: boolean;
-    serves_bu5: boolean;
-    serves_bu6: boolean;
-    notes: string;
+  hub_id: string;
+  hub_name: string;
+  function_category: string;
+  owner_user_id: string;
+  what_they_enable: string;
+  serves_flywheel_ids: string[];
+  capacity_constraint: boolean;
+  hiring_priority: string;
+  monthly_budget: number;
+  serves_bu1: boolean;
+  serves_bu2: boolean;
+  serves_bu3: boolean;
+  serves_bu4: boolean;
+  serves_bu5: boolean;
+  serves_bu6: boolean;
+  notes: string;
 }
 
 export interface Interface {
-    interface_id: string;
-    interface_name: string;
-    interface_category: string;
-    interface_type: string;
-    flywheel_id: string;
-    bu_ids_served: string[];
-    interface_owner: string;
-    monthly_budget: number;
-    channel_id: string;
-    interface_goal: string;
-    cost_model: number;
-    avg_cac: number;
-    avg_conversion_rate: number;
-    interface_status: string;
-    notes: string;
-    platform_id?: string;
+  interface_id: string;
+  interface_name: string;
+  interface_category: string;
+  interface_type: string;
+  flywheel_id: string;
+  bu_ids_served: string[];
+  interface_owner: string;
+  monthly_budget: number;
+  channel_id: string;
+  interface_goal: string;
+  cost_model: number;
+  avg_cac: number;
+  avg_conversion_rate: number;
+  interface_status: string;
+  notes: string;
+  platform_id?: string;
 }
 
 export interface Channel {
-    channel_id: string;
-    channel_type: string;
-    channel_name: string;
-    interfaces: string;
-    focus: string;
+  channel_id: string;
+  channel_type: string;
+  channel_name: string;
+  interfaces: string;
+  focus: string;
 }
 
 // from sheetConfig
@@ -547,89 +547,89 @@ export interface SystemTouchpoint {
 }
 
 export interface SystemPlatform {
-    platform_id: string;
-    platform_name: string;
-    platform_type: string;
-    owner_hub: string;
-    primary_segments: string;
-    secondary_segments: string;
-    platform_icon: string;
-    platform_link: string;
+  platform_id: string;
+  platform_name: string;
+  platform_type: string;
+  owner_hub: string;
+  primary_segments: string;
+  secondary_segments: string;
+  platform_icon: string;
+  platform_link: string;
 }
 
 export interface FlywheelStrategy {
-    flywheelId: string;
-    flywheelName: string;
-    strategicRank: string;
-    servesSegments: string;
-    positioningWeOwn: string;
-    networkEffectType: string;
-    velocityCompounding: string;
-    capitalEfficiency: string;
-    strategicAction: string;
-    bottleneckProblem: string;
-    requiredFixes: string;
-    keyBottleneckMetric: string;
-    fixInvestment: string;
-    fixRoi: string;
-    killCriteria: string;
+  flywheelId: string;
+  flywheelName: string;
+  strategicRank: string;
+  servesSegments: string;
+  positioningWeOwn: string;
+  networkEffectType: string;
+  velocityCompounding: string;
+  capitalEfficiency: string;
+  strategicAction: string;
+  bottleneckProblem: string;
+  requiredFixes: string;
+  keyBottleneckMetric: string;
+  fixInvestment: string;
+  fixRoi: string;
+  killCriteria: string;
 }
 
 export interface SegmentPositioning {
-    segment: string;
-    segmentName: string;
-    categoryName: string;
-    categoryDefinition: string;
-    ourPov: string;
-    shiftFrom: string;
-    shiftTo: string;
-    brandArchitecture: string;
-    tagline: string;
-    architectureType: string;
-    categoryCompetedIn: string;
-    positionWeOwn: string;
-    proofPoints: string;
-    gtmImplication: string;
-    strategicBet: string;
-    strategyBetReason: string;
-    action: string;
-    target: string;
-    enablementProgram: string;
-    roi: string;
-    investment: string;
+  segment: string;
+  segmentName: string;
+  categoryName: string;
+  categoryDefinition: string;
+  ourPov: string;
+  shiftFrom: string;
+  shiftTo: string;
+  brandArchitecture: string;
+  tagline: string;
+  architectureType: string;
+  categoryCompetedIn: string;
+  positionWeOwn: string;
+  proofPoints: string;
+  gtmImplication: string;
+  strategicBet: string;
+  strategyBetReason: string;
+  action: string;
+  target: string;
+  enablementProgram: string;
+  roi: string;
+  investment: string;
 }
 
 export interface FunnelStage {
-    stageId: string;
-    flywheelId: string;
-    flywheelName: string;
-    stage: string;
-    type: string;
-    hubId: string;
-    hubName: string;
-    ownerId: string;
-    ownerName: string;
-    interfaceChannel: string;
-    currentConv: string;
-    targetConv: string;
-    time: string;
-    bottleneck: string;
+  stageId: string;
+  flywheelId: string;
+  flywheelName: string;
+  stage: string;
+  type: string;
+  hubId: string;
+  hubName: string;
+  ownerId: string;
+  ownerName: string;
+  interfaceChannel: string;
+  currentConv: string;
+  targetConv: string;
+  time: string;
+  bottleneck: string;
 }
 
 export interface InterfaceMap {
-    flywheel: string;
-    buId: string;
-    channelId: string;
-    channelName: string;
-    interfaceId: string;
-    interfaceName: string;
-    hubId: string;
-    hubName: string;
-    ownerId: string;
-    ownerName: string;
-    sla: string;
-    status: string;
-    bottleneck: string;
+  flywheel: string;
+  buId: string;
+  channelId: string;
+  channelName: string;
+  interfaceId: string;
+  interfaceName: string;
+  hubId: string;
+  hubName: string;
+  ownerId: string;
+  ownerName: string;
+  sla: string;
+  status: string;
+  bottleneck: string;
 }
 
 export interface Program {
@@ -769,35 +769,44 @@ export interface MgmtTask {
 }
 
 export interface MgmtHub {
-    team_id: string;
-    team_name: string;
-    hub_id: string;
-    agency_function: string;
-    primary_kpi: string;
-    budget_monthly: number;
-    headcount: number;
+  team_id: string;
+  team_name: string;
+  hub_id: string;
+  agency_function: string;
+  primary_kpi: string;
+  budget_monthly: number;
+  headcount: number;
 }
 
 export interface WeeklyUpdate {
-    update_id: string;
-    project_id: string;
-    week_ending: string;
-    owner: string;
-    status_color: string;
-    progress_summary: string;
-    blockers: string;
-    decisions_needed: string;
+  update_id: string;
+  project_id: string;
+  week_ending: string;
+  owner: string;
+  status_color: string;
+  progress_summary: string;
+  blockers: string;
+  decisions_needed: string;
 }
 
 export interface DecisionLog {
-    decision_id: string;
-    date: string;
-    decision_maker: string;
-    project_id: string;
-    decision: string;
-    rationale: string;
-    alternatives_considered: string;
-    impact: string;
+  decision_id: string;
+  date: string;
+  decision_maker: string;
+  project_id: string;
+  decision: string;
+  rationale: string;
+  alternatives_considered: string;
+  impact: string;
 }
 
-export type SystemEntityType = 'segment' | 'flywheel' | 'bu' | 'channel' | 'hub' | 'person' | 'interface' | 'stage' | 'touchpoint';
+export type SystemEntityType =
+  | 'segment'
+  | 'flywheel'
+  | 'bu'
+  | 'channel'
+  | 'hub'
+  | 'person'
+  | 'interface'
+  | 'stage'
+  | 'touchpoint';
