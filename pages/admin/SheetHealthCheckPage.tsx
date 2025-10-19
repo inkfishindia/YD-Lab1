@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSpreadsheetConfig, SpreadsheetIds } from '../../contexts/SpreadsheetConfigContext';
 import type { SheetMappings, SheetRelations, SheetDataTypes } from '../../contexts/SpreadsheetConfigContext';
 import { groupedSheetConfigs, allSheetConfigs, SheetConfig, predefinedRelations } from '../../sheetConfig';
@@ -111,11 +111,16 @@ const SheetHealthCheckPage: React.FC = () => {
     }, [isConfigured, runChecks]);
 
     useEffect(() => {
-        if (dataContext.loading || Object.keys(localRelations).length === 0) return;
+        if (dataContext.loading || Object.keys(dataContext.allData).length === 0) return;
+
+        const allRelations = { ...predefinedRelations };
+        for(const [configName, relations] of Object.entries(localRelations)) {
+            allRelations[configName] = { ...(allRelations[configName] || {}), ...relations };
+        }
 
         const newStatus: Record<string, { status: 'ok' | 'error', errors: string[] }> = {};
         
-        for (const [configName, relations] of Object.entries(localRelations)) {
+        for (const [configName, relations] of Object.entries(allRelations)) {
             newStatus[configName] = { status: 'ok', errors: [] };
 
             for (const [field, targetConfigName] of Object.entries(relations)) {
@@ -147,16 +152,16 @@ const SheetHealthCheckPage: React.FC = () => {
                         }
                     };
                     
-                    if (Array.isArray(foreignKeyValue)) foreignKeyValue.forEach(checkFk);
-                    else checkFk(foreignKeyValue);
+                    const valuesToCheck = String(foreignKeyValue).split(/[,|]/).map(s => s.trim()).filter(Boolean);
+                    valuesToCheck.forEach(checkFk);
                 }
             }
         }
         setRelationStatus(newStatus);
     }, [dataContext.loading, dataContext.allData, localRelations, spreadsheetIds]);
 
-    const handleSave = () => {
-        saveSheetConfiguration({ mappings: localMappings, relations: localRelations, dataTypes: localDataTypes });
+    const handleSave = async () => {
+        await saveSheetConfiguration({ mappings: localMappings, relations: localRelations, dataTypes: localDataTypes });
         setIsSaved(true);
         dataContext.refreshData();
         setTimeout(() => setIsSaved(false), 3000);

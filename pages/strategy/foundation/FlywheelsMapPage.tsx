@@ -609,10 +609,10 @@ const FlywheelsMapPage: React.FC = () => {
                 </section>
 
                 {/* --- BOTTOM SECTION --- */}
-                <div className="flex gap-6 flex-1 min-h-0">
+                <div className="flex gap-6 flex-1 min-h-0 items-start">
                     {/* --- BOTTOM LEFT: HOW & WHO --- */}
                     <div className="flex-1 flex flex-col min-h-0">
-                        <section className="flex-1 flex flex-col min-h-0">
+                        <section className="flex flex-col min-h-0">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex-1"></div>
                                 <div className="text-center">
@@ -623,7 +623,7 @@ const FlywheelsMapPage: React.FC = () => {
                                     <Button onClick={() => handleOpenModal('flywheel')} variant="secondary" className="!px-3 !py-1.5"><PlusIcon className="w-4 h-4 mr-2" />Add Flywheel</Button>
                                 </div>
                             </div>
-                            <div className="flex gap-4 overflow-x-auto pb-4 -m-2 px-2 flex-1">
+                            <div className="flex gap-4 overflow-x-auto pb-4 -m-2 px-2">
                                 {data.systemFlywheels.map(flywheel => {
                                     const relatedSegments = data.systemSegments.filter(s => splitAndTrim(flywheel.serves_segments).includes(s.segment_id));
                                     const isSelected = selection?.type === 'flywheel' && selection.id === flywheel.flywheel_id;
@@ -723,7 +723,7 @@ const FlywheelsMapPage: React.FC = () => {
 
                     {/* --- BOTTOM RIGHT: HUBS & TEAMS --- */}
                     <div className="w-[40rem] flex-shrink-0 flex flex-col min-h-0">
-                        <section className="flex-1 flex flex-col min-h-0">
+                        <section className="flex flex-col min-h-0">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex-1"></div>
                                 <div className="text-center">
@@ -733,7 +733,7 @@ const FlywheelsMapPage: React.FC = () => {
                                     <Button onClick={() => handleOpenModal('hub')} variant="secondary" className="!px-3 !py-1.5"><PlusIcon className="w-4 h-4 mr-2" />Add Hub</Button>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-4 auto-rows-min overflow-y-auto flex-1 p-1">
+                            <div className="grid grid-cols-2 gap-4 auto-rows-min overflow-y-auto p-1">
                                 {sortedHubs.map(hub => {
                                     const relatedPeople = data.systemPeople.filter(p => p.primary_hub === hub.hub_id);
                                     const isSelected = selection?.type === 'hub' && selection.id === hub.hub_id;

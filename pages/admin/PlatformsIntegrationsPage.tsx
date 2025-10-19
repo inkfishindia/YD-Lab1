@@ -11,6 +11,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
         YDS_APP: '',
         YDC_BASE: '',
         YDS_MANAGEMENT: '',
+        MASTER_SCHEMA: '',
     });
     const [isSaved, setIsSaved] = useState(false);
 
@@ -44,7 +45,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
                 onChange={handleChange}
                 placeholder="Enter Spreadsheet ID here"
                 className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white focus:ring-blue-500 focus:border-blue-500"
-                required
+                required={key !== 'MASTER_SCHEMA'} 
             />
         </div>
     );
@@ -63,16 +64,19 @@ const PlatformsIntegrationsPage: React.FC = () => {
                 {!isConfigured && (
                     <div className="mt-4 p-4 bg-yellow-900/50 border border-yellow-500/50 rounded-lg text-yellow-300">
                         <p className="font-bold">Configuration Needed</p>
-                        <p className="text-sm">Please fill in all spreadsheet IDs and save to begin using the application.</p>
+                        <p className="text-sm">Please fill in all required spreadsheet IDs and save to begin using the application.</p>
                     </div>
                 )}
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                    {renderInputField("MASTER_SCHEMA", "Master Schema Spreadsheet ID", "The single source of truth for all table schemas. If provided, it overrides the app's default configuration.")}
+                    <hr className="border-gray-700"/>
+                    <h2 className="text-lg font-semibold text-white -mb-4">Data Spreadsheets</h2>
                     {renderInputField("YDS_MANAGEMENT", "YDS Management Spreadsheet ID", "Contains the new Program, Project, Milestone, and Task hierarchy.")}
                     {renderInputField("STRATEGY", "Strategy Spreadsheet ID", "Contains sheets for Business Units and Flywheels.")}
                     {renderInputField("PARTNERS", "Partners/Revenue Spreadsheet ID", "Contains sheets for Leads, Opportunities, and Accounts.")}
-                    {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like People, BrainDump and Logs.")}
-                    {renderInputField("YDC_BASE", "YDC - Base Spreadsheet ID", "Contains the interconnected data for the System Map.")}
+                    {renderInputField("YDS_APP", "YDS App Spreadsheet ID", "Contains sheets for app-specific data like BrainDump and Logs.")}
+                    {renderInputField("YDC_BASE", "YDC - Base Spreadsheet ID", "Contains the interconnected data for the System Map, including People.")}
                     
                     <div className="flex items-center gap-4">
                         <Button type="submit">Save Configuration</Button>

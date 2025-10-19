@@ -140,27 +140,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           })
           .then(() => {
             // GAPI client is ready. Check for a stored session.
-            /* Temporarily disabled for testing logged-out state
-          try {
-            const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
-            if (storedSession) {
-              const session = JSON.parse(storedSession);
-              // Check if session is expired
-              if (session && session.accessToken && session.expiresAt > Date.now()) {
-                // Restore session
-                (window as any).gapi.client.setToken({ access_token: session.accessToken });
-                setCurrentUser(session.user);
-                setIsSignedIn(true);
-              } else {
-                // Clear expired session
-                localStorage.removeItem(LOCAL_STORAGE_KEY);
+            try {
+              const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+              if (storedSession) {
+                const session = JSON.parse(storedSession);
+                // Check if session is expired
+                if (session && session.accessToken && session.expiresAt > Date.now()) {
+                  // Restore session
+                  (window as any).gapi.client.setToken({ access_token: session.accessToken });
+                  setCurrentUser(session.user);
+                  setIsSignedIn(true);
+                } else {
+                  // Clear expired session
+                  localStorage.removeItem(LOCAL_STORAGE_KEY);
+                }
               }
+            } catch (e) {
+              console.error("Could not restore session:", e);
+              localStorage.removeItem(LOCAL_STORAGE_KEY);
             }
-          } catch (e) {
-            console.error("Could not restore session:", e);
-            localStorage.removeItem(LOCAL_STORAGE_KEY);
-          }
-          */
 
             gapiReady = true;
             checkAndFinalizeLoading();

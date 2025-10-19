@@ -761,3 +761,15 @@ export interface InterfaceMap {
   status: string;
   channelId: string;
 }
+
+// Represents one row in the Master Schema sheet.
+export interface MasterSchemaRow {
+  [key: string]: any; // Allow other properties from the sheet
+  _rowIndex: number; // Internal: the 1-based index of the row in the sheet
+  spreadsheet_name: string;
+  table_alias: string;
+  app_field: string;
+  header: string;
+  data_type: 'string' | 'number' | 'boolean' | 'string_array';
+  fk_reference?: string;
+}

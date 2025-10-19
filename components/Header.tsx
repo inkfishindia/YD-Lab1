@@ -122,7 +122,6 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
   const { refreshData, loading: dataLoading, dataError } = useData();
 
   const canCreateSomething = hasPermission('people:write');
-  const canManageRoles = hasPermission('roles:write');
 
   const getTitle = () => {
     const pathParts = location.pathname.split('/').filter((p) => p);
@@ -139,14 +138,7 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
   };
 
   const sectionPrefix = '/' + location.pathname.split('/')[1];
-  let currentTabs = navigationTabs[sectionPrefix];
-
-  if (sectionPrefix === '/profile' && currentTabs) {
-    currentTabs = currentTabs.filter((tab) => {
-      if (tab.href === 'roles') return canManageRoles;
-      return true;
-    });
-  }
+  const currentTabs = navigationTabs[sectionPrefix];
 
   const handleNavigation = (path: string) => {
     navigate(path);

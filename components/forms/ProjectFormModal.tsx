@@ -78,7 +78,6 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, on
     };
     
     const handleMultiSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        // FIX: Explicitly type the 'option' parameter to resolve ambiguity in some TypeScript configurations.
         const selectedOptions = Array.from(e.target.selectedOptions, (option: HTMLOptionElement) => option.value);
         setFormData(prev => ({ ...prev, [e.target.name]: selectedOptions }));
     };

@@ -80,9 +80,13 @@ export const predefinedRelations: Record<string, Record<string, string>> = {
     },
      'SystemFlywheels': {
         owner_person: 'SystemPeople',
+        serves_segments: 'SystemSegments',
+        serves_bus: 'SystemBusinessUnits',
     },
     'SystemSegments': {
         owner_person: 'SystemPeople',
+        served_by_flywheels: 'SystemFlywheels',
+        served_by_bus: 'SystemBusinessUnits',
     },
     'SystemChannels': {
         responsible_person: 'SystemPeople',
@@ -586,7 +590,7 @@ export const getMgmtHubsConfig = (ids: SpreadsheetIds): SheetConfig<MgmtHub> => 
             hub_id: { header: 'hub_id' },
             agency_function: { header: 'agency_function' },
             primary_kpi: { header: 'primary_kpi' },
-            budget_monthly: { header: 'budget_monthly', type: 'number' },
+            budget_monthly: { header: 'budget_allocation', type: 'number' },
             headcount: { header: 'headcount', type: 'number' },
         },
     };
@@ -690,8 +694,7 @@ export const getSystemSegmentsConfig = (ids: SpreadsheetIds): SheetConfig<System
       category_entry_points: { header: 'category_entry_points' },
       buying_situations: { header: 'buying_situations' },
       distinctive_assets: { header: 'distinctive_assets' },
-      age_min: { header: 'age_group', type: 'number' }, // Note: Header is 'age group', might need mapping
-      age_max: { header: 'age group', type: 'number' },
+      age_min: { header: 'age group', type: 'number' }, // Note: Header is 'age group', might need mapping
       company_size: { header: 'company_size' },
       psychographic: { header: 'psychographic' },
       purchase_trigger_1: { header: 'purchase_trigger_1' },
@@ -986,7 +989,6 @@ export const getSystemPlatformsConfig = (ids: SpreadsheetIds): SheetConfig<Syste
             platform_type: { header: 'platform_type' },
             owner_hub: { header: 'owner_hub' },
             primary_segments: { header: 'primary_segments' },
-            secondary_segments: { header: 'Scondary_segments' },
             platform_icon: { header: 'platform_icon_url' },
             platform_link: { header: 'platform_link_url' },
         }
