@@ -17,11 +17,27 @@ interface TaskFormModalProps {
 
 const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, task }) => {
     const { people, projects, hubs, channels, tasks: allTasks } = useData();
-    const [formData, setFormData] = useState({
+    // FIX: Provide explicit type for formData to prevent incorrect type inference.
+    const [formData, setFormData] = useState<{
+        title: string;
+        project_id: string;
+        assignee_user_id: string;
+        status: Status;
+        priority: Priority;
+        estimate_hours: number;
+        due_date: string;
+        description: string;
+        logged_hours: number;
+        channel_id: string;
+        touchpoint_id: string;
+        hub_id: string;
+        dependency_task_id: string;
+    }>({
         title: '',
         project_id: '',
         assignee_user_id: '',
-        status: Status.NotStarted,
+// FIX: Use bracket notation for enum members with spaces.
+        status: Status['Not Started'],
         priority: Priority.Medium,
         estimate_hours: 0,
         due_date: '',
@@ -39,7 +55,8 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({ isOpen, onClose, onSave, 
             title: task?.title || '',
             project_id: task?.project_id || (projects[0]?.project_id || ''),
             assignee_user_id: task?.assignee_user_id || (people[0]?.user_id || ''),
-            status: task?.status || Status.NotStarted,
+// FIX: Use bracket notation for enum members with spaces.
+            status: task?.status || Status['Not Started'],
             priority: task?.priority || Priority.Medium,
             estimate_hours: task?.estimate_hours || 0,
             due_date: task?.due_date || '',

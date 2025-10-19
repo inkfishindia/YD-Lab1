@@ -42,6 +42,7 @@ import {
   SegmentPositioningSchema,
   FunnelStageSchema,
   InterfaceMapSchema,
+  AppSheetRowSchema,
   MasterSchemaRowSchema,
 } from './schemas';
 
@@ -113,5 +114,7 @@ export type SegmentPositioning = z.infer<typeof SegmentPositioningSchema>;
 export type FunnelStage = z.infer<typeof FunnelStageSchema>;
 export type InterfaceMap = z.infer<typeof InterfaceMapSchema>;
 
+// Represents one row in the 'App' sheet for spreadsheet ID configuration.
+export type AppSheetRow = z.infer<typeof AppSheetRowSchema>;
 // Represents one row in the Master Schema sheet.
 export type MasterSchemaRow = z.infer<typeof MasterSchemaRowSchema>;

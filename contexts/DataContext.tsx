@@ -9,7 +9,8 @@ import React, {
 } from 'react';
 
 import * as config from '../sheetConfig';
-import { SheetConfig } from '../sheetConfig';
+// FIX: Changed import for SheetConfig to come from sheetGateway.ts
+import { SheetConfig } from '../services/sheetGateway';
 import {
   Person,
   Project,
@@ -48,6 +49,7 @@ import {
   SegmentPositioning,
   FunnelStage,
   InterfaceMap,
+  AppSheetRow,
 } from '../types';
 import {
   mockPeople,
@@ -70,7 +72,7 @@ import {
 import * as sheetGateway from '../services/sheetGateway';
 
 import { useAuth } from './AuthContext';
-import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
+import { SpreadsheetIds, useSpreadsheetConfig } from './SpreadsheetConfigContext';
 
 interface IDataContext {
   people: Person[];
@@ -110,7 +112,7 @@ interface IDataContext {
   interfaceMaps: InterfaceMap[];
   allData: Record<string, any[]>;
   loading: boolean;
-  dataError: Error | null;
+  dataError: Error[];
   addPerson: (person: Omit<Person, 'user_id'>) => Promise<void>;
   updatePerson: (person: Person) => Promise<void>;
   deletePerson: (userId: string) => Promise<void>;
@@ -206,10 +208,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   const { isSignedIn } = useAuth();
-  const { spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured } =
-    useSpreadsheetConfig();
+  const {
+    spreadsheetIds,
+    sheetMappings,
+    sheetDataTypes,
+    isConfigured,
+    appSheetRows,
+  } = useSpreadsheetConfig();
   const [loading, setLoading] = useState(true);
-  const [dataError, setDataError] = useState<Error | null>(null);
+  const [dataError, setDataError] = useState<Error[]>([]);
 
   // Data states
   const [people, setPeople] = useState<Person[]>([]);
@@ -263,37 +270,78 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [interfaceMaps, setInterfaceMaps] = useState<InterfaceMap[]>([]);
 
   const dynamicConfigs: Record<string, SheetConfig<any>> | null = useMemo(() => {
-    if (!isConfigured) return null;
+    if (!isConfigured || !appSheetRows || appSheetRows.length === 0) return null;
 
     const mappedConfigs: { [key: string]: SheetConfig<any> } = {};
+
+    // Layer 1 is directly from the context's `spreadsheetIds`.
+    // The `appSheetRows` are for Layer 2 mappings.
+
     Object.entries(config.allSheetConfigs).forEach(([configName, configFn]) => {
-      const defaultConfig = configFn(spreadsheetIds);
-      const customMappings = sheetMappings[configName];
-      const customDataTypes = sheetDataTypes[configName];
+      // Layer 2: Find the row in 'App' that maps the alias (configName) to a sheet_name and a spreadsheet_code.
+      const sheetRow = appSheetRows.find(
+        (row) => row.table_alias === configName,
+      );
 
-      const newColumns = JSON.parse(JSON.stringify(defaultConfig.columns)); 
+      if (sheetRow && sheetRow.sheet_name && sheetRow.spreadsheet_code) {
+        const spreadsheetCode =
+          sheetRow.spreadsheet_code.trim() as keyof SpreadsheetIds;
 
-      if (customMappings) {
-        Object.entries(customMappings).forEach(([appField, sheetHeader]) => {
-          if (newColumns[appField]) {
-            newColumns[appField].header = sheetHeader;
+        // Layer 1 lookup: Get the ID from the context state, which is the source of truth.
+        const spreadsheetIdToUse = spreadsheetIds[spreadsheetCode];
+
+        if (spreadsheetIdToUse) {
+          const defaultConfig = configFn(spreadsheetIds); // This is just for schema, columns, etc. The ID will be overridden.
+          const newSheetName = sheetRow.sheet_name;
+
+          // Re-build the range string with the dynamically found sheet name.
+          const sheetPart = newSheetName.includes(' ')
+            ? `'${newSheetName}'`
+            : newSheetName;
+          const originalRangeParts = defaultConfig.range.split('!');
+          const newRange = `${sheetPart}!${
+            originalRangeParts.length > 1 ? originalRangeParts[1] : 'A:Z'
+          }`;
+
+          // Layer 3: Apply custom column header and data type mappings from the master schema.
+          const customMappings = sheetMappings[configName];
+          const customDataTypes = sheetDataTypes[configName];
+          // Deep copy to avoid mutating the base config.
+          const newColumns = JSON.parse(JSON.stringify(defaultConfig.columns));
+
+          if (customMappings) {
+            Object.entries(customMappings).forEach(
+              ([appField, sheetHeader]) => {
+                if (newColumns[appField]) {
+                  newColumns[appField].header = sheetHeader;
+                }
+              },
+            );
           }
-        });
-      }
-
-      if (customDataTypes) {
-        Object.entries(customDataTypes).forEach(([appField, dataType]) => {
-          if (newColumns[appField]) {
-            newColumns[appField].type = dataType;
+          if (customDataTypes) {
+            Object.entries(customDataTypes).forEach(([appField, dataType]) => {
+              if (newColumns[appField]) {
+                newColumns[appField].type = dataType;
+              }
+            });
           }
-        });
-      }
 
-      mappedConfigs[configName] = { ...defaultConfig, columns: newColumns };
+          mappedConfigs[configName] = {
+            ...defaultConfig,
+            spreadsheetId: spreadsheetIdToUse, // Use the resolved ID.
+            range: newRange,
+            columns: newColumns,
+          };
+        } else {
+          console.warn(
+            `Could not resolve spreadsheet_id for spreadsheet_code '${spreadsheetCode}' (from table alias '${configName}'). Check your configuration in Admin > Integrations.`,
+          );
+        }
+      }
     });
 
     return mappedConfigs;
-  }, [spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured]);
+  }, [spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured, appSheetRows]);
 
   const refreshData = useCallback(async () => {
     const shouldFetchData = isSignedIn && isConfigured && dynamicConfigs;
@@ -305,7 +353,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     setLoading(true);
-    setDataError(null);
+    setDataError([]);
     try {
       sheetGateway.clearCache();
       const configsBySpreadsheet: Record<
@@ -326,15 +374,36 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       for (const [spreadsheetId, configs] of Object.entries(
         configsBySpreadsheet,
       )) {
-        const result = await sheetGateway.batchFetchAndParseSheetData(
-          spreadsheetId,
-          configs,
-        );
-        combinedData = { ...combinedData, ...result };
+        try {
+          const result = await sheetGateway.batchFetchAndParseSheetData(
+            spreadsheetId,
+            configs,
+          );
+          combinedData = { ...combinedData, ...result };
+        } catch (error: any) {
+          console.error(
+            `Failed to fetch or parse data for spreadsheet ${spreadsheetId}:`,
+            error,
+          );
+          const gapiError = error.result?.error;
+          let errorMessage = `Could not fetch data for one or more sheets in spreadsheet ID ending in ...${spreadsheetId.slice(
+            -6,
+          )}.`;
+          if (gapiError) {
+            errorMessage = `Failed to access spreadsheet ...${spreadsheetId.slice(
+              -6,
+            )}. Error: ${gapiError.message}`;
+          } else if (error.message) {
+            errorMessage = `Error for spreadsheet ...${spreadsheetId.slice(
+              -6,
+            )}: ${error.message}`;
+          }
+          setDataError((prev) => [...prev, new Error(errorMessage)]);
+        }
       }
 
       // Set all data states after all fetches are complete.
-      setPeople(combinedData.People || []);
+      setPeople(combinedData.SystemPeople || []);
       setBusinessUnits(combinedData['Business Units'] || []);
       setFlywheels(combinedData.Flywheels || []);
       setLeads(combinedData.Leads || []);
@@ -364,16 +433,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       setWeeklyUpdates(combinedData.WeeklyUpdates || []);
       setDecisionLogs(combinedData.DecisionLogs || []);
     } catch (error: any) {
-      console.error('Failed to fetch data from Google Sheets:', error);
-      const gapiError = error.result?.error;
-      let errorMessage =
-        'Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.';
-      if (gapiError) {
-        errorMessage = `Failed to access spreadsheet. Check permissions or ID. Error: ${gapiError.message}`;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      setDataError(new Error(errorMessage));
+      console.error('An unexpected error occurred during data refresh:', error);
+      setDataError((prev) => [
+        ...prev,
+        new Error('An unexpected error occurred. Check console for details.'),
+      ]);
     } finally {
       setLoading(false);
     }
@@ -416,13 +480,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addPerson = useCallback(
     async (person: Omit<Person, 'user_id'>) => {
-      if (!dynamicConfigs?.People) throw new Error('People config not ready');
+      if (!dynamicConfigs?.SystemPeople) throw new Error('People config not ready');
       const newPerson: Person = {
         ...person,
         user_id: person.email,
         is_active: person.is_active ?? true,
       };
-      await sheetGateway.appendEntity(dynamicConfigs.People, newPerson);
+      await sheetGateway.appendEntity(dynamicConfigs.SystemPeople, newPerson);
       setPeople((prev) => [...prev, newPerson]);
     },
     [dynamicConfigs],
@@ -430,8 +494,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updatePerson = useCallback(
     async (person: Person) => {
-      if (!dynamicConfigs?.People) throw new Error('People config not ready');
-      await sheetGateway.updateEntity(dynamicConfigs.People, person);
+      if (!dynamicConfigs?.SystemPeople) throw new Error('People config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.SystemPeople, person);
       setPeople((prev) =>
         prev.map((p) => (p.user_id === person.user_id ? person : p)),
       );
@@ -441,8 +505,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deletePerson = useCallback(
     async (userId: string) => {
-      if (!dynamicConfigs?.People) throw new Error('People config not ready');
-      await sheetGateway.deleteEntity(dynamicConfigs.People, userId);
+      if (!dynamicConfigs?.SystemPeople) throw new Error('People config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.SystemPeople, userId);
       setPeople((prev) => prev.filter((p) => p.user_id !== userId));
     },
     [dynamicConfigs],
@@ -803,7 +867,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     stateSetter: React.Dispatch<React.SetStateAction<T[]>>,
   ) => {
     const addEntity = useCallback(
-      async (entity: Omit<T, keyof T>) => {
+      // FIX: Changed entity type to 'any' to resolve a complex generic type mismatch issue.
+      async (entity: any) => {
         const config = dynamicConfigs?.[configKey];
         if (!config) throw new Error(`${configKey} config not ready`);
         const newEntity = await sheetGateway.createEntity(config, entity);
@@ -930,8 +995,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     return mgmtProjects.map((mp) => ({
       project_id: mp.project_id,
       project_name: mp.project_name,
-      business_unit_id: hubBuMap.get(mp.hub_id) || [],
-      owner_user_id: mp.owner_id,
+      business_unit_id: hubBuMap.get(mp.hub_id || '') || [],
+      owner_user_id: mp.owner_id || '',
       priority: mp.priority as Priority,
       status: mp.status as Status,
       start_date: mp.start_date,
@@ -963,30 +1028,156 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, [mgmtTasks, milestones]);
 
-  const addProject = useCallback(async (project: Omit<Project, 'project_id'>) => {
-    console.warn('addProject is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
-  const updateProject = useCallback(async (project: Project) => {
-    console.warn('updateProject is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
-  const deleteProject = useCallback(async (projectId: string) => {
-    console.warn('deleteProject is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
-  const addTask = useCallback(async (task: Omit<Task, 'task_id'>) => {
-    console.warn('addTask is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
-  const updateTask = useCallback(async (task: Task) => {
-    console.warn('updateTask is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
-  const deleteTask = useCallback(async (taskId: string) => {
-    console.warn('deleteTask is a mock function and does not save data.');
-    return Promise.resolve();
-  }, []);
+  const addProject = useCallback(
+    async (project: Omit<Project, 'project_id'>) => {
+      if (!dynamicConfigs?.MgmtProjects) throw new Error('MgmtProjects config not ready');
+
+      let hub_id: string | undefined = undefined;
+      const bu_id = project.business_unit_id?.[0];
+      if (bu_id) {
+        const buIndex = businessUnits.findIndex((bu) => bu.bu_id === bu_id);
+        if (buIndex > -1) {
+          const hub = hubs.find(
+            (h: any) => h[`serves_bu${buIndex + 1}`] === true,
+          );
+          if (hub) hub_id = hub.hub_id;
+        }
+      }
+
+      const mgmtProjectData: Partial<MgmtProject> = {
+        project_name: project.project_name,
+        owner_id: project.owner_user_id,
+        priority: project.priority,
+        status: project.status,
+        start_date: project.start_date,
+        end_date: project.target_end_date,
+        budget: project.budget_planned,
+        hub_id: hub_id,
+      };
+
+      const newMgmtProject = await sheetGateway.createEntity(
+        dynamicConfigs.MgmtProjects,
+        mgmtProjectData,
+      );
+      setMgmtProjects((prev) => [...prev, newMgmtProject]);
+    },
+    [dynamicConfigs, businessUnits, hubs],
+  );
+
+  const updateProject = useCallback(
+    async (project: Project) => {
+      if (!dynamicConfigs?.MgmtProjects) throw new Error('MgmtProjects config not ready');
+
+      const existing = mgmtProjects.find(
+        (p) => p.project_id === project.project_id,
+      );
+      if (!existing) throw new Error('Project not found to update.');
+
+      let hub_id: string | undefined = existing.hub_id;
+      const bu_id = project.business_unit_id?.[0];
+      if (bu_id) {
+        const buIndex = businessUnits.findIndex((bu) => bu.bu_id === bu_id);
+        if (buIndex > -1) {
+          const hub = hubs.find(
+            (h: any) => h[`serves_bu${buIndex + 1}`] === true,
+          );
+          if (hub) hub_id = hub.hub_id;
+        }
+      }
+
+      const updatedMgmtProject: MgmtProject = {
+        ...existing,
+        project_name: project.project_name,
+        owner_id: project.owner_user_id,
+        priority: project.priority,
+        status: project.status,
+        start_date: project.start_date,
+        end_date: project.target_end_date,
+        budget: project.budget_planned,
+        hub_id: hub_id,
+      };
+
+      await sheetGateway.updateEntity(
+        dynamicConfigs.MgmtProjects,
+        updatedMgmtProject,
+      );
+      setMgmtProjects((prev) =>
+        prev.map((p) =>
+          p.project_id === project.project_id ? updatedMgmtProject : p,
+        ),
+      );
+    },
+    [dynamicConfigs, mgmtProjects, businessUnits, hubs],
+  );
+
+  const deleteProject = useCallback(
+    async (projectId: string) => {
+      if (!dynamicConfigs?.MgmtProjects) throw new Error('MgmtProjects config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.MgmtProjects, projectId);
+      setMgmtProjects((prev) => prev.filter((p) => p.project_id !== projectId));
+    },
+    [dynamicConfigs],
+  );
+
+  const addTask = useCallback(
+    async (task: Omit<Task, 'task_id'>) => {
+      if (!dynamicConfigs?.MgmtTasks) throw new Error('MgmtTasks config not ready');
+
+      const mgmtTaskData: Partial<MgmtTask> = {
+        task_name: task.title,
+        project_id: task.project_id,
+        assignee_User_id: task.assignee_user_id,
+        status: task.status,
+        priority: task.priority,
+        effort_hours: task.estimate_hours,
+        due_date: task.due_date,
+        description: task.description,
+      };
+
+      const newMgmtTask = await sheetGateway.createEntity(
+        dynamicConfigs.MgmtTasks,
+        mgmtTaskData,
+      );
+      setMgmtTasks((prev) => [...prev, newMgmtTask]);
+    },
+    [dynamicConfigs],
+  );
+
+  const updateTask = useCallback(
+    async (task: Task) => {
+      if (!dynamicConfigs?.MgmtTasks) throw new Error('MgmtTasks config not ready');
+
+      const existing = mgmtTasks.find((t) => t.task_id === task.task_id);
+      if (!existing) throw new Error('Task not found for update.');
+
+      const updatedMgmtTask: MgmtTask = {
+        ...existing,
+        task_name: task.title,
+        project_id: task.project_id,
+        assignee_User_id: task.assignee_user_id,
+        status: task.status,
+        priority: task.priority,
+        effort_hours: task.estimate_hours,
+        due_date: task.due_date,
+        description: task.description,
+      };
+
+      await sheetGateway.updateEntity(dynamicConfigs.MgmtTasks, updatedMgmtTask);
+      setMgmtTasks((prev) =>
+        prev.map((t) => (t.task_id === task.task_id ? updatedMgmtTask : t)),
+      );
+    },
+    [dynamicConfigs, mgmtTasks],
+  );
+
+  const deleteTask = useCallback(
+    async (taskId: string) => {
+      if (!dynamicConfigs?.MgmtTasks) throw new Error('MgmtTasks config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.MgmtTasks, taskId);
+      setMgmtTasks((prev) => prev.filter((t) => t.task_id !== taskId));
+    },
+    [dynamicConfigs],
+  );
 
   const allData = useMemo(
     () => ({
@@ -1002,8 +1193,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       Interfaces: interfaces,
       Channels: channels,
       'Customer Segments': customerSegments,
-      Projects: projects, 
-      Tasks: tasks, 
+      Projects: projects,
+      Tasks: tasks,
       SystemSegments: systemSegments,
       SystemFlywheels: systemFlywheels,
       SystemBusinessUnits: systemBusinessUnits,

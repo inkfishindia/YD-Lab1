@@ -121,16 +121,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   `;
 
   const navItems = [
-    { to: '/command-center', icon: HomeIcon, label: 'COMMAND CENTER' },
-    {
-      to: '/strategy',
-      icon: PresentationChartLineIcon,
-      label: 'STRATEGY',
-    },
-    { to: '/system', icon: BriefcaseIcon, label: 'SYSTEM' },
-    { to: '/execution', icon: FolderIcon, label: 'EXECUTION' },
+    { to: '/strategy', icon: PresentationChartLineIcon, label: 'STRATEGY' },
+    { to: '/brand-creative', icon: BeakerIcon, label: 'BRAND & CREATIVE' },
+    { to: '/management', icon: FolderIcon, label: 'MANAGEMENT' },
+    { to: '/analytics', icon: ChartBarIcon, label: 'ANALYTICS' },
     { to: '/marketing', icon: MegaphoneIcon, label: 'MARKETING' },
-    { to: '/creative', icon: BeakerIcon, label: 'CREATIVE' },
+    { to: '/command-center', icon: HomeIcon, label: 'COMMAND CENTER' },
+    { to: '/system', icon: BriefcaseIcon, label: 'SYSTEM' },
     { to: '/revenue', icon: CurrencyDollarIcon, label: 'REVENUE' },
     { to: '/tools', icon: WrenchScrewdriverIcon, label: 'TOOLS' },
     { to: '/admin', icon: Cog6ToothIcon, label: 'ADMIN', requiresAuth: true },

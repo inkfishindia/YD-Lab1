@@ -746,12 +746,38 @@ export const InterfaceMapSchema = z.object({
   channelId: optionalString,
 });
 
+export const AppSheetRowSchema = z.object({
+  _rowIndex: z.number().optional(), // Internal helper
+  spreadsheet_name: optionalString,
+  spreadsheet_code: optionalString,
+  spreadsheet_id: optionalString,
+  sheet_name: optionalString,
+  table_alias: optionalString,
+}).catchall(z.any());
+
 export const MasterSchemaRowSchema = z.object({
-  _rowIndex: z.number(),
-  spreadsheet_name: z.string(),
-  table_alias: z.string(),
-  app_field: z.string(),
-  header: z.string(),
-  data_type: z.enum(['string', 'number', 'boolean', 'string_array']),
-  fk_reference: z.string().optional(),
+  _rowIndex: z.number().optional(), // Internal helper for updates
+  spreadsheet_name: z.string().optional(),
+  spreadsheet_code: z.string().optional(),
+  spreadsheet_id: z.string().optional(),
+  sheet_name: z.string().optional(),
+  table_alias: z.string().optional(),
+  gid: z.string().optional(),
+  key_field: z.string().optional(), // Retained for compatibility if needed
+  named_data_range: z.string().optional(),
+  range: z.string().optional(),
+  sheet_type: z.string().optional(),
+  system_role: z.string().optional(),
+  data_tier: z.string().optional(),
+  description: z.string().optional(),
+  col_index: optionalNumber,
+  app_field: z.string().optional(),
+  header: z.string().optional(),
+  sample_value: z.string().optional(),
+  detected_type: z.string().optional(),
+  has_formula: optionalBoolean,
+  snapshot_ts: z.string().optional(),
+  data_type: z.enum(['string', 'number', 'boolean', 'string_array']).optional(),
+  is_pk: z.preprocess(val => String(val).toUpperCase() === 'TRUE', z.boolean()).optional(),
+  fk_ref: z.string().optional().nullable(),
 }).catchall(z.any());

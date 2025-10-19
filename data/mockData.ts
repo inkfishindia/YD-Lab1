@@ -167,7 +167,8 @@ export const mockBusinessUnits: BusinessUnit[] = [
     bu_name: 'Consumer Mobile',
     bu_type: 'Mobile App',
     owner_user_id: 'mock_user_2',
-    health_status: HealthStatus.OnTrack,
+// FIX: Use bracket notation for enum members with spaces.
+    health_status: HealthStatus['On Track'],
     priority_level: Priority.High,
     primary_flywheel_id: 'mock_fw_1',
     customerType: 'SMB',
@@ -193,7 +194,8 @@ export const mockBusinessUnits: BusinessUnit[] = [
     bu_name: 'Enterprise Platform',
     bu_type: 'Web Platform',
     owner_user_id: 'mock_user_1',
-    health_status: HealthStatus.AtRisk,
+// FIX: Use bracket notation for enum members with spaces.
+    health_status: HealthStatus['At Risk'],
     priority_level: Priority.Medium,
     primary_flywheel_id: 'mock_fw_2',
     upsell_flywheel_id: 'mock_fw_1',
@@ -257,7 +259,8 @@ export const mockOpportunities: Opportunity[] = [
     opportunity_id: 'mock_opp_3',
     opportunity_name: 'Hardware Upgrade',
     account_id: 'mock_acc_1',
-    stage: OpportunityStage.ClosedWon,
+// FIX: Use bracket notation for enum members with spaces.
+    stage: OpportunityStage['Closed - Won'],
     amount: 250000,
     close_date: '2024-07-20',
     owner_user_id: 'mock_user_2',

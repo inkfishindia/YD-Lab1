@@ -35,7 +35,8 @@ const getInitialFormData = (people: Person[], flywheels: Flywheel[]): Omit<Busin
     current_revenue: 0,
     current_orders: 0,
     variance_pct: '0%',
-    health_status: HealthStatus.OnTrack,
+// FIX: Use bracket notation for enum members with spaces.
+    health_status: HealthStatus['On Track'],
     growth_rate_required: 0,
     priority_level: Priority.Medium,
     status: 'Active',

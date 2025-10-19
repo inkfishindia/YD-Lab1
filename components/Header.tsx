@@ -46,15 +46,19 @@ const navigationTabs: Record<
 > = {
   '/command-center': [
     { name: 'Dashboard', href: 'dashboard', icon: HomeIcon },
-    { name: 'Executive Dashboard', href: 'executive-dashboard', icon: ChartBarIcon },
+    {
+      name: 'Executive Dashboard',
+      href: 'executive-dashboard',
+      icon: ChartBarIcon,
+    },
   ],
-  '/execution': [{ name: 'Programs', href: '', icon: FolderIcon }],
+  '/management': [{ name: 'Programs', href: '', icon: FolderIcon }],
   '/marketing': [
     { name: 'Campaigns', href: 'campaigns', icon: MegaphoneIcon },
     { name: 'Content Pipeline', href: 'content', icon: MegaphoneIcon },
     { name: 'Interfaces', href: 'interfaces', icon: MegaphoneIcon },
   ],
-  '/creative': [
+  '/brand-creative': [
     { name: 'YDC Map', href: 'ydc-map', icon: SwatchIcon },
     { name: 'Competitor Analysis', href: 'competitor-analysis', icon: ScaleIcon },
     { name: 'Visual Mood', href: 'visual-mood', icon: PencilIcon },
@@ -84,6 +88,9 @@ const navigationTabs: Record<
       href: 'briefs',
       icon: PresentationChartLineIcon,
     },
+  ],
+  '/analytics': [
+    { name: 'KPI & Imports', href: 'kpi-imports', icon: ChartBarIcon },
   ],
   '/system': [{ name: 'System Map', href: 'map', icon: BriefcaseIcon }],
   '/tools': [
@@ -150,6 +157,11 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
       refreshData();
     }
   };
+
+  const hasError = dataError.length > 0;
+  const errorTitle = hasError
+    ? `Data Errors:\n${dataError.map(e => `- ${e.message}`).join('\n')}`
+    : 'Data connection is healthy';
 
   return (
     <header className="flex-shrink-0 bg-gray-950 border-b border-gray-800 flex flex-col">
@@ -222,16 +234,14 @@ const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
               className={`absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-gray-950 ${
                 dataLoading
                   ? 'bg-yellow-500 animate-pulse'
-                  : dataError
+                  : hasError
                   ? 'bg-red-500'
                   : 'bg-green-500'
               }`}
               title={
                 dataLoading
                   ? 'Loading data from Google Sheets...'
-                  : dataError
-                  ? `Data Error: ${dataError.message}`
-                  : 'Data connection is healthy'
+                  : errorTitle
               }
             />
           </div>

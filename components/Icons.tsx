@@ -1,19 +1,23 @@
 import React from 'react';
 
+// FIX: Updated to accept and handle a `title` prop for accessibility, which also resolves the TypeScript error in consuming components.
 const createOutlineIcon =
-  (path: React.ReactNode) => (props: React.SVGProps<SVGSVGElement>) =>
-    (
+  (path: React.ReactNode) => (props: React.SVGProps<SVGSVGElement> & { title?: string }) => {
+    const { title, ...rest } = props;
+    return (
       <svg
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
         strokeWidth={1.5}
         stroke="currentColor"
-        {...props}
+        {...rest}
       >
+        {title && <title>{title}</title>}
         {path}
       </svg>
     );
+  };
 
 // Using heroicons as a base for SVGs.
 
@@ -436,20 +440,25 @@ export const ExclamationTriangleIcon = createOutlineIcon(
     d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
   />,
 );
-export const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    {...props}
-  >
-    <path
-      fillRule="evenodd"
-      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
+// FIX: Updated to accept and handle a `title` prop for accessibility, which also resolves the TypeScript error in consuming components.
+export const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement> & { title?: string }) => {
+  const { title, ...rest } = props;
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      {...rest}
+    >
+      {title && <title>{title}</title>}
+      <path
+        fillRule="evenodd"
+        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
+        clipRule="evenodd"
+      />
+    </svg>
+  );
+};
 export const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

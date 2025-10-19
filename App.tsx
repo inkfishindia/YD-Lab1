@@ -40,7 +40,7 @@ const DashboardPage = React.lazy(
 const ExecutiveDashboardPage = React.lazy(
   () => import('./pages/command-center/ExecutiveDashboardPage'),
 );
-const CreativePage = React.lazy(() => import('./pages/CreativePage'));
+const BrandCreativePage = React.lazy(() => import('./pages/BrandCreativePage'));
 const CompetitorAnalysisPage = React.lazy(
   () => import('./pages/creative/CompetitorAnalysisPage'),
 );
@@ -56,7 +56,7 @@ const ExperienceStorePage = React.lazy(
 const VisualMoodPage = React.lazy(
   () => import('./pages/creative/VisualMoodPage'),
 );
-const ExecutionPage = React.lazy(() => import('./pages/ExecutionPage'));
+const ManagementPage = React.lazy(() => import('./pages/ManagementPage'));
 const ProgramsViewPage = React.lazy(
   () => import('./pages/execution/ProgramsViewPage'),
 );
@@ -202,6 +202,10 @@ const BrainDumpPage = React.lazy(() => import('./pages/tools/BrainDumpPage'));
 const CalendarPage = React.lazy(() => import('./pages/tools/CalendarPage'));
 const InboxPage = React.lazy(() => import('./pages/tools/InboxPage'));
 const NotesDocsPage = React.lazy(() => import('./pages/tools/NotesDocsPage'));
+const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage'));
+const KPIImportsPage = React.lazy(
+  () => import('./pages/analytics/KPIImportsPage'),
+);
 
 const App: React.FC = () => {
   return (
@@ -381,8 +385,8 @@ const MainLayout: React.FC<{
                   />
                 </Route>
 
-                {/* EXECUTION */}
-                <Route path="/execution" element={<ExecutionPage />}>
+                {/* MANAGEMENT (formerly EXECUTION) */}
+                <Route path="/management" element={<ManagementPage />}>
                   <Route index element={<ProgramsViewPage />} />
                   <Route path="*" element={<ProgramsViewPage />} />
                 </Route>
@@ -423,8 +427,8 @@ const MainLayout: React.FC<{
                   </Route>
                 </Route>
 
-                {/* CREATIVE */}
-                <Route path="/creative" element={<CreativePage />}>
+                {/* BRAND & CREATIVE (formerly CREATIVE) */}
+                <Route path="/brand-creative" element={<BrandCreativePage />}>
                   <Route index element={<Navigate to="ydc-map" replace />} />
                   <Route path="ydc-map" element={<DesignSystemPage />} />
                   <Route
@@ -533,6 +537,12 @@ const MainLayout: React.FC<{
                 <Route path="/system" element={<SystemPage />}>
                   <Route index element={<Navigate to="map" replace />} />
                   <Route path="map" element={<SystemMapPage />} />
+                </Route>
+
+                {/* ANALYTICS (New) */}
+                <Route path="/analytics" element={<AnalyticsPage />}>
+                  <Route index element={<Navigate to="kpi-imports" replace />} />
+                  <Route path="kpi-imports" element={<KPIImportsPage />} />
                 </Route>
 
                 {/* TOOLS */}

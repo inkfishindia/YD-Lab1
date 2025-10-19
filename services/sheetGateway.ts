@@ -1,5 +1,20 @@
 import { z } from 'zod';
-import { SheetConfig } from '../sheetConfig';
+
+// FIX: Define SheetConfig here as sheetConfig.ts is deprecated.
+export interface SheetConfig<T> {
+  spreadsheetId: string;
+  gid: string;
+  range: string;
+  namedDataRange?: string; // Added for named range support
+  keyField: keyof T;
+  columns: {
+      [K in keyof T]?: {
+          header: string;
+          type?: 'string' | 'number' | 'boolean' | 'string_array';
+      };
+  };
+  schema: z.ZodType<T>;
+}
 
 // --- Caching ---
 const IN_MEMORY_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -48,6 +63,7 @@ export interface SheetMappingInfo {
     dataType: 'string' | 'number' | 'boolean' | 'string_array';
   }[];
   actualHeaders: string[];
+  allSheetNamesInSpreadsheet: string[];
   error: string | null;
 }
 
@@ -87,6 +103,14 @@ async function withRetries<T>(apiCall: () => Promise<T>): Promise<T> {
 const headerCache = new Map<string, Record<string, number>>();
 const spreadsheetMetadataCache = new Map<string, any>();
 
+function createLowercaseHeaderMap(headers: string[]): Record<string, number> {
+    const headerMap: Record<string, number> = {};
+    headers.forEach((header: string, index: number) => {
+        if (header) headerMap[header.trim().toLowerCase()] = index;
+    });
+    return headerMap;
+}
+
 export async function getHeaderMap(spreadsheetId: string, sheetName: string): Promise<Record<string, number>> {
     const cacheKey = `header-${spreadsheetId}-${sheetName}`;
     const cachedHeader = getInMemoryCache(cacheKey);
@@ -95,14 +119,11 @@ export async function getHeaderMap(spreadsheetId: string, sheetName: string): Pr
     try {
         const response = await withRetries(() => (window as any).gapi.client.sheets.spreadsheets.values.get({
             spreadsheetId,
-            range: `${sheetName}!1:1`,
+            range: `${sheetName.includes(' ') ? `'${sheetName}'` : sheetName}!1:1`,
         }));
         // FIX: Cast 'response' to 'any' to safely access 'result' property.
         const headers = (response as any).result.values ? (response as any).result.values[0] : [];
-        const headerMap: Record<string, number> = {};
-        headers.forEach((header: string, index: number) => {
-            if (header) headerMap[header.trim()] = index;
-        });
+        const headerMap = createLowercaseHeaderMap(headers);
         setInMemoryCache(cacheKey, headerMap);
         return headerMap;
     } catch (err: any) {
@@ -134,7 +155,8 @@ export async function batchFetchAndParseSheetData<T extends { [key: string]: any
     const cachedInMemory = getInMemoryCache(inMemoryCacheKey);
     if (cachedInMemory) return cachedInMemory;
 
-    const ranges = configs.map(c => c.config.range);
+    // Prioritize named ranges, fall back to A1 notation
+    const ranges = configs.map(c => c.config.namedDataRange || c.config.range);
     
     // 1. Fetch raw data from the API.
     const rawDataResponse = await withRetries(() => (window as any).gapi.client.sheets.spreadsheets.values.batchGet({ spreadsheetId, ranges }));
@@ -156,18 +178,17 @@ export async function batchFetchAndParseSheetData<T extends { [key: string]: any
 
     // 4. If checksums mismatch (or no journal entry), parse the data.
     const allResults: Record<string, T[]> = {};
-    const sheetNames = [...new Set(configs.map(c => c.config.range.split('!')[0]))];
+    const sheetNames = [...new Set(configs.map(c => c.config.range.split('!')[0].replace(/'/g, '')))];
     
     // Pre-fetch all headers for this spreadsheet.
-    const headerRanges = sheetNames.map(name => `${name}!1:1`);
+    const headerRanges = sheetNames.map(name => `${name.includes(' ') ? `'${name}'` : name}!1:1`);
     const headersResponse = await withRetries(() => (window as any).gapi.client.sheets.spreadsheets.values.batchGet({ spreadsheetId, ranges: headerRanges }));
     // FIX: Cast 'headersResponse' to 'any' to safely access 'result' property.
     const headerValueRanges = (headersResponse as any).result.valueRanges || [];
     headerValueRanges.forEach((vr: any, index: number) => {
         const sheetName = sheetNames[index];
         const headers = vr?.values?.[0] || [];
-        const headerMap: Record<string, number> = {};
-        headers.forEach((h: string, i: number) => { if (h) headerMap[h.trim()] = i; });
+        const headerMap = createLowercaseHeaderMap(headers);
         headerCache.set(`${spreadsheetId}-${sheetName}`, headerMap);
     });
 
@@ -178,7 +199,7 @@ export async function batchFetchAndParseSheetData<T extends { [key: string]: any
         if (!configs[index]) return;
         const { key, config } = configs[index];
         const { range, columns, keyField, schema } = config;
-        const sheetName = range.split('!')[0];
+        const sheetName = range.split('!')[0].replace(/'/g, '');
         const data = valueRange.values || [];
         const headerMap = headerCache.get(`${spreadsheetId}-${sheetName}`);
 
@@ -195,9 +216,11 @@ export async function batchFetchAndParseSheetData<T extends { [key: string]: any
             const item: { [key: string]: any } = {};
             for (const itemKey in columns) {
                 const colConfig = columns[itemKey as keyof T];
-                const header = colConfig.header;
-                const colIndex = headerMap[header];
-                item[itemKey] = (colIndex !== undefined && row[colIndex] !== null && row[colIndex] !== '') ? row[colIndex] : undefined;
+                if(colConfig) {
+                    const header = colConfig.header;
+                    const colIndex = headerMap[header.toLowerCase()];
+                    item[itemKey] = (colIndex !== undefined && row[colIndex] !== null && row[colIndex] !== '') ? row[colIndex] : undefined;
+                }
             }
             
             if (!item[keyField as string] || String(item[keyField as string]).trim() === '') {
@@ -251,16 +274,17 @@ async function getSheetId(spreadsheetId: string, sheetName: string): Promise<num
 
 async function findRowIndex<T>(config: SheetConfig<T>, id: string): Promise<number> {
   const { spreadsheetId, range, keyField, columns } = config;
-  const sheetName = range.split('!')[0];
+  const sheetName = range.split('!')[0].replace(/'/g, '');
   const headerMap = await getHeaderMap(spreadsheetId, sheetName);
-  const keyColumnHeader = columns[keyField]?.header;
-  if (!keyColumnHeader) throw new Error(`Key field header for '${String(keyField)}' not found.`);
+  const keyColumnConfig = columns[keyField];
+  if (!keyColumnConfig) throw new Error(`Key field header for '${String(keyField)}' not found.`);
+  const keyColumnHeader = keyColumnConfig.header;
 
-  const keyColumnIndex = headerMap[keyColumnHeader];
+  const keyColumnIndex = headerMap[keyColumnHeader.toLowerCase()];
   if (keyColumnIndex === undefined) throw new Error(`Column '${keyColumnHeader}' not found in sheet '${sheetName}'.`);
 
   const keyColumnLetter = String.fromCharCode('A'.charCodeAt(0) + keyColumnIndex);
-  const dataRange = `${sheetName}!${keyColumnLetter}2:${keyColumnLetter}`;
+  const dataRange = `${sheetName.includes(' ') ? `'${sheetName}'` : sheetName}!${keyColumnLetter}2:${keyColumnLetter}`;
 
   const response = await withRetries(() => (window as any).gapi.client.sheets.spreadsheets.values.get({ spreadsheetId, range: dataRange }));
   // FIX: Cast 'response' to 'any' to safely access 'result' property.
@@ -279,17 +303,19 @@ export function mapEntityToRowArray<T>(entity: Partial<T>, headerMap: Record<str
 
   for (const key in columns) {
     const colConfig = columns[key as keyof T];
-    const header = colConfig.header;
-    const colIndex = headerMap[header];
-    if (colIndex !== undefined) {
-      const value = entity[key as keyof T];
-      if (value === undefined || value === null) {
-        row[colIndex] = null;
-      } else if (colConfig.type === 'string_array' && Array.isArray(value)) {
-        row[colIndex] = value.join(', ');
-      } else {
-        row[colIndex] = value;
-      }
+    if(colConfig){
+        const header = colConfig.header;
+        const colIndex = headerMap[header.toLowerCase()];
+        if (colIndex !== undefined) {
+          const value = entity[key as keyof T];
+          if (value === undefined || value === null) {
+            row[colIndex] = null;
+          } else if (colConfig.type === 'string_array' && Array.isArray(value)) {
+            row[colIndex] = value.join(', ');
+          } else {
+            row[colIndex] = value;
+          }
+        }
     }
   }
   return row;
@@ -300,7 +326,7 @@ export function mapEntityToRowArray<T>(entity: Partial<T>, headerMap: Record<str
 
 export async function createEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: Partial<T>): Promise<T> {
   const { spreadsheetId, range, columns, keyField } = config;
-  const sheetName = range.split('!')[0];
+  const sheetName = range.split('!')[0].replace(/'/g, '');
   clearCache();
   invalidateSyncJournal(spreadsheetId);
 
@@ -323,7 +349,7 @@ export async function createEntity<T extends { [key: string]: any }>(config: She
 
 export async function appendEntity<T>(config: SheetConfig<T>, entityData: T): Promise<void> {
     const { spreadsheetId, range, columns } = config;
-    const sheetName = range.split('!')[0];
+    const sheetName = range.split('!')[0].replace(/'/g, '');
     clearCache();
     invalidateSyncJournal(spreadsheetId);
 
@@ -340,7 +366,7 @@ export async function appendEntity<T>(config: SheetConfig<T>, entityData: T): Pr
 
 export async function updateEntity<T extends { [key: string]: any }>(config: SheetConfig<T>, entityData: T): Promise<T> {
   const { spreadsheetId, range, columns, keyField } = config;
-  const sheetName = range.split('!')[0];
+  const sheetName = range.split('!')[0].replace(/'/g, '');
   const id = entityData[keyField] as string;
   clearCache();
   invalidateSyncJournal(spreadsheetId);
@@ -351,9 +377,10 @@ export async function updateEntity<T extends { [key: string]: any }>(config: She
   ]);
 
   const rowData = mapEntityToRowArray(entityData, headerMap, columns);
+  const updateRange = `${sheetName.includes(' ') ? `'${sheetName}'` : sheetName}!A${rowIndex}`;
   await withRetries(() => (window as any).gapi.client.sheets.spreadsheets.values.update({
     spreadsheetId,
-    range: `${sheetName}!A${rowIndex}`,
+    range: updateRange,
     valueInputOption: 'USER_ENTERED',
     resource: { values: [rowData] },
   }));
@@ -363,7 +390,7 @@ export async function updateEntity<T extends { [key: string]: any }>(config: She
 
 export async function deleteEntity<T>(config: SheetConfig<T>, id: string): Promise<void> {
   const { spreadsheetId, range } = config;
-  const sheetName = range.split('!')[0];
+  const sheetName = range.split('!')[0].replace(/'/g, '');
   clearCache();
   invalidateSyncJournal(spreadsheetId);
 

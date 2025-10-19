@@ -17,7 +17,8 @@ const getInitialData = (people: any[], businessUnits: any[]): Omit<Project, 'pro
     business_unit_id: businessUnits[0] ? [businessUnits[0].bu_id] : [],
     owner_user_id: people[0]?.user_id || '',
     priority: Priority.Medium,
-    status: Status.NotStarted,
+    // FIX: Use bracket notation for enum members with spaces.
+    status: Status['Not Started'],
     start_date: '',
     target_end_date: '',
     budget_planned: 0,

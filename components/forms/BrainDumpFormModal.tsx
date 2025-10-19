@@ -14,7 +14,12 @@ interface BrainDumpFormModalProps {
 
 const BrainDumpFormModal: React.FC<BrainDumpFormModalProps> = ({ isOpen, onClose, onSave, item }) => {
     const { currentUser } = useAuth();
-    const [formData, setFormData] = useState({
+    // FIX: Explicitly type the useState hook to prevent type inference issues.
+    const [formData, setFormData] = useState<{
+        type: string;
+        content: string;
+        priority: Priority;
+    }>({
         type: '',
         content: '',
         priority: Priority.Medium,
@@ -31,7 +36,7 @@ const BrainDumpFormModal: React.FC<BrainDumpFormModalProps> = ({ isOpen, onClose
     }, [item, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value as any }));
     };
     
     const handleSubmit = (e: React.FormEvent) => {

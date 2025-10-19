@@ -89,7 +89,8 @@ const HeroSection: React.FC = () => {
         return 'Good evening';
     };
 
-    const activeProjects = projects.filter(p => p.status === Status.InProgress || p.status === Status.NotStarted).length;
+// FIX: Use bracket notation for enum members with spaces.
+    const activeProjects = projects.filter(p => p.status === Status['In Progress'] || p.status === Status['Not Started']).length;
 
     const formatEvent = () => {
         if (!nextEvent) return "No upcoming events";
