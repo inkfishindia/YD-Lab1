@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
+import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useData } from '../../../contexts/DataContext';
 import Card from '../../../components/ui/Card';
 import Button from '../../../components/ui/Button';
@@ -159,8 +160,8 @@ const DetailSection: React.FC<{ title: string; children: React.ReactNode; classN
 const SegmentDetailView: React.FC<{ item: SystemSegment; onSelect: (type: SystemEntityType, id: string) => void; }> = ({ item: segment, onSelect }) => {
     const { systemFlywheels, systemBusinessUnits, systemPeople, systemPlatforms } = useData();
     const owner = systemPeople.find(p => p.person_id === segment.owner_person);
-    const relatedFlywheels = systemFlywheels.filter(fw => splitAndTrim(segment.served_by_flywheels).includes(fw.flywheel_id));
-    const relatedBUs = systemBusinessUnits.filter(bu => splitAndTrim(segment.served_by_bus).includes(bu.bu_id));
+    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels?.includes(fw.flywheel_id));
+    const relatedBUs = systemBusinessUnits.filter(bu => segment.served_by_bus?.includes(bu.bu_id));
     const relatedPlatforms = systemPlatforms.filter(p => splitAndTrim(segment.Platforms).includes(p.platform_id));
 
     return (
@@ -455,11 +456,24 @@ const DetailSidebar: React.FC<{ selection: { type: SystemEntityType; id: string 
 
 const FlywheelsMapPage: React.FC = () => {
     const data = useData();
+    const location = useLocation();
     const [selection, setSelection] = useState<{ type: SystemEntityType; id: string } | null>(null);
     const [expandedSegmentId, setExpandedSegmentId] = useState<string | null>(null);
     const [activeTooltip, setActiveTooltip] = useState<{ content: React.ReactNode; targetRect: DOMRect | null }>({ content: null, targetRect: null });
     const [modalState, setModalState] = useState<{ type: SystemEntityType | null, isOpen: boolean, data: any }>({ type: null, isOpen: false, data: null });
     
+    useEffect(() => {
+        if (location.state?.selection) {
+            const { type, id } = location.state.selection;
+            setSelection({ type, id });
+            if (type === 'segment') {
+                setExpandedSegmentId(id);
+            }
+             // Clear the state so it doesn't trigger on re-renders without navigation
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
+
     const handleOpenModal = (type: SystemEntityType, data: any = null) => setModalState({ type, isOpen: true, data });
     const handleCloseModal = () => setModalState({ type: null, isOpen: false, data: null });
     
@@ -495,7 +509,11 @@ const FlywheelsMapPage: React.FC = () => {
 
             data.systemBusinessUnits.forEach(bu => { if (sets.bu.has(bu.bu_id)) { if(bu.primary_flywheel) sets.flywheel.add(bu.primary_flywheel); if(bu.serves_segment) sets.segment.add(bu.serves_segment); if(bu.owner_person) sets.person.add(bu.owner_person); }});
             data.systemFlywheels.forEach(fw => { if (sets.flywheel.has(fw.flywheel_id)) { splitAndTrim(fw.serves_segments).forEach(id => sets.segment.add(id)); splitAndTrim(fw.serves_bus).forEach(id => sets.bu.add(id)); splitAndTrim(fw.acquisition_channels).forEach(id => sets.channel.add(id)); if(fw.owner_person) sets.person.add(fw.owner_person); }});
-            data.systemSegments.forEach(seg => { if (sets.segment.has(seg.segment_id)) { splitAndTrim(seg.served_by_flywheels).forEach(id => sets.flywheel.add(id)); splitAndTrim(seg.served_by_bus).forEach(id => sets.bu.add(id)); if(seg.owner_person) sets.person.add(seg.owner_person); }});
+            data.systemSegments.forEach(seg => { if (sets.segment.has(seg.segment_id)) { 
+                seg.served_by_flywheels?.forEach(id => sets.flywheel.add(id)); 
+                seg.served_by_bus?.forEach(id => sets.bu.add(id));
+                if(seg.owner_person) sets.person.add(seg.owner_person); 
+            }});
             data.systemChannels.forEach(chan => { if(sets.channel.has(chan.channel_id)) { splitAndTrim(chan.serves_flywheels).forEach(id => sets.flywheel.add(id)); splitAndTrim(chan.serves_bus).forEach(id => sets.bu.add(id)); if(chan.responsible_person) sets.person.add(chan.responsible_person); }});
             data.systemHubs.forEach(hub => { if (sets.hub.has(hub.hub_id)) { if(hub.owner_person) sets.person.add(hub.owner_person); data.systemPeople.forEach(p => { if(p.primary_hub === hub.hub_id) sets.person.add(p.person_id) }) }});
             data.systemPeople.forEach(p => { if (sets.person.has(p.person_id)) { if(p.primary_hub) sets.hub.add(p.primary_hub); splitAndTrim(p.owns_flywheels).forEach(id => sets.flywheel.add(id)); splitAndTrim(p.owns_segments).forEach(id => sets.segment.add(id)); splitAndTrim(p.owns_bus).forEach(id => sets.bu.add(id)); }});

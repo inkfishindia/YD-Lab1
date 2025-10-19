@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback } from 'react';
 
 import {
@@ -95,6 +94,9 @@ type StructuredProject = MgmtProject & {
 type StructuredProgram = Program & { projects: StructuredProject[] };
 
 // --- HELPER FUNCTIONS ---
+const idStringIncludes = (idString: string | undefined, id: string) =>
+  idString ? idString.split(/[,|]/).map((s) => s.trim()).includes(id) : false;
+
 const segmentTooltipContent = (segment: SystemSegment) => (
   <div className="text-xs">
     <p className="font-bold text-gray-300">Profile</p>
@@ -1097,17 +1099,17 @@ const ProgramsViewPage: React.FC = () => {
       switch (selection.type) {
         case 'segment':
           programs.forEach((p) => {
-            if (p.serves_segment_ids?.includes(selection.id))
+            if (idStringIncludes(p.serves_segment_ids, selection.id))
               highlights.programs.add(p.program_id);
           });
           mgmtProjects.forEach((p) => {
-            if (p.segment_impact?.includes(selection.id))
+            if (idStringIncludes(p.segment_impact, selection.id))
               highlights.projects.add(p.project_id);
           });
           break;
         case 'platform':
           programs.forEach((p) => {
-            if (p.platform_ids?.includes(selection.id))
+            if (idStringIncludes(p.platform_ids, selection.id))
               highlights.programs.add(p.program_id);
           });
           mgmtProjects.forEach((p) => {
@@ -1117,11 +1119,11 @@ const ProgramsViewPage: React.FC = () => {
           break;
         case 'channel':
           programs.forEach((p) => {
-            if (p.channel_ids?.includes(selection.id))
+            if (idStringIncludes(p.channel_ids, selection.id))
               highlights.programs.add(p.program_id);
           });
           mgmtProjects.forEach((p) => {
-            if (p.channel_ids?.includes(selection.id))
+            if (idStringIncludes(p.channel_ids, selection.id))
               highlights.projects.add(p.project_id);
           });
           break;
@@ -1130,7 +1132,7 @@ const ProgramsViewPage: React.FC = () => {
           programs.forEach((p) => {
             if (
               p.owner_hub_id === selection.id ||
-              p.contributing_hub_ids?.includes(selection.id)
+              idStringIncludes(p.contributing_hub_ids, selection.id)
             )
               highlights.programs.add(p.program_id);
           });
@@ -1157,7 +1159,7 @@ const ProgramsViewPage: React.FC = () => {
           mgmtTasks.forEach((t) => {
             if (
               t.owner_id === selection.id ||
-              t.assignee_ids?.includes(selection.id)
+              idStringIncludes(t.assignee_ids, selection.id)
             )
               highlights.tasks.add(t.task_id);
           });

@@ -10,7 +10,6 @@ import React, {
 
 import * as config from '../sheetConfig';
 import { SheetConfig } from '../sheetConfig';
-// FIX: Add Project and Task to imports for data mapping.
 import {
   Person,
   Project,
@@ -45,7 +44,6 @@ import {
   Priority,
   Status,
   SystemPlatform,
-  // FIX: Add missing types for PositioningPage.
   FlywheelStrategy,
   SegmentPositioning,
   FunnelStage,
@@ -64,13 +62,12 @@ import {
   mockInterfaces,
   mockChannels,
   mockCustomerSegments,
-  // FIX: Add missing mock data for PositioningPage.
   mockFlywheelStrategies,
   mockSegmentPositionings,
   mockFunnelStages,
   mockInterfaceMaps,
 } from '../data/mockData';
-import * as sheetService from '../services/googleSheetService';
+import * as sheetGateway from '../services/sheetGateway';
 
 import { useAuth } from './AuthContext';
 import { useSpreadsheetConfig } from './SpreadsheetConfigContext';
@@ -98,7 +95,6 @@ interface IDataContext {
   systemStages: SystemStage[];
   systemTouchpoints: SystemTouchpoint[];
   systemPlatforms: SystemPlatform[];
-  // FIX: Add projects and tasks for backward compatibility.
   projects: Project[];
   tasks: Task[];
   programs: Program[];
@@ -108,7 +104,6 @@ interface IDataContext {
   mgmtHubs: MgmtHub[];
   weeklyUpdates: WeeklyUpdate[];
   decisionLogs: DecisionLog[];
-  // FIX: Add properties for PositioningPage data.
   flywheelStrategies: FlywheelStrategy[];
   segmentPositionings: SegmentPositioning[];
   funnelStages: FunnelStage[];
@@ -152,16 +147,12 @@ interface IDataContext {
   addRole: (role: Role) => Promise<void>;
   updateRole: (role: Role) => Promise<void>;
   deleteRole: (roleName: string) => Promise<void>;
-
-  // FIX: Add CRUD operations for legacy projects and tasks.
   addProject: (project: Omit<Project, 'project_id'>) => Promise<void>;
   updateProject: (project: Project) => Promise<void>;
   deleteProject: (projectId: string) => Promise<void>;
   addTask: (task: Omit<Task, 'task_id'>) => Promise<void>;
   updateTask: (task: Task) => Promise<void>;
   deleteTask: (taskId: string) => Promise<void>;
-
-  // System CRUD
   addSystemSegment: (
     segment: Omit<SystemSegment, 'segment_id'>,
   ) => Promise<void>;
@@ -262,8 +253,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   const [mgmtHubs, setMgmtHubs] = useState<MgmtHub[]>([]);
   const [weeklyUpdates, setWeeklyUpdates] = useState<WeeklyUpdate[]>([]);
   const [decisionLogs, setDecisionLogs] = useState<DecisionLog[]>([]);
-
-  // FIX: Add state for PositioningPage data.
   const [flywheelStrategies, setFlywheelStrategies] = useState<
     FlywheelStrategy[]
   >([]);
@@ -282,7 +271,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       const customMappings = sheetMappings[configName];
       const customDataTypes = sheetDataTypes[configName];
 
-      const newColumns = JSON.parse(JSON.stringify(defaultConfig.columns)); // Deep copy
+      const newColumns = JSON.parse(JSON.stringify(defaultConfig.columns)); 
 
       if (customMappings) {
         Object.entries(customMappings).forEach(([appField, sheetHeader]) => {
@@ -303,38 +292,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       mappedConfigs[configName] = { ...defaultConfig, columns: newColumns };
     });
 
-    return {
-      people: mappedConfigs['People'],
-      businessUnits: mappedConfigs['Business Units'],
-      flywheels: mappedConfigs['Flywheels'],
-      leads: mappedConfigs['Leads'],
-      opportunities: mappedConfigs['Opportunities'],
-      accounts: mappedConfigs['Accounts'],
-      braindumps: mappedConfigs['BrainDump'],
-      roles: mappedConfigs['Roles'],
-      logs: mappedConfigs['Logs'],
-      hubs: mappedConfigs['Hubs'],
-      interfaces: mappedConfigs['Interfaces'],
-      channels: mappedConfigs['Channels'],
-      customerSegments: mappedConfigs['Customer Segments'],
-      systemSegments: mappedConfigs['SystemSegments'],
-      systemFlywheels: mappedConfigs['SystemFlywheels'],
-      systemBusinessUnits: mappedConfigs['SystemBusinessUnits'],
-      systemChannels: mappedConfigs['SystemChannels'],
-      systemInterfaces: mappedConfigs['SystemInterfaces'],
-      systemHubs: mappedConfigs['SystemHubs'],
-      systemPeople: mappedConfigs['SystemPeople'],
-      systemStages: mappedConfigs['SystemStages'],
-      systemTouchpoints: mappedConfigs['SystemTouchpoints'],
-      systemPlatforms: mappedConfigs['SystemPlatforms'],
-      programs: mappedConfigs['Programs'],
-      mgmtProjects: mappedConfigs['MgmtProjects'],
-      milestones: mappedConfigs['Milestones'],
-      mgmtTasks: mappedConfigs['MgmtTasks'],
-      mgmtHubs: mappedConfigs['MgmtHubs'],
-      weeklyUpdates: mappedConfigs['WeeklyUpdates'],
-      decisionLogs: mappedConfigs['DecisionLogs'],
-    };
+    return mappedConfigs;
   }, [spreadsheetIds, sheetMappings, sheetDataTypes, isConfigured]);
 
   const refreshData = useCallback(async () => {
@@ -349,7 +307,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     setLoading(true);
     setDataError(null);
     try {
-      // Group configs by spreadsheet ID to batch requests efficiently.
+      sheetGateway.clearCache();
       const configsBySpreadsheet: Record<
         string,
         { key: string; config: SheetConfig<any> }[]
@@ -364,55 +322,49 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       }
 
       let combinedData: Record<string, any[]> = {};
-      const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-      // Fetch spreadsheets sequentially to avoid rate-limiting.
       for (const [spreadsheetId, configs] of Object.entries(
         configsBySpreadsheet,
       )) {
-        const result = await sheetService.batchFetchAndParseSheetData(
+        const result = await sheetGateway.batchFetchAndParseSheetData(
           spreadsheetId,
           configs,
         );
         combinedData = { ...combinedData, ...result };
-        await delay(1500); // Wait 1.5 seconds between each spreadsheet to stay within per-minute quotas.
       }
 
       // Set all data states after all fetches are complete.
-      setPeople(combinedData.people || []);
-      setBusinessUnits(combinedData.businessUnits || []);
-      setFlywheels(combinedData.flywheels || []);
-      setLeads(combinedData.leads || []);
-      setOpportunities(combinedData.opportunities || []);
-      setAccounts(combinedData.accounts || []);
-      setBrainDumps(combinedData.braindumps || []);
-      setRoles(combinedData.roles || []);
-      setHubs(combinedData.hubs || []);
-      setInterfaces(combinedData.interfaces || []);
-      setChannels(combinedData.channels || []);
-      setCustomerSegments(combinedData.customerSegments || []);
-
-      setSystemSegments(combinedData.systemSegments || []);
-      setSystemFlywheels(combinedData.systemFlywheels || []);
-      setSystemBusinessUnits(combinedData.systemBusinessUnits || []);
-      setSystemChannels(combinedData.systemChannels || []);
-      setSystemInterfaces(combinedData.systemInterfaces || []);
-      setSystemHubs(combinedData.systemHubs || []);
-      setSystemPeople(combinedData.systemPeople || []);
-      setSystemStages(combinedData.systemStages || []);
-      setSystemTouchpoints(combinedData.systemTouchpoints || []);
-      setSystemPlatforms(combinedData.systemPlatforms || []);
-
-      setPrograms(combinedData.programs || []);
-      setMgmtProjects(combinedData.mgmtProjects || []);
-      setMilestones(combinedData.milestones || []);
-      setMgmtTasks(combinedData.mgmtTasks || []);
-      setMgmtHubs(combinedData.mgmtHubs || []);
-      setWeeklyUpdates(combinedData.weeklyUpdates || []);
-      setDecisionLogs(combinedData.decisionLogs || []);
+      setPeople(combinedData.People || []);
+      setBusinessUnits(combinedData['Business Units'] || []);
+      setFlywheels(combinedData.Flywheels || []);
+      setLeads(combinedData.Leads || []);
+      setOpportunities(combinedData.Opportunities || []);
+      setAccounts(combinedData.Accounts || []);
+      setBrainDumps(combinedData.BrainDump || []);
+      setRoles(combinedData.Roles || []);
+      setHubs(combinedData.Hubs || []);
+      setInterfaces(combinedData.Interfaces || []);
+      setChannels(combinedData.Channels || []);
+      setCustomerSegments(combinedData['Customer Segments'] || []);
+      setSystemSegments(combinedData.SystemSegments || []);
+      setSystemFlywheels(combinedData.SystemFlywheels || []);
+      setSystemBusinessUnits(combinedData.SystemBusinessUnits || []);
+      setSystemChannels(combinedData.SystemChannels || []);
+      setSystemInterfaces(combinedData.SystemInterfaces || []);
+      setSystemHubs(combinedData.SystemHubs || []);
+      setSystemPeople(combinedData.SystemPeople || []);
+      setSystemStages(combinedData.SystemStages || []);
+      setSystemTouchpoints(combinedData.SystemTouchpoints || []);
+      setSystemPlatforms(combinedData.SystemPlatforms || []);
+      setPrograms(combinedData.Programs || []);
+      setMgmtProjects(combinedData.MgmtProjects || []);
+      setMilestones(combinedData.Milestones || []);
+      setMgmtTasks(combinedData.MgmtTasks || []);
+      setMgmtHubs(combinedData.MgmtHubs || []);
+      setWeeklyUpdates(combinedData.WeeklyUpdates || []);
+      setDecisionLogs(combinedData.DecisionLogs || []);
     } catch (error: any) {
       console.error('Failed to fetch data from Google Sheets:', error);
-      // Try to parse GAPI error for more specific user feedback
       const gapiError = error.result?.error;
       let errorMessage =
         'Could not fetch data from Google Sheets. Please go to Admin > Sheet Health Check for a detailed analysis of your configuration.';
@@ -453,7 +405,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setMgmtHubs([]);
         setWeeklyUpdates([]);
         setDecisionLogs([]);
-        // FIX: Add mock data for PositioningPage when not signed in.
         setFlywheelStrategies(mockFlywheelStrategies);
         setSegmentPositionings(mockSegmentPositionings);
         setFunnelStages(mockFunnelStages);
@@ -465,14 +416,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addPerson = useCallback(
     async (person: Omit<Person, 'user_id'>) => {
-      if (!dynamicConfigs?.people) throw new Error('People config not ready');
-      // The user_id and email are the same, derived from the form's email field.
+      if (!dynamicConfigs?.People) throw new Error('People config not ready');
       const newPerson: Person = {
         ...person,
         user_id: person.email,
         is_active: person.is_active ?? true,
       };
-      await sheetService.appendEntity(dynamicConfigs.people, newPerson);
+      await sheetGateway.appendEntity(dynamicConfigs.People, newPerson);
       setPeople((prev) => [...prev, newPerson]);
     },
     [dynamicConfigs],
@@ -480,8 +430,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updatePerson = useCallback(
     async (person: Person) => {
-      if (!dynamicConfigs?.people) throw new Error('People config not ready');
-      await sheetService.updateEntity(dynamicConfigs.people, person);
+      if (!dynamicConfigs?.People) throw new Error('People config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.People, person);
       setPeople((prev) =>
         prev.map((p) => (p.user_id === person.user_id ? person : p)),
       );
@@ -491,8 +441,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deletePerson = useCallback(
     async (userId: string) => {
-      if (!dynamicConfigs?.people) throw new Error('People config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.people, userId);
+      if (!dynamicConfigs?.People) throw new Error('People config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.People, userId);
       setPeople((prev) => prev.filter((p) => p.user_id !== userId));
     },
     [dynamicConfigs],
@@ -500,7 +450,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addRole = useCallback(
     async (role: Role) => {
-      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
+      if (!dynamicConfigs?.Roles) throw new Error('Roles config not ready');
       if (
         roles.some(
           (r) => r.role_name.toLowerCase() === role.role_name.toLowerCase(),
@@ -508,7 +458,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       ) {
         throw new Error(`Role "${role.role_name}" already exists.`);
       }
-      await sheetService.appendEntity(dynamicConfigs.roles, role);
+      await sheetGateway.appendEntity(dynamicConfigs.Roles, role);
       setRoles((prev) => [...prev, role]);
     },
     [dynamicConfigs, roles],
@@ -516,8 +466,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateRole = useCallback(
     async (role: Role) => {
-      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
-      await sheetService.updateEntity(dynamicConfigs.roles, role);
+      if (!dynamicConfigs?.Roles) throw new Error('Roles config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.Roles, role);
       setRoles((prev) =>
         prev.map((r) => (r.role_name === role.role_name ? role : r)),
       );
@@ -527,8 +477,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteRole = useCallback(
     async (roleName: string) => {
-      if (!dynamicConfigs?.roles) throw new Error('Roles config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.roles, roleName);
+      if (!dynamicConfigs?.Roles) throw new Error('Roles config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.Roles, roleName);
       setRoles((prev) => prev.filter((r) => r.role_name !== roleName));
     },
     [dynamicConfigs],
@@ -536,8 +486,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addLead = useCallback(
     async (lead: Omit<Lead, 'lead_id'>) => {
-      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
-      const newLead = await sheetService.createEntity(dynamicConfigs.leads, lead);
+      if (!dynamicConfigs?.Leads) throw new Error('Leads config not ready');
+      const newLead = await sheetGateway.createEntity(dynamicConfigs.Leads, lead);
       setLeads((prev) => [...prev, newLead]);
     },
     [dynamicConfigs],
@@ -545,8 +495,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateLead = useCallback(
     async (lead: Lead) => {
-      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
-      await sheetService.updateEntity(dynamicConfigs.leads, lead);
+      if (!dynamicConfigs?.Leads) throw new Error('Leads config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.Leads, lead);
       setLeads((prev) =>
         prev.map((l) => (l.lead_id === lead.lead_id ? lead : l)),
       );
@@ -556,8 +506,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteLead = useCallback(
     async (leadId: string) => {
-      if (!dynamicConfigs?.leads) throw new Error('Leads config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.leads, leadId);
+      if (!dynamicConfigs?.Leads) throw new Error('Leads config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.Leads, leadId);
       setLeads((prev) => prev.filter((l) => l.lead_id !== leadId));
     },
     [dynamicConfigs],
@@ -565,10 +515,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addOpportunity = useCallback(
     async (opportunity: Omit<Opportunity, 'opportunity_id'>) => {
-      if (!dynamicConfigs?.opportunities)
+      if (!dynamicConfigs?.Opportunities)
         throw new Error('Opportunities config not ready');
-      const newOpp = await sheetService.createEntity(
-        dynamicConfigs.opportunities,
+      const newOpp = await sheetGateway.createEntity(
+        dynamicConfigs.Opportunities,
         opportunity,
       );
       setOpportunities((prev) => [...prev, newOpp]);
@@ -578,9 +528,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateOpportunity = useCallback(
     async (opportunity: Opportunity) => {
-      if (!dynamicConfigs?.opportunities)
+      if (!dynamicConfigs?.Opportunities)
         throw new Error('Opportunities config not ready');
-      await sheetService.updateEntity(dynamicConfigs.opportunities, opportunity);
+      await sheetGateway.updateEntity(dynamicConfigs.Opportunities, opportunity);
       setOpportunities((prev) =>
         prev.map((o) =>
           o.opportunity_id === opportunity.opportunity_id ? opportunity : o,
@@ -592,9 +542,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteOpportunity = useCallback(
     async (opportunityId: string) => {
-      if (!dynamicConfigs?.opportunities)
+      if (!dynamicConfigs?.Opportunities)
         throw new Error('Opportunities config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.opportunities, opportunityId);
+      await sheetGateway.deleteEntity(dynamicConfigs.Opportunities, opportunityId);
       setOpportunities((prev) =>
         prev.filter((o) => o.opportunity_id !== opportunityId),
       );
@@ -604,9 +554,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addAccount = useCallback(
     async (account: Omit<Account, 'account_id'>) => {
-      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
-      const newAccount = await sheetService.createEntity(
-        dynamicConfigs.accounts,
+      if (!dynamicConfigs?.Accounts) throw new Error('Accounts config not ready');
+      const newAccount = await sheetGateway.createEntity(
+        dynamicConfigs.Accounts,
         account,
       );
       setAccounts((prev) => [...prev, newAccount]);
@@ -616,8 +566,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateAccount = useCallback(
     async (account: Account) => {
-      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
-      await sheetService.updateEntity(dynamicConfigs.accounts, account);
+      if (!dynamicConfigs?.Accounts) throw new Error('Accounts config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.Accounts, account);
       setAccounts((prev) =>
         prev.map((a) => (a.account_id === account.account_id ? account : a)),
       );
@@ -627,8 +577,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteAccount = useCallback(
     async (accountId: string) => {
-      if (!dynamicConfigs?.accounts) throw new Error('Accounts config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.accounts, accountId);
+      if (!dynamicConfigs?.Accounts) throw new Error('Accounts config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.Accounts, accountId);
       setAccounts((prev) => prev.filter((a) => a.account_id !== accountId));
     },
     [dynamicConfigs],
@@ -636,10 +586,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addBrainDump = useCallback(
     async (item: Omit<BrainDump, 'braindump_id'>) => {
-      if (!dynamicConfigs?.braindumps)
+      if (!dynamicConfigs?.BrainDump)
         throw new Error('BrainDump config not ready');
-      const newItem = await sheetService.createEntity(
-        dynamicConfigs.braindumps,
+      const newItem = await sheetGateway.createEntity(
+        dynamicConfigs.BrainDump,
         item,
       );
       setBrainDumps((prev) => [...prev, newItem]);
@@ -649,9 +599,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateBrainDump = useCallback(
     async (item: BrainDump) => {
-      if (!dynamicConfigs?.braindumps)
+      if (!dynamicConfigs?.BrainDump)
         throw new Error('BrainDump config not ready');
-      await sheetService.updateEntity(dynamicConfigs.braindumps, item);
+      await sheetGateway.updateEntity(dynamicConfigs.BrainDump, item);
       setBrainDumps((prev) =>
         prev.map((bd) => (bd.braindump_id === item.braindump_id ? item : bd)),
       );
@@ -661,9 +611,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteBrainDump = useCallback(
     async (itemId: string) => {
-      if (!dynamicConfigs?.braindumps)
+      if (!dynamicConfigs?.BrainDump)
         throw new Error('BrainDump config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.braindumps, itemId);
+      await sheetGateway.deleteEntity(dynamicConfigs.BrainDump, itemId);
       setBrainDumps((prev) => prev.filter((bd) => bd.braindump_id !== itemId));
     },
     [dynamicConfigs],
@@ -671,10 +621,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addBusinessUnit = useCallback(
     async (bu: Omit<BusinessUnit, 'bu_id'>) => {
-      if (!dynamicConfigs?.businessUnits)
+      if (!dynamicConfigs?.['Business Units'])
         throw new Error('BusinessUnits config not ready');
-      const newBu = await sheetService.createEntity(
-        dynamicConfigs.businessUnits,
+      const newBu = await sheetGateway.createEntity(
+        dynamicConfigs['Business Units'],
         bu,
       );
       setBusinessUnits((prev) => [...prev, newBu]);
@@ -684,9 +634,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateBusinessUnit = useCallback(
     async (bu: BusinessUnit) => {
-      if (!dynamicConfigs?.businessUnits)
+      if (!dynamicConfigs?.['Business Units'])
         throw new Error('BusinessUnits config not ready');
-      await sheetService.updateEntity(dynamicConfigs.businessUnits, bu);
+      await sheetGateway.updateEntity(dynamicConfigs['Business Units'], bu);
       setBusinessUnits((prev) =>
         prev.map((b) => (b.bu_id === bu.bu_id ? bu : b)),
       );
@@ -696,9 +646,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteBusinessUnit = useCallback(
     async (buId: string) => {
-      if (!dynamicConfigs?.businessUnits)
+      if (!dynamicConfigs?.['Business Units'])
         throw new Error('BusinessUnits config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.businessUnits, buId);
+      await sheetGateway.deleteEntity(dynamicConfigs['Business Units'], buId);
       setBusinessUnits((prev) => prev.filter((b) => b.bu_id !== buId));
     },
     [dynamicConfigs],
@@ -706,8 +656,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addHub = useCallback(
     async (hub: Omit<Hub, 'hub_id'>) => {
-      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
-      const newHub = await sheetService.createEntity(dynamicConfigs.hubs, hub);
+      if (!dynamicConfigs?.Hubs) throw new Error('Hubs config not ready');
+      const newHub = await sheetGateway.createEntity(dynamicConfigs.Hubs, hub);
       setHubs((prev) => [...prev, newHub]);
     },
     [dynamicConfigs],
@@ -715,8 +665,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateHub = useCallback(
     async (hub: Hub) => {
-      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
-      await sheetService.updateEntity(dynamicConfigs.hubs, hub);
+      if (!dynamicConfigs?.Hubs) throw new Error('Hubs config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.Hubs, hub);
       setHubs((prev) => prev.map((h) => (h.hub_id === hub.hub_id ? hub : h)));
     },
     [dynamicConfigs],
@@ -724,8 +674,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteHub = useCallback(
     async (hubId: string) => {
-      if (!dynamicConfigs?.hubs) throw new Error('Hubs config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.hubs, hubId);
+      if (!dynamicConfigs?.Hubs) throw new Error('Hubs config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.Hubs, hubId);
       setHubs((prev) => prev.filter((h) => h.hub_id !== hubId));
     },
     [dynamicConfigs],
@@ -733,10 +683,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addInterface = useCallback(
     async (iface: Omit<Interface, 'interface_id'>) => {
-      if (!dynamicConfigs?.interfaces)
+      if (!dynamicConfigs?.Interfaces)
         throw new Error('Interfaces config not ready');
-      const newIface = await sheetService.createEntity(
-        dynamicConfigs.interfaces,
+      const newIface = await sheetGateway.createEntity(
+        dynamicConfigs.Interfaces,
         iface,
       );
       setInterfaces((prev) => [...prev, newIface]);
@@ -746,9 +696,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateInterface = useCallback(
     async (iface: Interface) => {
-      if (!dynamicConfigs?.interfaces)
+      if (!dynamicConfigs?.Interfaces)
         throw new Error('Interfaces config not ready');
-      await sheetService.updateEntity(dynamicConfigs.interfaces, iface);
+      await sheetGateway.updateEntity(dynamicConfigs.Interfaces, iface);
       setInterfaces((prev) =>
         prev.map((i) => (i.interface_id === iface.interface_id ? iface : i)),
       );
@@ -758,9 +708,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteInterface = useCallback(
     async (ifaceId: string) => {
-      if (!dynamicConfigs?.interfaces)
+      if (!dynamicConfigs?.Interfaces)
         throw new Error('Interfaces config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.interfaces, ifaceId);
+      await sheetGateway.deleteEntity(dynamicConfigs.Interfaces, ifaceId);
       setInterfaces((prev) => prev.filter((i) => i.interface_id !== ifaceId));
     },
     [dynamicConfigs],
@@ -768,9 +718,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addChannel = useCallback(
     async (channel: Omit<Channel, 'channel_id'>) => {
-      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
-      const newChannel = await sheetService.createEntity(
-        dynamicConfigs.channels,
+      if (!dynamicConfigs?.Channels) throw new Error('Channels config not ready');
+      const newChannel = await sheetGateway.createEntity(
+        dynamicConfigs.Channels,
         channel,
       );
       setChannels((prev) => [...prev, newChannel]);
@@ -780,8 +730,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateChannel = useCallback(
     async (channel: Channel) => {
-      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
-      await sheetService.updateEntity(dynamicConfigs.channels, channel);
+      if (!dynamicConfigs?.Channels) throw new Error('Channels config not ready');
+      await sheetGateway.updateEntity(dynamicConfigs.Channels, channel);
       setChannels((prev) =>
         prev.map((c) => (c.channel_id === channel.channel_id ? channel : c)),
       );
@@ -791,8 +741,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const deleteChannel = useCallback(
     async (channelId: string) => {
-      if (!dynamicConfigs?.channels) throw new Error('Channels config not ready');
-      await sheetService.deleteEntity(dynamicConfigs.channels, channelId);
+      if (!dynamicConfigs?.Channels) throw new Error('Channels config not ready');
+      await sheetGateway.deleteEntity(dynamicConfigs.Channels, channelId);
       setChannels((prev) => prev.filter((c) => c.channel_id !== channelId));
     },
     [dynamicConfigs],
@@ -800,10 +750,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addFlywheel = useCallback(
     async (flywheel: Omit<Flywheel, 'flywheel_id'>) => {
-      if (!dynamicConfigs?.flywheels)
+      if (!dynamicConfigs?.Flywheels)
         throw new Error('Flywheels config not ready');
-      const newFlywheel = await sheetService.createEntity(
-        dynamicConfigs.flywheels,
+      const newFlywheel = await sheetGateway.createEntity(
+        dynamicConfigs.Flywheels,
         flywheel,
       );
       setFlywheels((prev) => [...prev, newFlywheel]);
@@ -813,9 +763,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateFlywheel = useCallback(
     async (flywheel: Flywheel) => {
-      if (!dynamicConfigs?.flywheels)
+      if (!dynamicConfigs?.Flywheels)
         throw new Error('Flywheels config not ready');
-      await sheetService.updateEntity(dynamicConfigs.flywheels, flywheel);
+      await sheetGateway.updateEntity(dynamicConfigs.Flywheels, flywheel);
       setFlywheels((prev) =>
         prev.map((f) => (f.flywheel_id === flywheel.flywheel_id ? flywheel : f)),
       );
@@ -825,24 +775,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const addCustomerSegment = useCallback(
     async (segment: CustomerSegment) => {
-      if (!dynamicConfigs?.customerSegments)
+      if (!dynamicConfigs?.['Customer Segments'])
         throw new Error('Customer Segments config not ready');
-      const { spreadsheetId, range, columns } = dynamicConfigs.customerSegments;
-      const sheetName = range.split('!')[0];
-      const headerMap = await sheetService.getHeaderMap(spreadsheetId, sheetName);
-      const rowData = sheetService.mapEntityToRowArray(
-        segment,
-        headerMap,
-        columns,
-      );
-
-      await (window as any).gapi.client.sheets.spreadsheets.values.append({
-        spreadsheetId,
-        range: sheetName,
-        valueInputOption: 'USER_ENTERED',
-        insertDataOption: 'INSERT_ROWS',
-        resource: { values: [rowData] },
-      });
+      await sheetGateway.appendEntity(dynamicConfigs['Customer Segments'], segment);
       setCustomerSegments((prev) => [...prev, segment]);
     },
     [dynamicConfigs],
@@ -850,9 +785,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
   const updateCustomerSegment = useCallback(
     async (segment: CustomerSegment) => {
-      if (!dynamicConfigs?.customerSegments)
+      if (!dynamicConfigs?.['Customer Segments'])
         throw new Error('Customer Segments config not ready');
-      await sheetService.updateEntity(dynamicConfigs.customerSegments, segment);
+      await sheetGateway.updateEntity(dynamicConfigs['Customer Segments'], segment);
       setCustomerSegments((prev) =>
         prev.map((cs) =>
           cs.customer_segment === segment.customer_segment ? segment : cs,
@@ -869,12 +804,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   ) => {
     const addEntity = useCallback(
       async (entity: Omit<T, keyof T>) => {
-        if (!dynamicConfigs?.[configKey])
-          throw new Error(`${configKey} config not ready`);
-        const newEntity = await sheetService.createEntity(
-          dynamicConfigs[configKey],
-          entity,
-        );
+        const config = dynamicConfigs?.[configKey];
+        if (!config) throw new Error(`${configKey} config not ready`);
+        const newEntity = await sheetGateway.createEntity(config, entity);
         stateSetter((prev) => [...prev, newEntity]);
       },
       [dynamicConfigs],
@@ -882,10 +814,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     const updateEntity = useCallback(
       async (entity: T) => {
-        if (!dynamicConfigs?.[configKey])
-          throw new Error(`${configKey} config not ready`);
-        await sheetService.updateEntity(dynamicConfigs[configKey], entity);
-        const keyField = dynamicConfigs[configKey].keyField;
+        const config = dynamicConfigs?.[configKey];
+        if (!config) throw new Error(`${configKey} config not ready`);
+        await sheetGateway.updateEntity(config, entity);
+        const keyField = config.keyField;
         if (typeof keyField === 'symbol') {
           throw new Error(`Symbol key fields are not supported for ${configKey}`);
         }
@@ -898,10 +830,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
     const deleteEntity = useCallback(
       async (id: string) => {
-        if (!dynamicConfigs?.[configKey])
-          throw new Error(`${configKey} config not ready`);
-        await sheetService.deleteEntity(dynamicConfigs[configKey], id);
-        const keyField = dynamicConfigs[configKey].keyField;
+        const config = dynamicConfigs?.[configKey];
+        if (!config) throw new Error(`${configKey} config not ready`);
+        await sheetGateway.deleteEntity(config, id);
+        const keyField = config.keyField;
         if (typeof keyField === 'symbol') {
           throw new Error(`Symbol key fields are not supported for ${configKey}`);
         }
@@ -917,54 +849,53 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     addEntity: addSystemSegment,
     updateEntity: updateSystemSegment,
     deleteEntity: deleteSystemSegment,
-  } = createCrudForSystemEntity('systemSegments', setSystemSegments);
+  } = createCrudForSystemEntity('SystemSegments', setSystemSegments);
   const {
     addEntity: addSystemFlywheel,
     updateEntity: updateSystemFlywheel,
     deleteEntity: deleteSystemFlywheel,
-  } = createCrudForSystemEntity('systemFlywheels', setSystemFlywheels);
+  } = createCrudForSystemEntity('SystemFlywheels', setSystemFlywheels);
   const {
     addEntity: addSystemBusinessUnit,
     updateEntity: updateSystemBusinessUnit,
     deleteEntity: deleteSystemBusinessUnit,
-  } = createCrudForSystemEntity('systemBusinessUnits', setSystemBusinessUnits);
+  } = createCrudForSystemEntity('SystemBusinessUnits', setSystemBusinessUnits);
   const {
     addEntity: addSystemChannel,
     updateEntity: updateSystemChannel,
     deleteEntity: deleteSystemChannel,
-  } = createCrudForSystemEntity('systemChannels', setSystemChannels);
+  } = createCrudForSystemEntity('SystemChannels', setSystemChannels);
   const {
     addEntity: addSystemInterface,
     updateEntity: updateSystemInterface,
     deleteEntity: deleteSystemInterface,
-  } = createCrudForSystemEntity('systemInterfaces', setSystemInterfaces);
+  } = createCrudForSystemEntity('SystemInterfaces', setSystemInterfaces);
   const {
     addEntity: addSystemHub,
     updateEntity: updateSystemHub,
     deleteEntity: deleteSystemHub,
-  } = createCrudForSystemEntity('systemHubs', setSystemHubs);
+  } = createCrudForSystemEntity('SystemHubs', setSystemHubs);
   const {
     addEntity: addSystemPerson,
     updateEntity: updateSystemPerson,
     deleteEntity: deleteSystemPerson,
-  } = createCrudForSystemEntity('systemPeople', setSystemPeople);
+  } = createCrudForSystemEntity('SystemPeople', setSystemPeople);
   const {
     addEntity: addSystemStage,
     updateEntity: updateSystemStage,
     deleteEntity: deleteSystemStage,
-  } = createCrudForSystemEntity('systemStages', setSystemStages);
+  } = createCrudForSystemEntity('SystemStages', setSystemStages);
   const {
     addEntity: addSystemTouchpoint,
     updateEntity: updateSystemTouchpoint,
     deleteEntity: deleteSystemTouchpoint,
-  } = createCrudForSystemEntity('systemTouchpoints', setSystemTouchpoints);
+  } = createCrudForSystemEntity('SystemTouchpoints', setSystemTouchpoints);
   const {
     addEntity: addSystemPlatform,
     updateEntity: updateSystemPlatform,
     deleteEntity: deleteSystemPlatform,
-  } = createCrudForSystemEntity('systemPlatforms', setSystemPlatforms);
+  } = createCrudForSystemEntity('SystemPlatforms', setSystemPlatforms);
 
-  // FIX: Map new Mgmt data models to old Project/Task models for backward compatibility.
   const projects: Project[] = useMemo(() => {
     const hubBuMap = new Map<string, string[]>();
     hubs.forEach((hub) => {
@@ -1006,7 +937,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       start_date: mp.start_date,
       target_end_date: mp.end_date,
       budget_planned: mp.budget || 0,
-      budget_spent: 0, // Not available in new model
+      budget_spent: 0,
     }));
   }, [mgmtProjects, hubs, businessUnits]);
 
@@ -1032,7 +963,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     });
   }, [mgmtTasks, milestones]);
 
-  // FIX: Add mock CRUD functions for legacy projects/tasks to avoid crashes.
   const addProject = useCallback(async (project: Omit<Project, 'project_id'>) => {
     console.warn('addProject is a mock function and does not save data.');
     return Promise.resolve();
@@ -1072,8 +1002,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       Interfaces: interfaces,
       Channels: channels,
       'Customer Segments': customerSegments,
-      Projects: projects, // Add mapped projects
-      Tasks: tasks, // Add mapped tasks
+      Projects: projects, 
+      Tasks: tasks, 
       SystemSegments: systemSegments,
       SystemFlywheels: systemFlywheels,
       SystemBusinessUnits: systemBusinessUnits,
@@ -1091,7 +1021,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       MgmtHubs: mgmtHubs,
       WeeklyUpdates: weeklyUpdates,
       DecisionLogs: decisionLogs,
-      // FIX: Add PositioningPage data to allData.
       FlywheelStrategies: flywheelStrategies,
       SegmentPositionings: segmentPositionings,
       FunnelStages: funnelStages,
@@ -1129,7 +1058,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
       mgmtHubs,
       weeklyUpdates,
       decisionLogs,
-      // FIX: Add PositioningPage data dependencies.
       flywheelStrategies,
       segmentPositionings,
       funnelStages,
@@ -1151,7 +1079,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     channels,
     customerSegments,
     projects,
-    tasks, // Add mapped data to context
+    tasks,
     systemSegments,
     systemFlywheels,
     systemBusinessUnits,
@@ -1169,7 +1097,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     mgmtHubs,
     weeklyUpdates,
     decisionLogs,
-    // FIX: Add PositioningPage data to context value.
     flywheelStrategies,
     segmentPositionings,
     funnelStages,
@@ -1211,7 +1138,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
     addRole,
     updateRole,
     deleteRole,
-    // Add mock CRUD functions to context
     addProject,
     updateProject,
     deleteProject,

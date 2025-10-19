@@ -1,6 +1,42 @@
 // FIX: Add missing type imports for new data models.
 import { Person, Project, Task, BusinessUnit, Flywheel, Lead, Opportunity, Account, BrainDump, LogEntry, Role, Hub, Interface, Channel, CustomerSegment, SystemSegment, SystemFlywheel, SystemBusinessUnit, SystemChannel, SystemInterface, SystemHub, SystemPerson, SystemStage, SystemTouchpoint, Program, MgmtProject, Milestone, MgmtTask, MgmtHub, WeeklyUpdate, DecisionLog, SystemPlatform } from './types';
 import type { SpreadsheetIds } from './contexts/SpreadsheetConfigContext';
+// FIX: Import Zod schemas for validation.
+import { z } from 'zod';
+import {
+    PersonSchema,
+    ProjectSchema,
+    TaskSchema,
+    BusinessUnitSchema,
+    FlywheelSchema,
+    LeadSchema,
+    OpportunitySchema,
+    AccountSchema,
+    BrainDumpSchema,
+    LogEntrySchema,
+    RoleSchema,
+    HubSchema,
+    InterfaceSchema,
+    ChannelSchema,
+    CustomerSegmentSchema,
+    SystemSegmentSchema,
+    SystemFlywheelSchema,
+    SystemBusinessUnitSchema,
+    SystemChannelSchema,
+    SystemInterfaceSchema,
+    SystemHubSchema,
+    SystemPersonSchema,
+    SystemStageSchema,
+    SystemTouchpointSchema,
+    ProgramSchema,
+    MgmtProjectSchema,
+    MilestoneSchema,
+    MgmtTaskSchema,
+    MgmtHubSchema,
+    WeeklyUpdateSchema,
+    DecisionLogSchema,
+    SystemPlatformSchema,
+} from './schemas';
 
 // Defines the structure for a column's mapping and type information
 type ColumnConfig = {
@@ -15,6 +51,7 @@ export interface SheetConfig<T> {
   range: string;
   keyField: keyof T; // A required field to identify a valid row
   columns: { [K in keyof Partial<T>]: ColumnConfig };
+  schema: z.ZodSchema<T>;
 }
 
 // --- Centralized Sheet Metadata ---
@@ -126,6 +163,7 @@ export const getCustomerSegmentsConfig = (ids: SpreadsheetIds): SheetConfig<Cust
             design_pov: { header: 'Design POV' },
             flywheel_id: { header: 'Flywheel_Id' },
         },
+        schema: CustomerSegmentSchema,
     };
 };
 
@@ -140,6 +178,7 @@ export const getRolesConfig = (ids: SpreadsheetIds): SheetConfig<Role> => {
             role_name: { header: 'role' },
             permissions: { header: 'permissions', type: 'string_array' },
         },
+        schema: RoleSchema,
     };
 };
 
@@ -158,6 +197,7 @@ export const getPeopleConfig = (ids: SpreadsheetIds): SheetConfig<Person> => {
             role_title: { header: 'role' },
             role_name: { header: 'role' },
         },
+        schema: PersonSchema,
     };
 };
 
@@ -195,6 +235,7 @@ export const getBusinessUnitsConfig = (ids: SpreadsheetIds): SheetConfig<Busines
             priority_level: { header: 'priority_level' },
             status: { header: 'status' },
         },
+        schema: BusinessUnitSchema,
     };
 };
 
@@ -228,6 +269,7 @@ export const getFlywheelsConfig = (ids: SpreadsheetIds): SheetConfig<Flywheel> =
             avg_ltv: { header: 'avg_ltv', type: 'number' },
             conversion_rate_pct: { header: 'conversion_rate_pct', type: 'number' },
         },
+        schema: FlywheelSchema,
     };
 };
 
@@ -256,6 +298,7 @@ export const getHubsConfig = (ids: SpreadsheetIds): SheetConfig<Hub> => {
             serves_bu6: { header: 'BU6', type: 'boolean' },
             notes: { header: 'notes' },
         },
+        schema: HubSchema,
     };
 };
 
@@ -284,6 +327,7 @@ export const getInterfacesConfig = (ids: SpreadsheetIds): SheetConfig<Interface>
             interface_status: { header: 'Interface_status' },
             notes: { header: 'notes' },
         },
+        schema: InterfaceSchema,
     };
 };
 
@@ -301,6 +345,7 @@ export const getChannelsConfig = (ids: SpreadsheetIds): SheetConfig<Channel> => 
             interfaces: { header: 'Interfaces' },
             focus: { header: 'Focus' },
         },
+        schema: ChannelSchema,
     };
 };
 
@@ -327,6 +372,7 @@ export const getLeadsConfig = (ids: SpreadsheetIds): SheetConfig<Lead> => {
             last_activity_date: { header: 'last_activity_date' },
             disqualified_reason: { header: 'disqualified_reason' },
         },
+        schema: LeadSchema,
     };
 };
 
@@ -346,6 +392,7 @@ export const getOpportunitiesConfig = (ids: SpreadsheetIds): SheetConfig<Opportu
             close_date: { header: 'close_date' },
             owner_user_id: { header: 'owner_user_id' },
         },
+        schema: OpportunitySchema,
     };
 };
 
@@ -363,6 +410,7 @@ export const getAccountsConfig = (ids: SpreadsheetIds): SheetConfig<Account> => 
             website: { header: 'website' },
             owner_user_id: { header: 'owner_user_id' },
         },
+        schema: AccountSchema,
     };
 };
 
@@ -381,6 +429,7 @@ export const getBrainDumpConfig = (ids: SpreadsheetIds): SheetConfig<BrainDump> 
             user_email: { header: 'UserEmail' },
             priority: { header: 'Priority' },
         },
+        schema: BrainDumpSchema,
     };
 };
 
@@ -404,6 +453,7 @@ export const getLogConfig = (ids: SpreadsheetIds): SheetConfig<LogEntry> => {
             success_criteria: { header: 'Success Criteria' },
             status: { header: 'Status' },
         },
+        schema: LogEntrySchema,
     };
 };
 
@@ -465,6 +515,7 @@ export const getProgramsConfig = (ids: SpreadsheetIds): SheetConfig<Program> => 
             updated_by_person_id: { header: 'updated_by_person_id' },
             notes: { header: 'notes' },
         },
+        schema: ProgramSchema,
     };
 };
 
@@ -511,6 +562,7 @@ export const getMgmtProjectsConfig = (ids: SpreadsheetIds): SheetConfig<MgmtProj
             velocity_tasks_per_day: { header: 'velocity_tasks_per_day', type: 'number' },
             is_on_time: { header: 'is_on_time' },
         },
+        schema: MgmtProjectSchema,
     };
 };
 
@@ -542,6 +594,7 @@ export const getMilestonesConfig = (ids: SpreadsheetIds): SheetConfig<Milestone>
             dependent_milestone_ids: { header: 'dependent_milestone_ids' },
             actual_completion_date: { header: 'actual_completion_date' },
         },
+        schema: MilestoneSchema,
     };
 };
 
@@ -574,6 +627,7 @@ export const getMgmtTasksConfig = (ids: SpreadsheetIds): SheetConfig<MgmtTask> =
             notes: { header: 'notes' },
             impact_if_delayed: { header: 'impact_if_delayed' },
         },
+        schema: MgmtTaskSchema,
     };
 };
 
@@ -593,6 +647,7 @@ export const getMgmtHubsConfig = (ids: SpreadsheetIds): SheetConfig<MgmtHub> => 
             budget_monthly: { header: 'budget_allocation', type: 'number' },
             headcount: { header: 'headcount', type: 'number' },
         },
+        schema: MgmtHubSchema,
     };
 };
 
@@ -613,6 +668,7 @@ export const getWeeklyUpdatesConfig = (ids: SpreadsheetIds): SheetConfig<WeeklyU
             blockers: { header: 'blockers' },
             decisions_needed: { header: 'decisions_needed' },
         },
+        schema: WeeklyUpdateSchema,
     };
 };
 
@@ -633,6 +689,7 @@ export const getDecisionLogsConfig = (ids: SpreadsheetIds): SheetConfig<Decision
             alternatives_considered: { header: 'alternatives_considered' },
             impact: { header: 'impact' },
         },
+        schema: DecisionLogSchema,
     };
 };
 
@@ -705,7 +762,8 @@ export const getSystemSegmentsConfig = (ids: SpreadsheetIds): SheetConfig<System
       delta_score: { header: 'delta_score', type: 'number' },
       adoption_threshold: { header: 'adoption_threshold' },
       irreversibility_trigger: { header: 'irreversibility_trigger' },
-    }
+    },
+    schema: SystemSegmentSchema,
   }
 };
 
@@ -740,7 +798,8 @@ export const getSystemFlywheelsConfig = (ids: SpreadsheetIds): SheetConfig<Syste
             conversion_rate_pct: { header: 'conversion_rate_pct', type: 'number' },
             reorder_rate_6mo_pct: { header: 'reorder_rate_6mo_pct' },
             avg_sale_cycle_days: { header: 'avg_sale_cycle_days' },
-        }
+        },
+        schema: SystemFlywheelSchema,
     };
 };
 
@@ -782,7 +841,8 @@ export const getSystemBusinessUnitsConfig = (ids: SpreadsheetIds): SheetConfig<S
             variable_cost_per_order: { header: 'variable_cost_per_order', type: 'number' },
             fixed_costs_monthly: { header: 'fixed_costs_monthly', type: 'number' },
             break_even_orders: { header: 'break_even_orders', type: 'number' },
-        }
+        },
+        schema: SystemBusinessUnitSchema,
     };
 };
 
@@ -815,7 +875,8 @@ export const getSystemChannelsConfig = (ids: SpreadsheetIds): SheetConfig<System
             Notes: { header: 'Notes' },
             LTV: { header: 'LTV' },
             ROI: { header: 'ROI' },
-        }
+        },
+        schema: SystemChannelSchema,
     };
 };
 
@@ -846,7 +907,8 @@ export const getSystemInterfacesConfig = (ids: SpreadsheetIds): SheetConfig<Syst
             annual_volume: { header: 'annual_volume', type: 'number' },
             notes: { header: 'notes' },
             channel_id: { header: 'channel_id' },
-        }
+        },
+        schema: SystemInterfaceSchema,
     };
 };
 
@@ -876,7 +938,8 @@ export const getSystemHubsConfig = (ids: SpreadsheetIds): SheetConfig<SystemHub>
             primary_bottleneck: { header: 'primary_bottleneck' },
             scale_trigger_point: { header: 'scale_trigger_point' },
             Note: { header: 'note' },
-        }
+        },
+        schema: SystemHubSchema,
     };
 };
 
@@ -908,7 +971,8 @@ export const getSystemPeopleConfig = (ids: SpreadsheetIds): SheetConfig<SystemPe
             weekly_hours_capacity: { header: 'weekly_hours_capacity', type: 'number' },
             location: { header: 'location' },
             notes: { header: 'notes' },
-        }
+        },
+        schema: SystemPersonSchema,
     };
 };
 
@@ -936,7 +1000,8 @@ export const getSystemStagesConfig = (ids: SpreadsheetIds): SheetConfig<SystemSt
             monthly_volume_out: { header: 'monthly_volume_out', type: 'number' },
             revenue_per_stage: { header: 'revenue_per_stage', type: 'number' },
             stage_description: { header: 'stage_description' },
-        }
+        },
+        schema: SystemStageSchema,
     };
 };
 
@@ -972,7 +1037,8 @@ export const getSystemTouchpointsConfig = (ids: SpreadsheetIds): SheetConfig<Sys
             roi_score: { header: 'roi_score', type: 'number' },
             optimization_priority: { header: 'optimization_priority' },
             current_status: { header: 'current_status' },
-        }
+        },
+        schema: SystemTouchpointSchema,
     };
 };
 
@@ -991,7 +1057,8 @@ export const getSystemPlatformsConfig = (ids: SpreadsheetIds): SheetConfig<Syste
             primary_segments: { header: 'primary_segments' },
             platform_icon: { header: 'platform_icon_url' },
             platform_link: { header: 'platform_link_url' },
-        }
+        },
+        schema: SystemPlatformSchema,
     };
 };
 

@@ -61,7 +61,8 @@ const BrainDumpFormModal: React.FC<BrainDumpFormModalProps> = ({ isOpen, onClose
                     <div>
                         <label htmlFor="priority" className="block text-sm font-medium text-gray-300">Priority</label>
                         <select name="priority" value={formData.priority} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                            {Object.values(Priority).map(p => <option key={p} value={p}>{p}</option>)}
+                            {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
+                            {Object.values(Priority).map((p: Priority) => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
                 </div>

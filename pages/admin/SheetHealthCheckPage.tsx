@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useSpreadsheetConfig, SpreadsheetIds } from '../../contexts/SpreadsheetConfigContext';
 import type { SheetMappings, SheetRelations, SheetDataTypes } from '../../contexts/SpreadsheetConfigContext';
 import { groupedSheetConfigs, allSheetConfigs, SheetConfig, predefinedRelations } from '../../sheetConfig';
-import type { SheetMappingInfo } from '../../services/googleSheetService';
+// FIX: Changed import from googleSheetService to sheetGateway
+import type { SheetMappingInfo } from '../../services/sheetGateway';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { CheckCircleIcon, XCircleIcon, ExclamationTriangleIcon, ChevronDownIcon } from '../../components/Icons';

@@ -1,159 +1,146 @@
-import React, { useState, useMemo, useRef, useLayoutEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
-import type { Interface, Channel } from '../../../types';
+import type { Interface } from '../../../types';
+import Button from '../../../components/ui/Button';
+import { PlusIcon, EditIcon, TrashIcon, SortIcon } from '../../../components/Icons';
 import InterfaceFormModal from '../../../components/forms/InterfaceFormModal';
 
-const TooltipPortal: React.FC<{ activeTooltip: { content: React.ReactNode; targetRect: DOMRect | null } }> = ({ activeTooltip }) => {
-    const tooltipRef = useRef<HTMLDivElement>(null);
-    const [position, setPosition] = useState({ top: -9999, left: -9999, opacity: 0 });
-
-    useLayoutEffect(() => {
-        if (activeTooltip.targetRect && tooltipRef.current) {
-            const target = activeTooltip.targetRect;
-            const tip = tooltipRef.current.getBoundingClientRect();
-            
-            let top = target.top - tip.height - 8; // Default above
-            let left = target.left + (target.width / 2) - (tip.width / 2);
-
-            if (top < 8) top = target.bottom + 8; // Move below if no space above
-
-            if (left < 8) left = 8;
-            else if (left + tip.width > window.innerWidth) left = window.innerWidth - tip.width - 8;
-
-            setPosition({ top, left, opacity: 1 });
-        } else {
-            setPosition(pos => ({ ...pos, opacity: 0 }));
-        }
-    }, [activeTooltip]);
-
-    if (!activeTooltip.content) return null;
-
-    return (
-        <div 
-            ref={tooltipRef}
-            style={{ top: position.top, left: position.left, opacity: position.opacity }}
-            className="fixed z-50 bg-gray-950 p-3 border border-gray-700 rounded-lg shadow-xl w-72 transition-opacity duration-200"
-        >
-            {activeTooltip.content}
-        </div>
-    );
-};
-
+type SortConfig = { key: keyof Interface; direction: 'ascending' | 'descending' } | null;
 
 const AllInterfacesPage: React.FC = () => {
-  const { channels, interfaces, people } = useData();
-  const [activeTooltip, setActiveTooltip] = useState<{ content: React.ReactNode; targetRect: DOMRect | null }>({ content: null, targetRect: null });
-  
-  const peopleMap = useMemo(() => new Map(people.map(p => [p.user_id, p.full_name])), [people]);
-  const interfaceMap = useMemo(() => new Map(interfaces.map(i => [i.interface_id, i.interface_name])), [interfaces]);
-  const getPersonName = (id: string) => peopleMap.get(id) || 'N/A';
-  
-  const handleInterfaceTooltip = (e: React.MouseEvent<HTMLDivElement>, item: Interface) => {
-      const content = (
-          <div className="text-xs space-y-2 text-left">
-              <div className="grid grid-cols-3 gap-2 items-start">
-                  <span className="text-gray-400 col-span-1">Status</span>
-                  <span className="font-medium text-white col-span-2">{item.interface_status}</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2 items-start">
-                  <span className="text-gray-400 col-span-1">Notes</span>
-                  <span className="font-medium text-white col-span-2">{item.notes || 'N/A'}</span>
-              </div>
-          </div>
-      );
-      setActiveTooltip({
-          content,
-          targetRect: e.currentTarget.getBoundingClientRect(),
+  const { interfaces, addInterface, updateInterface, deleteInterface, people, flywheels, businessUnits } = useData();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingInterface, setEditingInterface] = useState<Interface | null>(null);
+  const [filters, setFilters] = useState({ name: '', category: '' });
+  const [sortConfig, setSortConfig] = useState<SortConfig>(null);
+
+  const filteredInterfaces = useMemo(() => {
+    return interfaces.filter(i =>
+      i.interface_name.toLowerCase().includes(filters.name.toLowerCase()) &&
+      i.interface_category.toLowerCase().includes(filters.category.toLowerCase())
+    );
+  }, [interfaces, filters]);
+
+  const sortedInterfaces = useMemo(() => {
+    let sortableInterfaces = [...filteredInterfaces];
+    if (sortConfig !== null) {
+      sortableInterfaces.sort((a, b) => {
+        const valA = a[sortConfig.key] || '';
+        const valB = b[sortConfig.key] || '';
+        if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+        return 0;
       });
+    }
+    return sortableInterfaces;
+  }, [filteredInterfaces, sortConfig]);
+
+  const requestSort = (key: keyof Interface) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig?.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
   };
 
-  const handleChannelTooltip = (e: React.MouseEvent<HTMLDivElement>, item: Channel) => {
-      const interfaceIds = item.interfaces.split(',').map(s => s.trim()).filter(Boolean);
-      const interfaceNames = interfaceIds.map(id => interfaceMap.get(id) || id);
-
-      const content = (
-          <div className="text-xs space-y-2 text-left">
-              <div className="font-bold text-base text-white mb-2">{item.channel_name}</div>
-              <div className="grid grid-cols-3 gap-2 items-start">
-                  <span className="text-gray-400 col-span-1">Interfaces</span>
-                  <span className="font-medium text-white col-span-2">
-                      {interfaceNames.length > 0 ? interfaceNames.join(', ') : 'None assigned'}
-                  </span>
-              </div>
-          </div>
-      );
-      setActiveTooltip({
-          content,
-          targetRect: e.currentTarget.getBoundingClientRect(),
-      });
+  const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
+
+  const openModal = (iface: Interface | null = null) => {
+    setEditingInterface(iface);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setEditingInterface(null);
+    setIsModalOpen(false);
+  };
+
+  const handleSave = (ifaceData: Omit<Interface, 'interface_id'> | Interface) => {
+    if ('interface_id' in ifaceData) {
+      updateInterface(ifaceData);
+    } else {
+      addInterface(ifaceData);
+    }
+    closeModal();
+  };
+
+  const getPersonName = (id: string) => people.find(p => p.user_id === id)?.full_name || 'N/A';
+  
+  const TableHeader: React.FC<{ sortKey: keyof Interface, label: string }> = ({ sortKey, label }) => (
+    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(sortKey)}>
+      <div className="flex items-center">{label}{sortConfig?.key === sortKey && <SortIcon className="w-4 h-4 ml-2" />}</div>
+    </th>
+  );
 
   return (
-    <div className="h-full flex flex-col">
-        <TooltipPortal activeTooltip={activeTooltip} />
-        <h1 className="text-2xl font-semibold text-white mb-4">Interface & Channel Board</h1>
-        
-        <div className="flex-1 flex gap-4 overflow-x-auto pb-4 -mx-8 px-8">
-            {channels.map(channel => {
-                const relatedInterfaces = interfaces.filter(i => i.channel_id === channel.channel_id);
-                return (
-                    <div key={channel.channel_id} className="w-[340px] flex-shrink-0 bg-gray-900 border border-gray-800 rounded-xl flex flex-col">
-                        {/* Channel Header */}
-                        <div 
-                            className="p-4 border-b border-gray-800 cursor-pointer"
-                            onMouseEnter={(e) => handleChannelTooltip(e, channel)}
-                            onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })}
-                        >
-                            <h3 className="font-bold text-lg text-white">{channel.channel_name}</h3>
-                            <div className="my-2 border-t border-gray-700"></div>
-                            <div className="flex justify-between items-center text-xs text-gray-400">
-                                <span>{channel.channel_type}</span>
-                                <span className="font-medium text-right">{channel.focus}</span>
-                            </div>
-                        </div>
+    <div className="container mx-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-semibold text-white">All Interfaces</h1>
+        <Button onClick={() => openModal()} className="flex items-center gap-2">
+          <PlusIcon className="w-5 h-5" /> Add Interface
+        </Button>
+      </div>
+      
+      <div className="mb-4 p-4 bg-gray-900 border border-gray-800 rounded-lg flex items-center gap-4">
+        <input
+          type="text"
+          name="name"
+          placeholder="Filter by name..."
+          value={filters.name}
+          onChange={handleFilterChange}
+          className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <input
+          type="text"
+          name="category"
+          placeholder="Filter by category..."
+          value={filters.category}
+          onChange={handleFilterChange}
+          className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
 
-                        {/* Interface Cards */}
-                        <div className="p-4 space-y-4 overflow-y-auto">
-                            {relatedInterfaces.length > 0 ? relatedInterfaces.map(iface => (
-                                <div
-                                    key={iface.interface_id}
-                                    onMouseEnter={(e) => handleInterfaceTooltip(e, iface)}
-                                    onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })}
-                                    className="bg-gray-800 border border-gray-700 rounded-lg p-3 cursor-pointer hover:border-accent-blue"
-                                >
-                                    <h4 className="font-bold text-base text-accent-blue">{iface.interface_name}</h4>
-                                    <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
-                                        <p className="truncate w-1/2">{iface.interface_goal}</p>
-                                        <p className="truncate w-1/2 text-right">{getPersonName(iface.interface_owner)}</p>
-                                    </div>
+      <div className="bg-gray-900 border border-gray-800 rounded-lg shadow-md overflow-hidden">
+        <table className="min-w-full divide-y divide-gray-700">
+          <thead className="bg-gray-800">
+            <tr>
+              <TableHeader sortKey="interface_name" label="Interface Name" />
+              <TableHeader sortKey="interface_category" label="Category" />
+              <TableHeader sortKey="interface_type" label="Type" />
+              <TableHeader sortKey="interface_owner" label="Owner" />
+              <TableHeader sortKey="monthly_budget" label="Monthly Budget" />
+              <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-700">
+            {sortedInterfaces.map((iface) => (
+              <tr key={iface.interface_id} className="hover:bg-gray-800">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{iface.interface_name}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{iface.interface_category}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{iface.interface_type}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(iface.interface_owner)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${iface.monthly_budget.toLocaleString()}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
+                  <button onClick={() => openModal(iface)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
+                  <button onClick={() => deleteInterface(iface.interface_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
-                                    <div className="my-2 border-t border-gray-700"></div>
-
-                                    <div className="text-xs space-y-1">
-                                        <div className="flex justify-between gap-2">
-                                            <span className="text-gray-400">Budget</span>
-                                            <span className="font-medium text-white text-right">${iface.monthly_budget.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between gap-2">
-                                            <span className="text-gray-400">Cost Model</span>
-                                            <span className="font-medium text-white text-right">{iface.cost_model}</span>
-                                        </div>
-                                        <div className="flex justify-between gap-2">
-                                            <span className="text-gray-400">Avg. CAC</span>
-                                            <span className="font-medium text-white text-right">${iface.avg_cac.toLocaleString()}</span>
-                                        </div>
-                                        <div className="flex justify-between gap-2">
-                                            <span className="text-gray-400">Conv. Rate</span>
-                                            <span className="font-medium text-white text-right">{iface.avg_conversion_rate}%</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )) : <p className="text-sm text-gray-500 text-center p-4">No interfaces for this channel.</p>}
-                        </div>
-                    </div>
-                );
-            })}
-        </div>
+      <InterfaceFormModal 
+        isOpen={isModalOpen} 
+        onClose={closeModal} 
+        onSave={handleSave} 
+        iface={editingInterface} 
+        people={people} 
+        flywheels={flywheels}
+        businessUnits={businessUnits}
+      />
     </div>
   );
 };

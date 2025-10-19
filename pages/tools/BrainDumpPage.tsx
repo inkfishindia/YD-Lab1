@@ -89,7 +89,8 @@ const BrainDumpPage: React.FC = () => {
           <input type="text" name="type" placeholder="Filter by type..." value={filters.type} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <select name="priority" value={filters.priority} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Priorities</option>
-              {Object.values(Priority).map(p => <option key={p} value={p}>{p}</option>)}
+              {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
+              {Object.values(Priority).map((p: Priority) => <option key={p} value={p}>{p}</option>)}
           </select>
       </div>
 

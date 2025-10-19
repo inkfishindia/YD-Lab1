@@ -83,32 +83,37 @@ const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ isOpen, o
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Owner</label>
                     <select name="owner_user_id" value={formData.owner_user_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
-                        {people.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
+                        {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
+                        {people.map((p: Person) => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Health Status</label>
                     <select name="health_status" value={formData.health_status} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                        {Object.values(HealthStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                        {/* FIX: Explicitly type 's' to resolve type inference issue. */}
+                        {Object.values(HealthStatus).map((s: HealthStatus) => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Priority</label>
                     <select name="priority_level" value={formData.priority_level} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                        {Object.values(Priority).map(p => <option key={p} value={p}>{p}</option>)}
+                        {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
+                        {Object.values(Priority).map((p: Priority) => <option key={p} value={p}>{p}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Primary Flywheel</label>
                     <select name="primary_flywheel_id" value={formData.primary_flywheel_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
-                        {flywheels.map(fw => <option key={fw.flywheel_id} value={fw.flywheel_id}>{fw.flywheel_name}</option>)}
+                        {/* FIX: Explicitly type 'fw' to resolve type inference issue. */}
+                        {flywheels.map((fw: Flywheel) => <option key={fw.flywheel_id} value={fw.flywheel_id}>{fw.flywheel_name}</option>)}
                     </select>
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-300">Upsell Flywheel (Optional)</label>
                     <select name="upsell_flywheel_id" value={formData.upsell_flywheel_id || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">None</option>
-                        {flywheels.map(fw => <option key={fw.flywheel_id} value={fw.flywheel_id}>{fw.flywheel_name}</option>)}
+                        {/* FIX: Explicitly type 'fw' to resolve type inference issue. */}
+                        {flywheels.map((fw: Flywheel) => <option key={fw.flywheel_id} value={fw.flywheel_id}>{fw.flywheel_name}</option>)}
                     </select>
                 </div>
                 <div className="col-span-2 flex justify-end space-x-3 pt-4">

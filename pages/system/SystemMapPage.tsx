@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { useData } from '../../contexts/DataContext';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { 
     CurrencyDollarIcon, 
@@ -9,6 +8,10 @@ import {
     CloseIcon,
 } from '../../components/Icons';
 import type { SystemHub } from '../../types';
+import Panel from '../../components/kit/Panel';
+import KPI from '../../components/kit/KPI';
+// FIX: Import 'useData' hook from DataContext to resolve 'Cannot find name useData' error.
+import { useData } from '../../contexts/DataContext';
 
 // Centralized entity type definition imported from types.ts
 import type { SystemEntityType } from '../../types';
@@ -19,40 +22,6 @@ const parseCurrency = (val: any): number => {
     if (typeof val !== 'string' || !val) return 0;
     const num = parseFloat(val.replace(/[^0-9.-]+/g, ""));
     return isNaN(num) ? 0 : num;
-};
-
-// Metric Card Component
-interface MetricCardProps {
-    title: string;
-    value: string;
-    icon: React.ElementType;
-    alertLevel: 'none' | 'warning' | 'danger';
-    onClick: () => void;
-    children?: React.ReactNode;
-}
-
-const MetricCard: React.FC<MetricCardProps> = ({ title, value, icon: Icon, alertLevel, onClick, children }) => {
-    const alertClasses = {
-        none: 'border-gray-700',
-        warning: 'border-yellow-500',
-        danger: 'border-red-500',
-    };
-
-    return (
-        <div 
-            className={`bg-gray-900 border-l-4 ${alertClasses[alertLevel]} rounded-r-lg shadow-md p-5 cursor-pointer hover:bg-gray-800 transition-colors`}
-            onClick={onClick}
-        >
-            <div className="flex items-start justify-between">
-                <div>
-                    <p className="text-sm font-medium text-gray-400">{title}</p>
-                    <p className="text-3xl font-bold text-white mt-1">{value}</p>
-                </div>
-                <Icon className="w-7 h-7 text-gray-500" />
-            </div>
-            {children && <div className="mt-4 pt-3 border-t border-gray-700/50">{children}</div>}
-        </div>
-    );
 };
 
 // Trend Sidebar Component
@@ -158,21 +127,24 @@ const SystemMapPage: React.FC = () => {
         setSidebar({ isOpen: true, title });
     };
 
+    const formattedMonthlyBurn = businessHealthData.monthlyBurn.value >= 100000 
+        ? `${(businessHealthData.monthlyBurn.value / 100000).toFixed(1)}L` 
+        : `₹${(businessHealthData.monthlyBurn.value / 1000).toFixed(1)}k`;
+
     return (
         <div className="space-y-6">
             <h1 className="text-2xl font-bold text-white">Business Health</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <MetricCard 
+                <KPI 
                     title="Monthly Burn" 
-                    value={`₹${(businessHealthData.monthlyBurn.value / 100000).toFixed(1)}L`} 
-                    icon={CurrencyDollarIcon} 
+                    value={formattedMonthlyBurn}
                     alertLevel={businessHealthData.monthlyBurn.isHigh ? 'danger' : 'none'}
                     onClick={() => openSidebar('Monthly Burn')}
                 />
-                <MetricCard 
+                <KPI 
                     title="Capacity Crisis" 
-                    value={`${businessHealthData.capacityCrisis.length} Hubs`} 
-                    icon={ExclamationTriangleIcon} 
+                    value={`${businessHealthData.capacityCrisis.length}`}
+                    unit="Hubs"
                     alertLevel={businessHealthData.capacityCrisis.some(h=>(h.current_utilization_pct || 0) > 90) ? 'danger' : businessHealthData.capacityCrisis.length > 0 ? 'warning' : 'none'}
                     onClick={() => openSidebar('Capacity Crisis')}
                 >
@@ -184,18 +156,18 @@ const SystemMapPage: React.FC = () => {
                             </div>
                         ))}
                     </div>
-                </MetricCard>
-                <MetricCard 
+                </KPI>
+                 <KPI 
                     title="Unit Economics" 
-                    value={`${businessHealthData.unitEconomics.count} BUs Negative`} 
-                    icon={ScaleIcon} 
+                    value={`${businessHealthData.unitEconomics.count}`} 
+                    unit="BUs Negative"
                     alertLevel={businessHealthData.unitEconomics.count > 0 ? 'danger' : 'none'}
                     onClick={() => openSidebar('Unit Economics')}
                 />
-                <MetricCard 
+                <KPI 
                     title="Revenue vs Target" 
-                    value={`${businessHealthData.revenueVsTarget.percent.toFixed(1)}%`} 
-                    icon={PresentationChartLineIcon} 
+                    value={`${businessHealthData.revenueVsTarget.percent.toFixed(1)}`} 
+                    unit="%"
                     alertLevel={businessHealthData.revenueVsTarget.percent < 75 ? 'warning' : 'none'}
                     onClick={() => openSidebar('Revenue vs Target')}
                 />
@@ -203,10 +175,11 @@ const SystemMapPage: React.FC = () => {
 
             {/* Placeholder for other sections */}
             <div className="pt-8">
-                <h2 className="text-xl font-semibold text-white">Further Analysis</h2>
-                <div className="mt-4 p-8 bg-gray-900 border border-dashed border-gray-700 rounded-lg text-center text-gray-500">
-                    More sections will be added here based on your briefs.
-                </div>
+                <Panel title="Further Analysis">
+                     <div className="h-48 flex items-center justify-center text-center text-gray-500 border border-dashed border-gray-700 rounded-lg">
+                        More sections will be added here based on your briefs.
+                    </div>
+                </Panel>
             </div>
 
             <TrendSidebar isOpen={sidebar.isOpen} onClose={() => setSidebar({isOpen: false, title: ''})} title={sidebar.title} />

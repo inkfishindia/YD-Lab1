@@ -10,8 +10,8 @@ import {
   SegmentPositioning,
   FunnelStage,
   InterfaceMap,
+  SystemEntityType,
 } from '../../types';
-import type { SystemEntityType } from '../../types';
 
 const DetailCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <Card className="!p-0">
@@ -27,7 +27,7 @@ const PositioningPage: React.FC = () => {
     const navigate = useNavigate();
 
     const handleNavigateToSystemMap = (type: SystemEntityType, id: string) => {
-        navigate('/system/map', { state: { selection: { type, id } } });
+        navigate('/strategy/dashboard', { state: { selection: { type, id } } });
     };
 
     const handleSelectFlywheel = (fw: FlywheelStrategy) => {

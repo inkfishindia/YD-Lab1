@@ -90,7 +90,8 @@ const LeadInboxPage: React.FC = () => {
           <input type="text" name="brand" placeholder="Filter by brand..." value={filters.brand} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/3 focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <select name="status" value={filters.status} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Statuses</option>
-              {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+              {/* FIX: Explicitly type 's' to resolve type inference issue. */}
+              {Object.values(LeadStatus).map((s: LeadStatus) => <option key={s} value={s}>{s}</option>)}
           </select>
       </div>
 
@@ -202,14 +203,16 @@ const LeadFormModal: React.FC<{isOpen: boolean, onClose: () => void, onSave: (da
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Status</label>
                         <select name="status_stage" value={formData.status_stage} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                            {Object.values(LeadStatus).map(s => <option key={s} value={s}>{s}</option>)}
+                            {/* FIX: Explicitly type 's' to resolve type inference issue. */}
+                            {Object.values(LeadStatus).map((s: LeadStatus) => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
                      <div>
                         <label className="block text-sm font-medium text-gray-300">SDR Owner</label>
                         <select name="sdr_owner_fk" value={formData.sdr_owner_fk} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                             <option value="">Unassigned</option>
-                            {people.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
+                            {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
+                            {people.map((p: Person) => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                         </select>
                     </div>
                 </div>

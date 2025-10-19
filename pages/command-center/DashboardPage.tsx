@@ -6,7 +6,8 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Status, Priority, Task } from '../../types';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
-import { fetchUnreadGmailCount, fetchNextCalendarEvent } from '../../services/googleSheetService';
+// FIX: Changed import from googleSheetService to sheetGateway
+import { fetchUnreadGmailCount, fetchNextCalendarEvent } from '../../services/sheetGateway';
 import { EnvelopeIcon, CalendarIcon, FolderIcon } from '../../components/Icons';
 
 

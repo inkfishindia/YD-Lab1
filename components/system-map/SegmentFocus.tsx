@@ -1,3 +1,5 @@
+
+
 import React from 'react';
 import type { SystemSegment } from '../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -10,15 +12,15 @@ interface FocusProps {
     onSelect: (type: any, id: string) => void;
 }
 
-const splitAndTrim = (str: string | undefined): string[] => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
-
 const SegmentFocus: React.FC<FocusProps> = ({ item: segment, onSelect }) => {
     const { systemFlywheels, systemBusinessUnits, systemPeople } = useData();
     
     const owner = systemPeople.find(p => p.person_id === segment.owner_person);
 
-    const relatedFlywheels = systemFlywheels.filter(fw => splitAndTrim(segment.served_by_flywheels).includes(fw.flywheel_id));
-    const relatedBUs = systemBusinessUnits.filter(bu => splitAndTrim(segment.served_by_bus).includes(bu.bu_id));
+    // FIX: The 'served_by_flywheels' and 'served_by_bus' properties are already string arrays.
+    // The 'splitAndTrim' helper function, which expects a string, is not needed here.
+    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels?.includes(fw.flywheel_id));
+    const relatedBUs = systemBusinessUnits.filter(bu => segment.served_by_bus?.includes(bu.bu_id));
     
     return (
         <div className="p-4 space-y-5">

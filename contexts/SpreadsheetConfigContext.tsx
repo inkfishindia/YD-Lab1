@@ -7,7 +7,8 @@ import React, {
   useCallback,
 } from 'react';
 
-import { getHeaderMap } from '../services/googleSheetService';
+// FIX: Changed import from googleSheetService to sheetGateway
+import { getHeaderMap } from '../services/sheetGateway';
 import type { MasterSchemaRow } from '../types';
 
 import { useAuth } from './AuthContext';

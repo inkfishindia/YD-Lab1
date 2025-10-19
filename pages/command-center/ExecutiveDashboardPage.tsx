@@ -94,7 +94,7 @@ const ExecutiveDashboardPage: React.FC = () => {
         <div className="flex flex-col bg-gray-900 border border-gray-800 rounded-lg">
             <div className="flex justify-between items-center p-4 border-b border-gray-800">
                 <h2 className="text-lg font-semibold text-white">{title}</h2>
-                <Button onClick={onAdd} disabled={addDisabled} variant="secondary" className="!p-2">
+                <Button onClick={onAdd} disabled={true} variant="secondary" className="!p-2" title="This is a legacy view. Use the Execution page to add new items.">
                     <PlusIcon className="w-5 h-5" />
                 </Button>
             </div>
@@ -108,8 +108,8 @@ const ExecutiveDashboardPage: React.FC = () => {
                         <p className="font-medium text-white truncate">{item[nameKey]}</p>
                         {detailKey && item[detailKey] && <div className="text-sm text-gray-400 mt-1"><Badge text={item[detailKey]} colorClass={STATUS_COLORS[item[detailKey]]} /></div>}
                         <div className="absolute top-2 right-2 flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} className="p-1 text-blue-400 hover:text-blue-300 bg-gray-900/50 rounded"><EditIcon className="w-4 h-4" /></button>
-                            <button onClick={(e) => { e.stopPropagation(); onDelete(item[idKey]); }} className="p-1 text-red-400 hover:text-red-300 bg-gray-900/50 rounded"><TrashIcon className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); onEdit(item); }} disabled={true} title="This is a legacy view. Use the Execution page to edit items." className="p-1 text-blue-400 hover:text-blue-300 bg-gray-900/50 rounded disabled:opacity-50 disabled:cursor-not-allowed"><EditIcon className="w-4 h-4" /></button>
+                            <button onClick={(e) => { e.stopPropagation(); onDelete(item[idKey]); }} disabled={true} title="This is a legacy view. Use the Execution page to delete items." className="p-1 text-red-400 hover:text-red-300 bg-gray-900/50 rounded disabled:opacity-50 disabled:cursor-not-allowed"><TrashIcon className="w-4 h-4" /></button>
                         </div>
                     </div>
                 )) : <p className="text-gray-500 text-center p-4">{addDisabled ? 'Select an item from the left.' : 'No items yet.'}</p>}
@@ -133,8 +133,8 @@ const ExecutiveDashboardPage: React.FC = () => {
 
     return (
         <div className="h-full flex flex-col">
-            <h1 className="text-2xl font-semibold text-white mb-4">Executive Dashboard</h1>
-            <p className="text-gray-400 mb-4 -mt-2 text-sm">Click an item to drill down. Hover to reveal edit/delete actions.</p>
+            <h1 className="text-2xl font-semibold text-white mb-4">Executive Dashboard (Legacy)</h1>
+            <p className="text-gray-400 mb-4 -mt-2 text-sm">This is a read-only view. For full CRUD functionality, please use the Execution page. Click an item to drill down.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                 {renderColumn('Business Units', businessUnits, selectedBuId, handleBuSelect, 'bu_id', 'bu_name', 
                     () => setBuModal({isOpen: true, data: null}),

@@ -15,7 +15,7 @@ const getInitialFormData = (): Omit<SystemSegment, 'segment_id'> => ({
     priority_rank: '1',
     customer_profile: '',
     psychological_job: '',
-    served_by_flywheels: '',
+    served_by_flywheels: [],
     behavioral_truth: '',
     validated_aov: 0,
     annual_orders: 0,
@@ -25,7 +25,7 @@ const getInitialFormData = (): Omit<SystemSegment, 'segment_id'> => ({
     strategic_notes: '',
     revenue_9mo_actual_inr: 0,
     '9mo_actual_orders': 0,
-    served_by_bus: '',
+    served_by_bus: [],
 });
 
 const SystemSegmentFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, initialData }) => {

@@ -69,7 +69,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
                 )}
 
                 <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-                    {renderInputField("MASTER_SCHEMA", "Master Schema Spreadsheet ID", "The single source of truth for all table schemas. If provided, it overrides the app's default configuration.")}
+                    {renderInputField("MASTER_SCHEMA", "Master Schema Spreadsheet ID", "The single source of truth for all table schemas. The app reads its configuration from this sheet. An admin can update this master config from the 'Sheet Health Check' page.")}
                     <hr className="border-gray-700"/>
                     <h2 className="text-lg font-semibold text-white -mb-4">Data Spreadsheets</h2>
                     {renderInputField("YDS_MANAGEMENT", "YDS Management Spreadsheet ID", "Contains the new Program, Project, Milestone, and Task hierarchy.")}
