@@ -1,10 +1,13 @@
-
 // This file defines the Google API keys required for the application to function.
 // In a production environment, these values would typically be injected by a build process
-// or served from a secure backend, but for this client-side example, they are defined here.
-// Please replace the placeholder values with your actual credentials from the Google Cloud Console.
+// or served from a secure backend. For this application, they are expected to be available
+// as environment variables (e.g., process.env.API_KEY, process.env.GOOGLE_CLIENT_ID).
+// Please ensure these environment variables are correctly configured in your deployment.
 
-export const API_KEY = 'AIzaSyAyt8Ki5sRhbXyxj8m_qK2ZgxFF2t2FbEw';
-export const GOOGLE_CLIENT_ID = '155749101771-lvmc383eus9pg407dedlp3r2q330gukj.apps.googleusercontent.com';
+// The API_KEY and GOOGLE_CLIENT_ID are now accessed directly via process.env
+// For example: process.env.API_KEY, process.env.GOOGLE_CLIENT_ID
+
+// Placeholder spreadsheet IDs for internal sheets. These should ideally also be environment variables
+// or fetched from a secure configuration service in a production environment.
 export const YDS_APP = '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw';
 export const YDC_BASE = '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY';

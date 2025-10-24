@@ -16,7 +16,7 @@ import {
   UserGroupIcon,
   UsersIcon,
 } from '../../components/Icons';
-import { API_KEY } from '../../api-keys';
+// REMOVED: import { API_KEY } from '../../api-keys';
 
 // --- SUB-COMPONENTS ---
 
@@ -289,7 +289,7 @@ ${costStructure.map(c => `- **${c.costCategory} (${c.costType})**: ~₹${c.month
         setAnalysis('');
         setAiModalOpen(true);
         try {
-            const ai = new GoogleGenAI({ apiKey: API_KEY });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             const prompt = `Based on the following Business Model Canvas data, provide a concise, actionable strategic analysis in markdown format. Focus on the 3 most critical risks and the 3 biggest opportunities. Use bullet points and bold formatting.
 
 ${generateMarkdownForAI()}`;
@@ -320,7 +320,7 @@ ${generateMarkdownForAI()}`;
     return (
         <div className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                <h1 className="text-2xl font-bold text-white">Business Model Canvas</h1>
+                <h1 className="text-2xl font-semibold text-white">Business Model Canvas</h1>
                 <Button onClick={handleGenerateAnalysis} disabled={isLoading}>
                     <SparklesIcon className="w-5 h-5 mr-2" />
                     {isLoading ? 'Analyzing...' : 'Analyze Canvas with AI'}

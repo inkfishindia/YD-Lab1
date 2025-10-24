@@ -3,10 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 
 import Button from '../../../components/ui/Button';
 import { SparklesIcon } from '../../../components/Icons';
-// FIX: The user wants to use process.env.API_KEY, but this is a client-side component.
-// I will import from api-keys.ts as that seems to be the project's pattern.
-// Note: This is not secure for a production app, but follows the existing project structure.
-import { API_KEY } from '../../../api-keys';
+// REMOVED: import { API_KEY } from '../../../api-keys';
 
 const NotebookLLMPage: React.FC = () => {
     const [prompt, setPrompt] = useState('');
@@ -26,7 +23,7 @@ const NotebookLLMPage: React.FC = () => {
 
         try {
             // FIX: Use new GoogleGenAI({apiKey: ...}) initialization.
-            const ai = new GoogleGenAI({ apiKey: API_KEY });
+            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
             // FIX: Use ai.models.generateContent with model and contents properties.
             const result = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',

@@ -10,7 +10,7 @@ import React, {
 import { z } from 'zod';
 
 import { appStructure } from '../config/appStructure';
-import { getHeaderMap, SheetConfig, getAllSheetNames } from '../services/googleSheetService';
+import { getHeaderMap, SheetConfig, getAllSheetNames, fetchSheetData } from '../services/googleSheetService';
 import type { AppSheetRow, MasterSchemaRow } from '../types';
 import { AppSheetRowSchema, MasterSchemaRowSchema } from '../schemas'; // Import schemas
 import * as googleSheetService from '../services/googleSheetService';
@@ -39,7 +39,7 @@ interface ISpreadsheetConfigContext {
   saveSheetConfiguration: (config: {
     ids?: SpreadsheetIds;
     aliasMappings?: Record<number, string>;
-    headerMappings?: Record<string, Record<string, string>>;
+    // headerMappings is no longer used for runtime config but might be part of an admin tool UI if needed
   }) => Promise<void>;
   appSheetRows: AppSheetRow[];
   masterSchemaRows: MasterSchemaRow[]; // Still needed for SheetHealthCheck
@@ -146,27 +146,26 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
       
       // --- Fetch Layer 1 Config from 'App' sheet ---
       const appSheetHeadersMap = await getHeaderMap(masterSpreadsheetId, 'App');
-      const appSheetResponse: any = await (window as any).gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: masterSpreadsheetId,
-        range: 'App!A:Z',
+      // Using fetchSheetData now instead of direct gapi.client
+      const appSheetAllRows = await googleSheetService.fetchSheetData<AppSheetRow>({
+          spreadsheetId: masterSpreadsheetId,
+          gid: (appSheetRows.find(r => r.sheet_name === 'App')?.sheet_id || '0'), // Find App sheet's GID for config, fallback to '0'
+          range: 'App!A:Z',
+          keyField: '_rowIndex',
+          columns: Object.keys(AppSheetRowSchema.shape).reduce((acc: any, key: string) => {
+              // Dynamically create columns based on schema shape for AppSheetRowSchema
+              acc[key] = { header: key }; 
+              return acc;
+          }, {}),
+          schema: AppSheetRowSchema,
       });
-      const appRowsData = appSheetResponse.result.values || [];
-      const appSheetHeaders = appRowsData.shift() || []; // Headers for parsing
-      const appSheetHeaderIndexMap = appSheetHeaders.reduce((acc: any, h: string, i: number) => ({ ...acc, [h.toLowerCase()]: i }), {});
 
-
-      const parsedAppRows: AppSheetRow[] = appRowsData.map((row: any[], index: number) => {
-        const rowData: Partial<AppSheetRow> = {
-            _rowIndex: index + 2,
-            spreadsheet_name: row[appSheetHeaderIndexMap['spreadsheet_name']],
-            spreadsheet_code: row[appSheetHeaderIndexMap['spreadsheet_code']],
-            spreadsheet_id: row[appSheetHeaderIndexMap['spreadsheet_id']],
-            sheet_name: row[appSheetHeaderIndexMap['sheet_name']],
-            table_alias: row[appSheetHeaderIndexMap['table_alias']],
-            sheet_id: row[appSheetHeaderIndexMap['gid']], // Map 'gid' column from sheet to 'sheet_id' in schema
-            header: row[appSheetHeaderIndexMap['header']], // Header field from App sheet itself
+      const parsedAppRows: AppSheetRow[] = appSheetAllRows.map((row: AppSheetRow) => {
+        // Since fetchSheetData already parses with the schema, just need to ensure _rowIndex is set
+        return {
+          ...row,
+          _rowIndex: row._rowIndex, // _rowIndex should be populated by fetchSheetData
         };
-        return AppSheetRowSchema.parse(rowData); // Validate and potentially fill defaults
       }).filter((r: AppSheetRow) => r.spreadsheet_code || r.sheet_name); // Filter out empty rows
 
       setAppSheetRows(parsedAppRows);
@@ -185,52 +184,20 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
       // --- Fetch Master Schema Rows (for Health Check, not for runtime mapping) ---
       // This logic remains to support the SheetHealthCheckPage, but these rows are NOT used
       // to construct `finalConfigs` or resolve headers for actual data sheets.
-      const schemaHeadersMap = await getHeaderMap(masterSpreadsheetId, 'HEADERS_SNAPSHOT_PARENT');
-      const schemaResponse: any = await (window as any).gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: masterSpreadsheetId,
-        range: 'HEADERS_SNAPSHOT_PARENT!A:AZ',
-      });
-      const schemaRowsData = schemaResponse.result.values || [];
-      const schemaHeaders = schemaRowsData.shift() || [];
-      const schemaHeaderIndexMap = schemaHeaders.reduce((acc: any, h: string, i: number) => ({ ...acc, [h.toLowerCase()]: i }), {});
-
-      const parsedSchemaRows: MasterSchemaRow[] = schemaRowsData.map((row: any[], index: number) => {
-        const rowData: Partial<MasterSchemaRow> = {
-            _rowIndex: index + 2,
-            table_alias: row[schemaHeaderIndexMap['table_alias']],
-            app_field: row[schemaHeaderIndexMap['app_field']],
-            header: row[schemaHeaderIndexMap['header']],
-            spreadsheet_id: row[schemaHeaderIndexMap['spreadsheet_id']],
-            spreadsheet_name: row[schemaHeaderIndexMap['spreadsheet_name']],
-            sheet_name: row[schemaHeaderIndexMap['sheet_name']],
-            gid: row[schemaHeaderIndexMap['gid']],
-            A1_Column_Range: row[schemaHeaderIndexMap['a1_column_range']],
-            Named_Range_Name: row[schemaHeaderIndexMap['named_range_name']],
-            col_index: row[schemaHeaderIndexMap['col_index']],
-            'Column Letter': row[schemaHeaderIndexMap['column letter']],
-            sample_value: row[schemaHeaderIndexMap['sample_value']],
-            Protection_Status: row[schemaHeaderIndexMap['protection_status']],
-            Data_Type: row[schemaHeaderIndexMap['data_type']],
-            Contains_Formula: row[schemaHeaderIndexMap['contains_formula']],
-            Data_Validation: row[schemaHeaderIndexMap['data_validation']],
-            Column_aliases: row[schemaHeaderIndexMap['column_aliases']],
-            key_field: row[schemaHeaderIndexMap['key_field']],
-            named_data_range: row[schemaHeaderIndexMap['named_data_range']],
-            range: row[schemaHeaderIndexMap['range']],
-            sheet_type: row[schemaHeaderIndexMap['sheet_type']],
-            system_role: row[schemaHeaderIndexMap['system_role']],
-            data_tier: row[schemaHeaderIndexMap['data_tier']],
-            description: row[schemaHeaderIndexMap['description']],
-            detected_type: row[schemaHeaderIndexMap['detected_type']],
-            has_formula: row[schemaHeaderIndexMap['has_formula']],
-            snapshot_ts: row[schemaHeaderIndexMap['snapshot_ts']],
-            is_pk: row[schemaHeaderIndexMap['is_pk']],
-            fk_ref: row[schemaHeaderIndexMap['fk_ref']],
-        };
-        return MasterSchemaRowSchema.parse(rowData);
-      }).filter((r: MasterSchemaRow) => r.table_alias && r.app_field);
+      const masterSchemaConfig: SheetConfig<MasterSchemaRow> = {
+          spreadsheetId: masterSpreadsheetId,
+          gid: '594360110', // GID for HEADERS_SNAPSHOT_PARENT (from csv data)
+          range: 'HEADERS_SNAPSHOT_PARENT!A:AZ',
+          keyField: '_rowIndex',
+          columns: Object.keys(MasterSchemaRowSchema.shape).reduce((acc: any, key: string) => {
+              acc[key] = { header: key }; 
+              return acc;
+          }, {}),
+          schema: MasterSchemaRowSchema,
+      };
+      const parsedSchemaRows: MasterSchemaRow[] = await googleSheetService.fetchSheetData<MasterSchemaRow>(masterSchemaConfig);
       
-      setMasterSchemaRows(parsedSchemaRows);
+      setMasterSchemaRows(parsedSchemaRows.filter((r: MasterSchemaRow) => r.table_alias && r.app_field));
       
       const allIdsPresent = Object.values(finalIds).every(
         (id) => typeof id === 'string' && id.trim() !== '',
@@ -243,7 +210,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
     } finally {
       setIsConfigLoading(false);
     }
-  }, [isSignedIn, getSheetNamesInSpreadsheet, buildAppSheetRowValues]);
+  }, [isSignedIn, getSheetNamesInSpreadsheet, buildAppSheetRowValues, appSheetRows]);
 
   useEffect(() => {
     const initConfig = async () => {

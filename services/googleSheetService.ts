@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs
 
+import { getAuthAccessToken } from './googleAuth'; // Import our token getter
+
 export interface SheetConfig<T> {
   spreadsheetId: string;
   gid: string; // Google Sheet ID
@@ -62,7 +64,7 @@ export function invalidateSyncJournal(spreadsheetId: string) {
         localStorage.setItem(SYNC_JOURNAL_KEY, JSON.stringify(journal));
     } catch (e) {
         console.error("Failed to invalidate sync journal for spreadsheet:", spreadsheetId, e);
-        localStorage.removeItem(SYNC_JOURNAL_KEY);
+        localStorage.removeItem(SYNC_JOURNAL_KEY); // Clear entire journal if parse/save fails
     }
 }
 
@@ -71,24 +73,29 @@ export function invalidateSyncJournal(spreadsheetId: string) {
 const MAX_RETRIES = 3;
 const INITIAL_BACKOFF_MS = 1000;
 
-async function withRetries<T>(apiCall: () => Promise<T>): Promise<T> {
+async function withRetries<T>(apiCall: () => Promise<Response>): Promise<T> {
+  const token = getAuthAccessToken();
+  if (!token) {
+    throw new Error('Authentication token is missing. Please sign in.');
+  }
+
   let lastError: any;
   for (let i = 0; i < MAX_RETRIES; i++) {
     try {
-      const response: any = await apiCall(); // Assert response as any here
-      // Google Sheets API can return 200 OK with an error object in result
-      if (response?.result?.error) { 
-        throw response.result.error; // Throw the specific API error
+      const response = await apiCall();
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`HTTP error! Status: ${response.status}, Body: ${errorBody}`);
       }
-      return response;
+      return await response.json() as T;
     } catch (err: any) {
       lastError = err;
-      const status = err?.code || err?.result?.error?.code || (err.message && err.message.includes('Network Error') ? -1 : 0);
+      const errorMessage = String(err); // Convert error to string for checking
       const isRetryable =
-        status === 429 || // Too Many Requests
-        status === 500 || // Internal Server Error
-        status === 503 || // Service Unavailable
-        status === -1;    // Network Error
+        errorMessage.includes('429') || // Too Many Requests
+        errorMessage.includes('500') || // Internal Server Error
+        errorMessage.includes('503') || // Service Unavailable
+        errorMessage.includes('Network Error'); // Generic network error
 
       if (isRetryable && i < MAX_RETRIES - 1) {
         const delayMs = INITIAL_BACKOFF_MS * Math.pow(2, i) + Math.random() * 1000;
@@ -113,14 +120,15 @@ export async function getHeaderMap(spreadsheetId: string, sheetName: string): Pr
   }
 
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId,
-        range: `${sheetName.includes(' ') ? `'${sheetName}'` : sheetName}!1:1`,
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(sheetName)}!1:1`;
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
 
-    const headers: string[] = response.result.values ? response.result.values[0] : [];
+    const headers: string[] = response.values ? response.values[0] : [];
     const headerMap = headers.reduce((acc: Record<string, number>, header: string, index: number) => {
       acc[header] = index;
       return acc;
@@ -145,14 +153,15 @@ export async function getAllSheetNames(spreadsheetId: string): Promise<{name: st
   }
 
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.sheets.spreadsheets.get({
-        spreadsheetId: spreadsheetId,
-        fields: 'sheets.properties',
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`;
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
 
-    const sheetNames = response.result.sheets?.map((sheet: any) => ({
+    const sheetNames = response.sheets?.map((sheet: any) => ({
       name: sheet.properties.title,
       gid: String(sheet.properties.sheetId)
     })) || [];
@@ -257,14 +266,15 @@ export async function fetchSheetData<T>(config: SheetConfig<T>): Promise<T[]> {
   }
 
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.sheets.spreadsheets.values.get({
-        spreadsheetId: config.spreadsheetId,
-        range: config.range,
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/${encodeURIComponent(config.range)}`;
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
 
-    const values = response.result.values || [];
+    const values = response.values || [];
     if (values.length === 0) return [];
 
     const headers: string[] = values[0];
@@ -297,15 +307,18 @@ export async function batchFetchAndParseSheetData(
   }
 
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.sheets.spreadsheets.values.batchGet({
-        spreadsheetId,
-        ranges,
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const queryString = ranges.map(range => `ranges=${encodeURIComponent(range)}`).join('&');
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values:batchGet?${queryString}`;
+    
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
 
     const result: Record<string, any[]> = {};
-    for (const valueRange of response.result.valueRanges || []) {
+    for (const valueRange of response.valueRanges || []) {
       const configEntry = configs.find(c => valueRange.range?.startsWith(c.config.range.split('!')[0]));
       if (configEntry) {
         const values = valueRange.values || [];
@@ -347,15 +360,21 @@ export async function appendEntity<T>(config: SheetConfig<T>, entity: T): Promis
   const headerArray = Object.keys(headers).sort((a,b) => headers[a] - headers[b]);
   const row = mapObjectToRow(entity, config.columns, headerArray);
 
-  await withRetries(() => 
-    (window as any).gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId: config.spreadsheetId,
-      range: config.range,
-      valueInputOption: 'USER_ENTERED',
-      insertDataOption: 'INSERT_ROWS',
-      resource: {
-        values: [row],
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/${encodeURIComponent(config.range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+
+  await withRetries(() =>
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        values: [row],
+      }),
     })
   );
   clearCache(); // Invalidate cache after write
@@ -383,14 +402,21 @@ export async function updateEntity<T>(config: SheetConfig<T>, entity: T): Promis
   const sheetRowIndex = rowIndex + 2; 
   const row = mapObjectToRow(entity, config.columns, headerArray);
 
-  await withRetries(() => 
-    (window as any).gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId: config.spreadsheetId,
-      range: `${sheetName}!A${sheetRowIndex}`, // Update the entire row
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [row],
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}/values/${encodeURIComponent(sheetName)}!A${sheetRowIndex}?valueInputOption=USER_ENTERED`;
+
+  await withRetries(() =>
+    fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        values: [row],
+      }),
     })
   );
   clearCache(); // Invalidate cache after write
@@ -413,10 +439,19 @@ export async function deleteEntity<T>(config: SheetConfig<T>, key: string): Prom
 
   const sheetRowIndex = rowIndex + 2; // +2 because sheet rows are 1-based and we skipped the header row
 
-  await withRetries(() => 
-    (window as any).gapi.client.sheets.spreadsheets.batchUpdate({
-      spreadsheetId: config.spreadsheetId,
-      resource: {
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${config.spreadsheetId}:batchUpdate`;
+
+  await withRetries(() =>
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
         requests: [
           {
             deleteRange: {
@@ -429,7 +464,7 @@ export async function deleteEntity<T>(config: SheetConfig<T>, key: string): Prom
             },
           },
         ],
-      },
+      }),
     })
   );
   clearCache(); // Invalidate cache after write
@@ -457,13 +492,14 @@ export async function createEntity<T extends { [K in keyof T]: any }, K extends 
  */
 export async function fetchUnreadGmailCount(): Promise<number> {
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.gmail.users.messages.list({
-        userId: 'me',
-        q: 'is:unread in:inbox',
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const url = `https://www.googleapis.com/gmail/v1/users/me/messages?q=is:unread%20in:inbox`;
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
-    return response.result.messages ? response.result.messages.length : 0;
+    return response.messages ? response.messages.length : 0;
   } catch (error) {
     console.error('Error fetching Gmail unread count:', error);
     throw new Error('Failed to fetch Gmail unread count.');
@@ -475,17 +511,14 @@ export async function fetchUnreadGmailCount(): Promise<number> {
  */
 export async function fetchNextCalendarEvent(): Promise<any | null> {
   try {
-    const response: any = await withRetries(() => 
-      (window as any).gapi.client.calendar.events.list({
-        calendarId: 'primary',
-        timeMin: new Date().toISOString(),
-        showDeleted: false,
-        singleEvents: true,
-        maxResults: 1,
-        orderBy: 'startTime',
-      })
+    const token = getAuthAccessToken();
+    if (!token) throw new Error('Authentication token is missing.');
+
+    const url = `https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=${new Date().toISOString()}&showDeleted=false&singleEvents=true&maxResults=1&orderBy=startTime`;
+    const response: any = await withRetries(() =>
+      fetch(url, { headers: { Authorization: `Bearer ${token}` } })
     );
-    const events = response.result.items;
+    const events = response.items;
     return events && events.length > 0 ? events[0] : null;
   } catch (error) {
     console.error('Error fetching next calendar event:', error);
@@ -497,15 +530,21 @@ export async function fetchNextCalendarEvent(): Promise<any | null> {
  * Appends a new row to the 'App' sheet.
  */
 export async function addAppSheetRow(spreadsheetId: string, values: any[]): Promise<void> {
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/App:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+
   await withRetries(() =>
-    (window as any).gapi.client.sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'App', // Assuming 'App' is the sheet name
-      valueInputOption: 'USER_ENTERED',
-      insertDataOption: 'INSERT_ROWS',
-      resource: {
-        values: [values],
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        values: [values],
+      }),
     })
   );
   clearCache();
@@ -516,15 +555,22 @@ export async function addAppSheetRow(spreadsheetId: string, values: any[]): Prom
  * Updates a specific row in the 'App' sheet.
  */
 export async function updateAppSheetRow(spreadsheetId: string, rowIndex: number, values: any[]): Promise<void> {
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
   // `rowIndex` here is 1-based from the sheet (including header), so it directly corresponds to the sheet row.
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/App!A${rowIndex}?valueInputOption=USER_ENTERED`;
+
   await withRetries(() =>
-    (window as any).gapi.client.sheets.spreadsheets.values.update({
-      spreadsheetId,
-      range: `App!A${rowIndex}`,
-      valueInputOption: 'USER_ENTERED',
-      resource: {
-        values: [values],
+    fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
+      body: JSON.stringify({
+        values: [values],
+      }),
     })
   );
   clearCache();
@@ -536,14 +582,16 @@ export async function updateAppSheetRow(spreadsheetId: string, rowIndex: number,
  * `rowIndex` is 1-based, directly from the sheet.
  */
 export async function deleteRow(spreadsheetId: string, sheetName: string, rowIndex: number): Promise<void> {
+  const token = getAuthAccessToken();
+  if (!token) throw new Error('Authentication token is missing.');
+
   const sheetIdResponse: any = await withRetries(() =>
-    (window as any).gapi.client.sheets.spreadsheets.get({
-      spreadsheetId: spreadsheetId,
-      fields: 'sheets.properties',
+    fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?fields=sheets.properties`, {
+      headers: { Authorization: `Bearer ${token}` }
     })
   );
   
-  const sheets = sheetIdResponse.result.sheets;
+  const sheets = sheetIdResponse.sheets;
   const targetSheet = sheets?.find((s: any) => s.properties.title === sheetName);
 
   if (!targetSheet || !targetSheet.properties?.sheetId) {
@@ -552,10 +600,16 @@ export async function deleteRow(spreadsheetId: string, sheetName: string, rowInd
 
   const gid = targetSheet.properties.sheetId;
 
-  await withRetries(() => 
-    (window as any).gapi.client.sheets.spreadsheets.batchUpdate({
-      spreadsheetId: spreadsheetId,
-      resource: {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}:batchUpdate`;
+
+  await withRetries(() =>
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
         requests: [
           {
             deleteRange: {
@@ -568,7 +622,7 @@ export async function deleteRow(spreadsheetId: string, sheetName: string, rowInd
             },
           },
         ],
-      },
+      }),
     })
   );
   clearCache();
