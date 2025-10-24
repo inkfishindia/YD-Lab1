@@ -37,7 +37,6 @@ const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
 const SCOPES =
   'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
-
 const LOCAL_STORAGE_KEY = 'google_auth_session';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
@@ -54,7 +53,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     const token = getAuthAccessToken(); // Get token from our module
     if (token && (window as any).google?.accounts?.oauth2) {
       (window as any).google.accounts.oauth2.revoke(
-        token,
+        token, // Use the stored access token
         () => {},
       );
     }
@@ -105,24 +104,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   );
 
   useEffect(() => {
-    // Only GIS script is loaded now
     const gisScript = document.createElement('script');
     gisScript.src = 'https://accounts.google.com/gsi/client';
     gisScript.async = true;
     gisScript.defer = true;
 
-    let gisReady = false;
-
-    const checkAndFinalizeLoading = () => {
-      if (gisReady) {
-        setIsLoading(false);
-      }
-    };
-
     gisScript.onload = () => {
       try {
         const clientId = process.env.GOOGLE_CLIENT_ID;
-        console.log('AuthContext: Initializing GIS with Client ID:', clientId);
         if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID") { // Placeholder check
             const missingIdError = "Google Client ID is missing or is a placeholder. Please update `window.process.env.GOOGLE_CLIENT_ID` in `index.html` with your actual Client ID.";
             console.error(missingIdError);
@@ -142,7 +131,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           }
         });
         setTokenClient(client);
-        gisReady = true;
         
         // Check for a stored session after GIS is ready
         try {
@@ -165,11 +153,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
           localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
 
-        checkAndFinalizeLoading();
       } catch (e: any) {
           console.error("Error initializing Google Identity Services:", e);
           setInitError(`Failed to initialize Google Sign-In services. Error: ${e.message}`);
-          setIsLoading(false);
+      } finally {
+        setIsLoading(false);
       }
     };
     

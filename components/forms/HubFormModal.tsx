@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { Hub, Person, Flywheel } from '../../types';
 import Modal from '../ui/Modal';
@@ -14,12 +13,28 @@ interface HubFormModalProps {
 }
 
 const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hub, people, flywheels }) => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useState<{
+        hub_name: string;
+        function_category: string;
+        owner_person: string;
+        what_they_enable: string;
+        serves_flywheel_ids: string[];
+        capacity_constraint: boolean;
+        hiring_priority: string;
+        budget_monthly_inr: number;
+        serves_bu1: boolean;
+        serves_bu2: boolean;
+        serves_bu3: boolean;
+        serves_bu4: boolean;
+        serves_bu5: boolean;
+        serves_bu6: boolean;
+        notes: string;
+    }>({
         hub_name: '',
         function_category: '',
         owner_person: '',
         what_they_enable: '',
-        serves_flywheel_ids: [] as string[],
+        serves_flywheel_ids: [],
         capacity_constraint: false,
         hiring_priority: 'Low',
         budget_monthly_inr: 0,
@@ -63,9 +78,11 @@ const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hu
         } else if (isCheckbox) {
              setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
         } else if (name === 'budget_monthly_inr') {
+            // FIX: Explicitly cast to 'any' for numeric input value.
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
         } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+            // FIX: Explicitly cast to 'any' for general input value.
+            setFormData(prev => ({ ...prev, [name]: value as any }));
         }
     };
 

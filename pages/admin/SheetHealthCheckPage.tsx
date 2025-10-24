@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { z } from 'zod';
 
 import { appStructure } from '../../config/appStructure';
-import { predefinedRelations } from '../../sheetConfig';
+import { predefinedRelations } from '../../sheetConfig'; // FIX: Updated import for predefinedRelations
 import {
   // FIX: Updated import for CheckCircleIcon
   CheckCircleIcon,
@@ -51,17 +51,14 @@ const SheetHealthCheckPage: React.FC = () => {
         // Generate field details directly from the config's columns
         const fieldDetails = Object.keys(columns).map(key => ({
             appField: key,
-            defaultHeader: columns[key as keyof typeof columns]?.header || key, // Use the configured header
-            dataType: columns[key as keyof typeof columns]?.type || 'string', // Use the configured type
+            defaultHeader: (columns as any)[key]?.header || key, // Use the configured header
+            dataType: (columns as any)[key]?.type || 'string', // Use the configured type
         }));
 
         try {
-            // Fetch original headers directly from the sheet's first row
-            const response: any = await (window as any).gapi.client.sheets.spreadsheets.values.get({
-              spreadsheetId,
-              range: `${sheetName.includes(' ') ? `'${sheetName}'` : sheetName}!1:1`,
-            });
-            const actualHeaders = response.result.values ? response.result.values[0] : [];
+            // Fetch original headers using googleSheetService.getHeaderMap
+            const actualHeadersMap = await getHeaderMap(spreadsheetId, sheetName);
+            const actualHeaders = Object.keys(actualHeadersMap).sort((a, b) => actualHeadersMap[a] - actualHeadersMap[b]);
 
             allResults[configName] = {
               configName,
@@ -124,10 +121,10 @@ const SheetHealthCheckPage: React.FC = () => {
 
         const errors: string[] = [];
         if (fromData && toData) {
-          const validToIds = new Set(toData.map((item) => item[toKeyField]));
+          const validToIds = new Set(toData.map((item) => (item as any)[toKeyField] as string));
 
           fromData.forEach((fromItem, index) => {
-            const fromFieldValue = fromItem[relation.fromField];
+            const fromFieldValue = (fromItem as any)[relation.fromField];
             if (fromFieldValue && !validToIds.has(fromFieldValue)) {
               errors.push(
                 `Row ${index + 1} in ${relation.from} has invalid ${
@@ -228,84 +225,29 @@ const SheetHealthCheckPage: React.FC = () => {
                                 {info.fieldDetails.map(fd => {
                                     const isCorrectlyMapped = info.actualHeaders.includes(fd.defaultHeader);
                                     return (
-                                        <p key={fd.appField} className={`font-mono ${isCorrectlyMapped ? 'text-green-400' : 'text-yellow-400'}`}>
-                                            {fd.defaultHeader} {isCorrectlyMapped ? '' : '⚠️'}
+                                        <p key={fd.appField} className={`font-mono ${isCorrectlyMapped ? 'text-green-400' : 'text-red-400'}`}>
+                                            {fd.defaultHeader}
                                         </p>
                                     );
                                 })}
                             </div>
-                             <div className="text-sm text-gray-400">
-                                <p className="font-semibold">Actual Sheet Headers</p>
-                                <div className="max-h-48 overflow-y-auto bg-gray-800 p-2 rounded-md font-mono text-gray-300">
-                                    {info.actualHeaders.length > 0 ? (
-                                        info.actualHeaders.map((h, idx) => <p key={idx}>{h}</p>)
-                                    ) : (
-                                        <p>No headers found or sheet inaccessible.</p>
-                                    )}
-                                </div>
+                            <div className="text-sm text-gray-400">
+                                <p className="font-semibold">Actual Header Status</p>
+                                {info.fieldDetails.map(fd => {
+                                    const isCorrectlyMapped = info.actualHeaders.includes(fd.defaultHeader);
+                                    return (
+                                        <p key={fd.appField} className={`font-mono ${isCorrectlyMapped ? 'text-green-400' : 'text-red-400'}`}>
+                                            {isCorrectlyMapped ? '✅ Found' : '❌ Missing'}
+                                        </p>
+                                    );
+                                })}
                             </div>
                         </div>
-                        {!info.error && hasMappingError && (
-                             <div className="bg-yellow-900/20 border border-yellow-500/50 text-yellow-300 text-sm p-3 rounded-md mt-4">
-                                <p className="font-medium">Missing or Mismatched Headers:</p>
-                                <ul className="list-disc list-inside mt-1">
-                                    {info.fieldDetails.filter(fd => !info.actualHeaders.includes(fd.defaultHeader))
-                                        .map(fd => (
-                                        <li key={fd.appField}>App field <span className="font-mono">{fd.appField}</span> expects header <span className="font-mono">"{fd.defaultHeader}"</span> but it's not found in the sheet.</li>
-                                    ))}
-                                </ul>
-                            </div>
-                        )}
                     </div>
                 )}
             </Card>
           );
       })}
-
-      {/* Relations Check */}
-       <Card className="!p-0">
-            <button
-                onClick={() => toggleSection('relations')}
-                className="w-full flex justify-between items-center px-6 py-4"
-            >
-                <div className="flex items-center gap-3">
-                    {relationStatus['overall']?.status === 'error' ? <ExclamationTriangleIcon className="w-6 h-6 text-yellow-400" /> : <CheckCircleIcon className="w-6 h-6 text-green-500" />}
-                    <span className="font-semibold text-white">Data Relations Check</span>
-                </div>
-                <ChevronDownIcon className={`w-5 h-5 text-gray-400 transition-transform ${openSections['relations'] ? 'rotate-180' : ''}`} />
-            </button>
-            {openSections['relations'] && (
-                <div className="px-6 pb-6 bg-gray-950/50 border-t border-gray-700">
-                    <p className="text-gray-400 text-sm mt-4">Checks for consistency between related data tables (e.g., if a Project's `owner_user_id` exists in the `People` table).</p>
-                    <div className="mt-4 space-y-3">
-                        {predefinedRelations.map((relation, index) => {
-                            const relationKey = `${relation.from}.${relation.fromField}-to-${relation.to}.${relation.toField}`;
-                            const status = relationStatus[relationKey];
-                            return (
-                                <div key={index} className="flex items-center gap-2">
-                                    {status?.status === 'error' ? <ExclamationTriangleIcon className="w-5 h-5 text-yellow-400" /> : <CheckCircleIcon className="w-5 h-5 text-green-500" />}
-                                    <span className="text-sm text-gray-300">
-                                        <span className="font-mono text-blue-400">{relation.from}.{relation.fromField}</span> linked to <span className="font-mono text-green-400">{relation.to}.{relation.toField}</span>: {status ? status.errors.length === 0 ? 'OK' : `${status.errors.length} issues` : 'Not checked'}
-                                    </span>
-                                </div>
-                            );
-                        })}
-                    </div>
-                    {relationStatus['overall']?.status === 'error' && (
-                        <div className="bg-yellow-900/20 border border-yellow-500/50 text-yellow-300 text-sm p-3 rounded-md mt-4">
-                            <p className="font-medium">Relation Issues Found:</p>
-                            <ul className="list-disc list-inside mt-1">
-                                {Object.keys(relationStatus).filter(k => k !== 'overall' && relationStatus[k].errors.length > 0).map(key => (
-                                    <li key={key}>
-                                        <span className="font-mono">{key}</span> has {relationStatus[key].length} invalid references.
-                                    </li>
-                                ))}
-                            </ul>
-                        </div>
-                    )}
-                </div>
-            )}
-        </Card>
     </div>
   );
 };

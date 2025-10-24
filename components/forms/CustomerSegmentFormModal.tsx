@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import type { CustomerSegment, Flywheel } from '../../types';
 import Modal from '../ui/Modal';
@@ -78,7 +79,8 @@ const CustomerSegmentFormModal: React.FC<CustomerSegmentFormModalProps> = ({ isO
     }, [segment, flywheels, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        // FIX: Explicitly cast 'e.target.value' to 'any' to resolve a TypeScript error related to form input types.
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value as any }));
     };
 
     const handleSubmit = (e: React.FormEvent) => {

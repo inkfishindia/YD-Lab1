@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import type { Hub } from '../../types';
@@ -19,7 +18,7 @@ const HubsFunctionsPage: React.FC = () => {
     return hubs.filter(h =>
       h.hub_name.toLowerCase().includes(filters.name.toLowerCase()) &&
 // FIX: Add a null check before calling toLowerCase() on a potentially undefined property.
-      (h.function_category ?? '').toLowerCase().includes(filters.category.toLowerCase())
+      (String(h.function_category) ?? '').toLowerCase().includes(filters.category.toLowerCase())
     );
   }, [hubs, filters]);
 
@@ -60,16 +59,16 @@ const HubsFunctionsPage: React.FC = () => {
   const handleSave = (hubData: Omit<Hub, 'hub_id'> | Hub) => {
 // FIX: Use an if/else block to ensure proper type narrowing for the 'hubData' parameter, resolving the TypeScript error.
     if ('hub_id' in hubData) {
-        updateHub(hubData);
+        updateHub(hubData as Hub);
     } else {
-        addHub(hubData);
+        addHub(hubData as Omit<Hub, 'hub_id'>);
     }
     closeModal();
   };
   
   const getPersonName = (id: string) => people.find(p => p.user_id === id)?.full_name || 'N/A';
   
-  const TableHeader: React.FC<{ sortKey: keyof Hub, label: string }> = ({ sortKey, label }) => (
+  const TableHeader: React.FC<{ sortKey: keyof Hub, label: React.ReactNode }> = ({ sortKey, label }) => (
       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(sortKey)}>
           <div className="flex items-center">{label}{sortConfig?.key === sortKey && <SortIcon className="w-4 h-4 ml-2" />}</div>
       </th>

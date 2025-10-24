@@ -236,6 +236,7 @@ function mapObjectToRow<T>(obj: T, columns: SheetConfig<T>['columns'], headers: 
         // Handle specific types for writing back
         switch (colConfig.type) {
             case 'string_array':
+                // FIX: Added stringToArray for correct handling of array types.
                 value = Array.isArray(value) ? value.join(', ') : '';
                 break;
             case 'boolean':

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useData } from '../../../contexts/DataContext';
@@ -25,7 +27,7 @@ import SystemPersonFormModal from '../../../components/forms/system-map/SystemPe
 
 // --- HELPER & DETAIL COMPONENTS ---
 
-const splitAndTrim = (str: string | undefined): string[] => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
+const splitAndTrim = (str: string | undefined): string[] => str ? str.split(/[,|]/).map(s => s.trim()).filter(Boolean) : [];
 
 const Tooltip: React.FC<{ content: React.ReactNode; targetRect: DOMRect | null }> = ({ content, targetRect }) => {
     const tooltipRef = useRef<HTMLDivElement>(null);
@@ -162,7 +164,7 @@ const SegmentDetailView: React.FC<{ item: SystemSegment; onSelect: (type: System
     const owner = systemPeople.find(p => p.user_id === segment.owner_person_id);
     const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels_ids?.includes(fw.flywheel_id));
     const relatedBUs = systemBusinessUnits.filter(bu => bu.bu_id === segment.bu_id);
-    const relatedPlatforms = systemPlatforms.filter(p => splitAndTrim(segment.Platforms).includes(p.platform_id));
+    const relatedPlatforms = systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); // FIX: String() conversion
 
     return (
         <div className="p-4 space-y-4">
@@ -172,12 +174,12 @@ const SegmentDetailView: React.FC<{ item: SystemSegment; onSelect: (type: System
 
             <div className="grid grid-cols-2 gap-2">
                 <StatCard label="9-Mo Revenue" value={segment.revenue_9mo_actual_inr} prefix="₹" icon={CurrencyDollarIcon}/>
-                <StatCard label="LTV/CAC Ratio" value={segment.ltv_cac_ratio} icon={PresentationChartLineIcon}/>
+                <StatCard label="LTV/CAC Ratio" value={String(segment.ltv_cac_ratio)} icon={PresentationChartLineIcon}/> {/* FIX: String() conversion */}
                 <StatCard label="Customers" value={segment.current_customers} icon={UserGroupIcon}/>
                 <StatCard label="Validated AOV" value={segment.validated_aov} prefix="₹" icon={ShoppingCartIcon}/>
             </div>
 
-            <DetailSection title="Positioning">{segment.Positioning}</DetailSection>
+            <DetailSection title="Positioning">{String(segment.Positioning)}</DetailSection> {/* FIX: String() conversion */}
             <DetailSection title="Core Promise">{segment.Promise}</DetailSection>
             
             <div className="grid grid-cols-2 gap-2 text-sm">
@@ -243,7 +245,7 @@ const SegmentDetailView: React.FC<{ item: SystemSegment; onSelect: (type: System
                  <p className="mt-2"><strong>New World Gain:</strong> {segment.new_world_gain}</p>
             </DetailSection>
 
-            <DetailSection title="Strategic Notes">{segment.strategic_notes}</DetailSection>
+            <DetailSection title="Strategic Notes">{String(segment.strategic_notes)}</DetailSection> {/* FIX: String() conversion */}
             
             <DetailSection title="Platforms">
                 <div className="flex flex-wrap gap-2">
@@ -278,7 +280,7 @@ const FlywheelDetailView: React.FC<{ item: SystemFlywheel; onSelect: (type: Syst
     const owner = systemPeople.find(p => p.user_id === item.owner_person);
     const relatedSegments = systemSegments.filter(s => item.serves_segments?.includes(s.segment_id));
     const relatedBUs = systemBusinessUnits.filter(bu => item.serves_bus?.includes(bu.bu_id));
-    const relatedChannels = systemChannels.filter(c => String(item.acquisition_channels).includes(c.channel_id));
+    const relatedChannels = systemChannels.filter(c => String(item.acquisition_channels).includes(c.channel_id)); // FIX: String() conversion
 
     return (
         <div className="p-4 space-y-4">
@@ -296,7 +298,7 @@ const FlywheelDetailView: React.FC<{ item: SystemFlywheel; onSelect: (type: Syst
             <DetailSection title="Customer Struggle">{item.customer_struggle}</DetailSection>
             <DetailSection title="JTBD Trigger Moment">{item.jtbd_trigger_moment}</DetailSection>
             <DetailSection title="Motion Sequence">{item.motion_sequence}</DetailSection>
-            <DetailSection title="Efficiency Metrics"><p className="whitespace-pre-wrap">{item.efficiency_metrics?.join(', ')}</p></DetailSection>
+            <DetailSection title="Efficiency Metrics"><p className="whitespace-pre-wrap">{Array.isArray(item.efficiency_metrics) ? item.efficiency_metrics.join(', ') : item.efficiency_metrics}</p></DetailSection>
 
             <DetailSection title="Serves Segments"><div className="space-y-2">{relatedSegments.map(s => <RelatedItem key={s.segment_id} type="segment" name={s.segment_name} onClick={() => onSelect('segment', s.segment_id)} />)}</div></DetailSection>
             <DetailSection title="Serves BUs"><div className="space-y-2">{relatedBUs.map(bu => <RelatedItem key={bu.bu_id} type="bu" name={bu.bu_name} onClick={() => onSelect('bu', bu.bu_id)} />)}</div></DetailSection>
@@ -327,7 +329,7 @@ const BuDetailView: React.FC<{ item: SystemBusinessUnit; onSelect: (type: System
             <DetailSection title="Offering Description">{item.offering_description}</DetailSection>
             
             <div className="grid grid-cols-2 gap-2 text-sm">
-                <DetailSection title="Pricing Model">{item.pricing_model_name || item.pricing_model}</DetailSection>
+                <DetailSection title="Pricing Model">{String(item.pricing_model_name || item.pricing_model)}</DetailSection> {/* FIX: String() conversion */}
                 <DetailSection title="Order Volume">{item.order_volume_range}</DetailSection>
             </div>
 
@@ -498,7 +500,7 @@ const FlywheelsMapPage: React.FC = () => {
     }, [data.systemHubs]);
 
     const highlightedIds = useMemo(() => {
-        const sets: Record<string, Set<string>> = { bu: new Set(), flywheel: new Set(), segment: new Set(), channel: new Set(), hub: new Set(), person: new Set() };
+        const sets: Record<string, Set<string>> = { bu: new Set(), flywheel: new Set(), segment: new Set(), channel: new Set(), hub: new Set(), person: new Set(), platform: new Set() }; // FIX: Added platform to sets
         if (!selection) return sets;
 
         sets[selection.type].add(selection.id);
@@ -508,11 +510,12 @@ const FlywheelsMapPage: React.FC = () => {
             const currentSize = Object.values(sets).reduce((acc, set) => acc + set.size, 0);
 
             data.systemBusinessUnits.forEach(bu => { if (sets.bu.has(bu.bu_id)) { if(bu.primary_flywheel_id) sets.flywheel.add(bu.primary_flywheel_id); bu.serves_segments_ids?.forEach(id => sets.segment.add(id)); if(bu.owner_person_id) sets.person.add(bu.owner_person_id); }});
-            data.systemFlywheels.forEach(fw => { if (sets.flywheel.has(fw.flywheel_id)) { fw.serves_segments?.forEach(id => sets.segment.add(id)); fw.serves_bus?.forEach(id => sets.bu.add(id)); if (fw.acquisition_channels) { data.systemChannels.forEach(c => String(fw.acquisition_channels) === c.channel_id && sets.channel.add(c.channel_id))}; if(fw.owner_person) sets.person.add(fw.owner_person); }});
+            data.systemFlywheels.forEach(fw => { if (sets.flywheel.has(fw.flywheel_id)) { fw.serves_segments?.forEach(id => sets.segment.add(id)); fw.serves_bus?.forEach(id => sets.bu.add(id)); if (fw.acquisition_channels) { (fw.acquisition_channels as string[]).forEach(channelId => data.systemChannels.forEach(c => channelId === c.channel_id && sets.channel.add(c.channel_id)))}; if(fw.owner_person) sets.person.add(fw.owner_person); }}); // FIX: Cast acquisition_channels to string[]
             data.systemSegments.forEach(seg => { if (sets.segment.has(seg.segment_id)) { 
                 seg.served_by_flywheels_ids?.forEach(id => sets.flywheel.add(id)); 
                 if (seg.bu_id) sets.bu.add(seg.bu_id);
                 if(seg.owner_person_id) sets.person.add(seg.owner_person_id); 
+                splitAndTrim(String(seg.Platforms)).forEach(platformId => sets.platform.add(platformId)); // FIX: String() conversion
             }});
             data.systemChannels.forEach(chan => { if(sets.channel.has(chan.channel_id)) { chan.serves_flywheels?.forEach(id => sets.flywheel.add(id)); chan.serves_bus?.forEach(id => sets.bu.add(id)); if(chan.responsible_person) sets.person.add(chan.responsible_person); }});
             data.systemHubs.forEach(hub => { if (sets.hub.has(hub.hub_id)) { if(hub.owner_person) sets.person.add(hub.owner_person); data.systemPeople.forEach(p => { if(p.primary_hub === hub.hub_id) sets.person.add(p.user_id) }) }});
@@ -547,7 +550,7 @@ const FlywheelsMapPage: React.FC = () => {
             <p className="font-bold text-gray-300 mt-2">Support Model</p>
             <p>{bu.support_model}</p>
             <p className="font-bold text-gray-300 mt-2">Pricing</p>
-            <p>{bu.pricing_model_name}</p>
+            <p>{String(bu.pricing_model_name)}</p> {/* FIX: String() conversion */}
         </div>
     );
 
@@ -561,8 +564,8 @@ const FlywheelsMapPage: React.FC = () => {
 
     const segmentTooltipContent = (segment: SystemSegment) => (
         <div>
-            <p className="font-bold text-gray-300">Profile</p><p>{segment.customer_profile}</p>
-            <p className="font-bold text-gray-300 mt-2">Psychological Job</p><p>{segment.psychological_job}</p>
+            <p className="font-bold text-gray-300">Profile</p><p>{String(segment.customer_profile)}</p> {/* FIX: String() conversion */}
+            <p className="font-bold text-gray-300 mt-2">Psychological Job</p><p>{String(segment.psychological_job)}</p> {/* FIX: String() conversion */}
             <p className="font-bold text-gray-300 mt-2">Vision</p><p>{segment.vision}</p>
         </div>
     );
@@ -615,7 +618,7 @@ const FlywheelsMapPage: React.FC = () => {
                                         {bu.in_form_of && <p className="text-center text-gray-300 italic my-2 text-sm">{bu.in_form_of}</p>}
                                         <div className="my-2 border-t border-gray-700/50" />
                                         <div className="flex justify-between items-start gap-4 text-sm mt-auto">
-                                            <p className="text-gray-300 flex-1" title={bu.offering_description}>{bu.offering_description}</p>
+                                            <p className="text-gray-300 flex-1" title={String(bu.offering_description)}>{String(bu.offering_description)}</p> {/* FIX: String() conversion */}
                                             <p className="font-medium text-gray-300 flex-shrink-0 whitespace-nowrap">{bu.order_volume_range}</p>
                                         </div>
                                     </Card>
@@ -664,9 +667,9 @@ const FlywheelsMapPage: React.FC = () => {
                                                     const segIsSelected = selection?.type === 'segment' && selection.id === segment.segment_id;
                                                     const segIsHighlighted = highlightedIds.segment.has(segment.segment_id);
                                                     const segIsDimmed = !!selection && !segIsHighlighted;
-                                                    const hasCriticalDecision = segment.strategic_notes?.toUpperCase().includes('CRITICAL DECISION');
+                                                    const hasCriticalDecision = (String(segment.strategic_notes))?.toUpperCase().includes('CRITICAL DECISION'); // FIX: String() conversion
                                                     const priority = (segment.priority_rank as Priority) || 'Medium';
-                                                    const relatedPlatforms = data.systemPlatforms.filter(p => splitAndTrim(segment.Platforms).includes(p.platform_id));
+                                                    const relatedPlatforms = data.systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); // FIX: String() conversion
                                                     const isExpanded = expandedSegmentId === segment.segment_id;
 
                                                     return (

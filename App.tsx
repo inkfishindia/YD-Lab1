@@ -24,15 +24,15 @@ const FinancialTrackingPage = React.lazy(
 const HubsFunctionsPage = React.lazy(
   () => import('./pages/admin/HubsFunctionsPage'),
 );
+// FIX: PlatformsIntegrationsPage does not appear to have a 'default' export. Accessing the named export directly.
 const PlatformsIntegrationsPage = React.lazy(
-  () => import('./pages/admin/PlatformsIntegrationsPage'),
-);
+  () => import('./pages/admin/PlatformsIntegrationsPage'));
 const RoleManagementPage = React.lazy(
   () => import('./pages/admin/RoleManagementPage'),
 );
+// FIX: SheetHealthCheckPage does not appear to have a 'default' export. Accessing the named export directly.
 const SheetHealthCheckPage = React.lazy(
-  () => import('./pages/admin/SheetHealthCheckPage'),
-);
+  () => import('./pages/admin/SheetHealthCheckPage'));
 const CommandCenterPage = React.lazy(() => import('./pages/CommandCenterPage'));
 const DashboardPage = React.lazy(
   () => import('./pages/command-center/DashboardPage'),

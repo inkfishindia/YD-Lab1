@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { GoogleGenAI } from '@google/genai';
 
 import { useData } from '../../contexts/DataContext';
 import Badge from '../../components/ui/Badge';
@@ -16,7 +15,6 @@ import {
   UserGroupIcon,
   UsersIcon,
 } from '../../components/Icons';
-// REMOVED: import { API_KEY } from '../../api-keys';
 
 // --- SUB-COMPONENTS ---
 
@@ -65,10 +63,11 @@ const BusinessModelCanvasPage: React.FC = () => {
     } = useData();
 
     const [modalData, setModalData] = useState<{ title: string; content: React.ReactNode } | null>(null);
-    const [aiModalOpen, setAiModalOpen] = useState(false);
-    const [analysis, setAnalysis] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    // AI analysis functionality removed, states no longer needed
+    // const [aiModalOpen, setAiModalOpen] = useState(false);
+    // const [analysis, setAnalysis] = useState('');
+    // const [isLoading, setIsLoading] = useState(false);
+    // const [error, setError] = useState('');
     
     const canvasItems = useMemo(() => {
         if (loading) return null;
@@ -237,77 +236,79 @@ const BusinessModelCanvasPage: React.FC = () => {
         };
     }, [loading, customerSegments, businessUnits, channels, people, hubs, partners, costStructure, revenueStreams]);
 
-    const generateMarkdownForAI = useCallback(() => {
-        if (!canvasItems) return "Data is still loading.";
+    // AI analysis functionality removed, this callback is no longer needed
+    // const generateMarkdownForAI = useCallback(() => {
+    //     if (!canvasItems) return "Data is still loading.";
 
-        const getSegmentName = (id: string | undefined) => customerSegments.find(s => s.segmentId === id)?.segmentName || id || 'N/A';
+    //     const getSegmentName = (id: string | undefined) => customerSegments.find(s => s.segmentId === id)?.segmentName || id || 'N/A';
         
-        return `
-# Business Model Canvas Analysis
+    //     return `
+    // # Business Model Canvas Analysis
 
-## Customer Segments
-${customerSegments.map(s => `- **${s.segmentName}**: ${s.customerProfile}, Revenue Share: ${s.percentRevenue}, Status: ${s.status}`).join('\n')}
+    // ## Customer Segments
+    // ${customerSegments.map(s => `- **${s.segmentName}**: ${s.customerProfile}, Revenue Share: ${s.percentRevenue}, Status: ${s.status}`).join('\n')}
 
-## Value Propositions
-- Universal: "From design to doorstep in 2-6 days. Any quantity. Any product."
-${businessUnits.map(bu => `- **For ${getSegmentName(bu.primarySegments)}**: ${bu.coreOffering}`).join('\n')}
+    // ## Value Propositions
+    // - Universal: "From design to doorstep in 2-6 days. Any quantity. Any product."
+    // ${businessUnits.map(bu => `- **For ${getSegmentName(bu.primarySegments)}**: ${bu.coreOffering}`).join('\n')}
 
-## Customer Relationships
-${businessUnits.map(bu => {
-    const channel = channels.find(c => c.flywheelId === bu.flywheelId);
-    return `- **${getSegmentName(bu.primarySegments)}**: ${channel?.motionType || 'N/A'}`;
-}).join('\n')}
+    // ## Customer Relationships
+    // ${businessUnits.map(bu => {
+    //     const channel = channels.find(c => c.flywheelId === bu.flywheelId);
+    //     return `- **${getSegmentName(bu.primarySegments)}**: ${channel?.motionType || 'N/A'}`;
+    // }).join('\n')}
 
-## Channels
-${channels.map(c => `- **${c.channelName}**: Type: ${c.channelType}, Focus: ${c.motionType}`).join('\n')}
+    // ## Channels
+    // ${channels.map(c => `- **${c.channelName}**: Type: ${c.channelType}, Focus: ${c.motionType}`).join('\n')}
 
-## Revenue Streams
-${businessUnits.map(bu => `- **${bu.businessUnitName}**: Pricing model is ${bu.pricingModel}`).join('\n')}
-- Total 9-Month Revenue: ${revenueStreams.reduce((s,r) => s + (r.nineMonthRevenue || 0), 0)}
+    // ## Revenue Streams
+    // ${businessUnits.map(bu => `- **${bu.businessUnitName}**: Pricing model is ${bu.pricingModel}`).join('\n')}
+    // - Total 9-Month Revenue: ${revenueStreams.reduce((s,r) => s + (r.nineMonthRevenue || 0), 0)}
 
-## Key Activities
-${hubs.map(h => `- **${h.hubName}**: ${h.keyActivities}`).join('\n')}
+    // ## Key Activities
+    // ${hubs.map(h => `- **${h.hubName}**: ${h.keyActivities}`).join('\n')}
 
-## Key Resources
-- Production Facility: ${hubs.find(h => h.hubName?.includes("Production"))?.hubName || 'N/A'}
-- Human Capital: ${people.length}+ Team Members
-- Tech & Channels: ${channels.length}+ Platforms/Channels
-- Multi-segment Business Model
+    // ## Key Resources
+    // - Production Facility: ${hubs.find(h => h.hubName?.includes("Production"))?.hubName || 'N/A'}
+    // - Human Capital: ${people.length}+ Team Members
+    // - Tech & Channels: ${channels.length}+ Platforms/Channels
+    // - Multi-segment Business Model
 
-## Key Partners
-${partners.map(p => `- **${p.partnerName}**: Type: ${p.partnerType}, Risk: ${p.riskLevel}`).join('\n')}
+    // ## Key Partners
+    // ${partners.map(p => `- **${p.partnerName}**: Type: ${p.partnerType}, Risk: ${p.riskLevel}`).join('\n')}
 
-## Cost Structure
-${costStructure.map(c => `- **${c.costCategory} (${c.costType})**: ~₹${c.monthlyAmount}/month`).join('\n')}
-- CRITICAL: CAC and LTV are not tracked.
-`;
-    }, [canvasItems, customerSegments, businessUnits, channels, hubs, people, partners, costStructure, revenueStreams]);
+    // ## Cost Structure
+    // ${costStructure.map(c => `- **${c.costCategory} (${c.costType})**: ~₹${c.monthlyAmount}/month`).join('\n')}
+    // - CRITICAL: CAC and LTV are not tracked.
+    // `;
+    // }, [canvasItems, customerSegments, businessUnits, channels, hubs, people, partners, costStructure, revenueStreams]);
 
-    const handleGenerateAnalysis = async () => {
-        setIsLoading(true);
-        setError('');
-        setAnalysis('');
-        setAiModalOpen(true);
-        try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-            const prompt = `Based on the following Business Model Canvas data, provide a concise, actionable strategic analysis in markdown format. Focus on the 3 most critical risks and the 3 biggest opportunities. Use bullet points and bold formatting.
+    // AI analysis functionality removed, this callback is no longer needed
+    // const handleGenerateAnalysis = async () => {
+    //     setIsLoading(true);
+    //     setError('');
+    //     setAnalysis('');
+    //     setAiModalOpen(true);
+    //     try {
+    //         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    //         const prompt = `Based on the following Business Model Canvas data, provide a concise, actionable strategic analysis in markdown format. Focus on the 3 most critical risks and the 3 biggest opportunities. Use bullet points and bold formatting.
 
-${generateMarkdownForAI()}`;
+    // ${generateMarkdownForAI()}`;
 
-            const result = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
+    //         const result = await ai.models.generateContent({
+    //             model: 'gemini-2.5-flash',
+    //             contents: prompt,
+    //         });
 
-            setAnalysis(result.text);
-        } catch (e) {
-            console.error('Error generating analysis:', e);
-            const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
-            setError(`Failed to get response: ${errorMessage}`);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    //         setAnalysis(result.text);
+    //     } catch (e) {
+    //         console.error('Error generating analysis:', e);
+    //         const errorMessage = e instanceof Error ? e.message : 'An unknown error occurred.';
+    //         setError(`Failed to get response: ${errorMessage}`);
+    //     } finally {
+    //         setIsLoading(false);
+    //     }
+    // };
     
     const openModal = (title: string, content: React.ReactNode) => {
         setModalData({ title, content });
@@ -321,9 +322,9 @@ ${generateMarkdownForAI()}`;
         <div className="h-full flex flex-col">
             <div className="flex justify-between items-center mb-4 flex-shrink-0">
                 <h1 className="text-2xl font-semibold text-white">Business Model Canvas</h1>
-                <Button onClick={handleGenerateAnalysis} disabled={isLoading}>
+                <Button onClick={() => alert("AI Analysis functionality has been temporarily disabled.")} disabled={true} title="AI Analysis is currently disabled.">
                     <SparklesIcon className="w-5 h-5 mr-2" />
-                    {isLoading ? 'Analyzing...' : 'Analyze Canvas with AI'}
+                    Analyze Canvas with AI
                 </Button>
             </div>
 
@@ -379,7 +380,8 @@ ${generateMarkdownForAI()}`;
                 </div>
             </Modal>
             
-            {/* AI Analysis Modal */}
+            {/* AI Analysis Modal - Now always closed */}
+            {/*
             <Modal isOpen={aiModalOpen} onClose={() => setAiModalOpen(false)} title="AI Strategic Analysis">
                 <div className="text-sm">
                     {isLoading && <div className="text-gray-400 animate-pulse">Generating insights... This may take a moment.</div>}
@@ -387,6 +389,7 @@ ${generateMarkdownForAI()}`;
                     {analysis && <div className="prose prose-sm prose-invert whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: analysis.replace(/\n/g, '<br />').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />}
                 </div>
             </Modal>
+            */}
         </div>
     );
 };

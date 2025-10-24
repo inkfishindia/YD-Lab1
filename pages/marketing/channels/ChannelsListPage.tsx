@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Channel } from '../../../types';
@@ -12,7 +13,7 @@ const ChannelsListPage: React.FC = () => {
   const { channels, addChannel, updateChannel, deleteChannel } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
-  const [filters, setFilters] = useState({ name: '', type: '' });
+  const [filters, setFilters] = useState<{ name: string; type: string }>({ name: '', type: '' });
   const [sortConfig, setSortConfig] = useState<SortConfig>(null);
 
   const filteredChannels = useMemo(() => {
@@ -61,14 +62,14 @@ const ChannelsListPage: React.FC = () => {
   const handleSave = (channelData: Omit<Channel, 'channel_id'> | Channel) => {
 // FIX: Use an if/else block to ensure proper type narrowing for the 'channelData' parameter, resolving the TypeScript error.
     if ('channel_id' in channelData) {
-      updateChannel(channelData);
+      updateChannel(channelData as Channel);
     } else {
-      addChannel(channelData);
+      addChannel(channelData as Omit<Channel, 'channel_id'>);
     }
     closeModal();
   };
   
-  const TableHeader: React.FC<{ sortKey: keyof Channel, label: string }> = ({ sortKey, label }) => (
+  const TableHeader: React.FC<{ sortKey: keyof Channel, label: React.ReactNode }> = ({ sortKey, label }) => (
     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(sortKey)}>
       <div className="flex items-center">{label}{sortConfig?.key === sortKey && <SortIcon className="w-4 h-4 ml-2" />}</div>
     </th>
@@ -119,7 +120,7 @@ const ChannelsListPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{channel.channel_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.channel_type}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.focus}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.interfaces}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.interfaces as React.ReactNode}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                   <button onClick={() => openModal(channel)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
                   <button onClick={() => deleteChannel(channel.channel_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>

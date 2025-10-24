@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { Person, Project, Task, BusinessUnit } from '../../types';
@@ -50,9 +48,9 @@ const ExecutiveDashboardPage: React.FC = () => {
     const handleSaveBu = (data: Omit<BusinessUnit, 'bu_id'> | BusinessUnit) => {
         // FIX: Use an if/else block to ensure proper type narrowing for the 'data' parameter when calling updateBusinessUnit and addBusinessUnit, resolving a TypeScript error.
         if ('bu_id' in data) {
-            updateBusinessUnit(data);
+            updateBusinessUnit(data as BusinessUnit);
         } else {
-            addBusinessUnit(data);
+            addBusinessUnit(data as Omit<BusinessUnit, 'bu_id'>);
         }
         setBuModal({isOpen: false, data: null});
     };
@@ -148,17 +146,17 @@ const ExecutiveDashboardPage: React.FC = () => {
             <h1 className="text-2xl font-semibold text-white mb-4">Executive Dashboard</h1>
             <p className="text-gray-400 mb-4 -mt-2 text-sm">Click an item to drill down. Hover to reveal edit/delete actions.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
-                {renderColumn('Business Units', businessUnits, selectedBuId, handleBuSelect, 'businessUnitId', 'businessUnitName', 
+                {renderColumn<BusinessUnit>('Business Units', businessUnits, selectedBuId, handleBuSelect, 'businessUnitId', 'businessUnitName', 
                     () => setBuModal({isOpen: true, data: null}),
                     (bu) => setBuModal({isOpen: true, data: bu}),
                     deleteBusinessUnit, false, 'status'
                 )}
-                {renderColumn('Projects', filteredProjects, selectedProjectId, handleProjectSelect, 'project_id', 'project_name', 
+                {renderColumn<Project>('Projects', filteredProjects, selectedProjectId, handleProjectSelect, 'project_id', 'project_name', 
                     () => setProjectModal({isOpen: true, data: null}),
                     (proj) => setProjectModal({isOpen: true, data: proj}),
                     deleteProject, !selectedBuId, 'status'
                 )}
-                {renderColumn('Tasks', filteredTasks, selectedTaskId, handleTaskSelect, 'task_id', 'title',
+                {renderColumn<Task>('Tasks', filteredTasks, selectedTaskId, handleTaskSelect, 'task_id', 'title',
                     () => setTaskModal({isOpen: true, data: null}),
                     (task) => setTaskModal({isOpen: true, data: task}),
                     deleteTask, !selectedProjectId, 'status'

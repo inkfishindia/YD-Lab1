@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Interface } from '../../../types';
@@ -62,9 +63,9 @@ const AllInterfacesPage: React.FC = () => {
   const handleSave = (ifaceData: Omit<Interface, 'interface_id'> | Interface) => {
 // FIX: Use an if/else block to ensure proper type narrowing for the 'ifaceData' parameter, resolving the TypeScript error.
     if ('interface_id' in ifaceData) {
-      updateInterface(ifaceData);
+      updateInterface(ifaceData as Interface);
     } else {
-      addInterface(ifaceData);
+      addInterface(ifaceData as Omit<Interface, 'interface_id'>);
     }
     closeModal();
   };

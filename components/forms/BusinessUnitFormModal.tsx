@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { BusinessUnit, Person, Flywheel } from '../../types';
@@ -59,7 +58,8 @@ export const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ is
     }, [businessUnit, people, flywheels, isOpen]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+        // FIX: Explicitly cast 'e.target.value' to 'any' to resolve a TypeScript error related to form input types.
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value as any }));
     };
     
     const handleSubmit = (e: React.FormEvent) => {

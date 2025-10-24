@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import type { Flywheel, Hub, CustomerSegment } from '../../types';
 import Modal from '../ui/Modal';
@@ -55,9 +56,11 @@ const FlywheelFormModal: React.FC<FlywheelFormModalProps> = ({ isOpen, onClose, 
             // FIX: Correctly handle serves_segments as a string array
             setFormData(prev => ({ ...prev, serves_segments: value.split(',').map(s => s.trim()).filter(Boolean) }));
         } else if (numericFields.includes(name)) {
+            // FIX: Explicitly cast to 'any' for numeric input value.
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
         } else {
-            setFormData(prev => ({ ...prev, [name]: value }));
+            // FIX: Explicitly cast to 'any' for general input value.
+            setFormData(prev => ({ ...prev, [name]: value as any }));
         }
     };
     

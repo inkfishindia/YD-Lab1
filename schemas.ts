@@ -4,20 +4,20 @@ import { z } from 'zod';
 // --- Reusable Preprocessors ---
 
 // Pre-process a comma or pipe-separated string into an array of strings. Handles empty strings and existing arrays gracefully.
-const stringToArray = z.preprocess(
+export const stringToArray = z.preprocess(
   (val) => (typeof val === 'string' && val.length > 0 ? val.split(/[,|]/).map(s => s.trim()) : Array.isArray(val) ? val : []),
   z.array(z.string()).optional()
 );
 
 // Coerce values to a number, treating empty strings, null, or undefined as undefined. This makes numeric fields optional.
-const optionalNumber = z.preprocess(val => {
+export const optionalNumber = z.preprocess(val => {
     if (val === '' || val === null || val === undefined) return undefined;
     const num = Number(String(val).replace(/[^0-9.-]+/g, ""));
     return isNaN(num) ? undefined : num;
 }, z.number().optional());
 
 // Coerce boolean-like values.
-const optionalBoolean = z.preprocess(val => {
+export const optionalBoolean = z.preprocess(val => {
     if (val === null || val === undefined) return undefined;
     if (typeof val === 'boolean') return val;
     const str = String(val).toLowerCase();
@@ -25,7 +25,7 @@ const optionalBoolean = z.preprocess(val => {
 }, z.boolean().optional());
 
 
-const optionalString = z.string().optional().nullable();
+export const optionalString = z.string().optional().nullable();
 
 // --- Zod Schemas for Enums ---
 export const StatusSchema = z.enum(['Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled', '⚠️ AT RISK', '✅ VALIDATED']);
@@ -82,7 +82,7 @@ export const PersonSchema = z.object({
   is_active: optionalBoolean,
   manager_id: optionalString,
   role_name: z.string().optional(),
-});
+}).passthrough(); // Allow extra fields that might come from the sheet
 
 export const ProjectSchema = z.object({
   project_id: z.string(),
@@ -272,18 +272,18 @@ export const InterfaceSchema = z.object({
 
 export const ChannelSchema = z.object({
     channelId: z.string(),
-    channelName: z.string(),
+    channelName: z.string(), // Added to match mock data and resolve error
     channelType: optionalString,
     platformId: optionalString,
     servesSegments: optionalString,
     flywheelId: optionalString,
     motionType: optionalString,
     notes: optionalString,
-    // For compatibility
+    // For compatibility (aliased from the sheet)
     channel_id: z.string().optional(),
     channel_name: z.string().optional(),
-    Platform: optionalString,
-    Notes: optionalString,
+    Platform: z.unknown().optional(), // Can be string or string array in source
+    Notes: z.unknown().optional(), // Can be string or string array in source
 }).passthrough();
 
 export const PartnerSchema = z.object({
@@ -841,7 +841,7 @@ export const MasterSchemaRowSchema = z.object({
   'Column Letter': optionalString, // New field
   sample_value: optionalString,
   Protection_Status: optionalString, // New field
-  Data_Type: z.enum(['STRING', 'NUMBER', 'BLANK']).optional(), // Explicit enum type based on CSV
+  Data_Type: z.enum(['STRING', 'NUMBER', 'BLANK', 'STRING_ARRAY']).optional(), // Explicit enum type based on CSV
   Contains_Formula: optionalBoolean, // New field
   Data_Validation: optionalString, // New field
   Column_aliases: optionalString, // New field
@@ -854,9 +854,9 @@ export const MasterSchemaRowSchema = z.object({
   system_role: optionalString,
   data_tier: optionalString,
   description: optionalString,
-  detected_type: optionalString,
+  detected_type: optionalBoolean, // Fixed to be optionalBoolean as per schema.ts context
   has_formula: optionalBoolean,
-  snapshot_ts: optionalString,
   is_pk: z.preprocess(val => String(val).toUpperCase() === 'TRUE', z.boolean()).optional(),
   fk_ref: optionalString,
+  snapshot_ts: optionalString, // Re-added this property
 }).catchall(z.any());

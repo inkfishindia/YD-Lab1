@@ -212,10 +212,10 @@ export const mockFlywheels: Flywheel[] = [
     flywheel_name: 'Self-Service Acquisition',
     serves_segments: ['SEG-MOCK-1'], // Corrected to match schema `string[]`
     motion_sequence: 'Product-Led Growth',
-    acquisition_channels: '2', // Changed to string to match SystemFlywheelSchema
+    acquisition_channels: ['CH_1', 'CH_2'], // Changed to string[] to match SystemFlywheelSchema
     annual_revenue_target_inr: 1000000,
     primary_bottleneck: 'Users sign up and convert on their own.',
-    efficiency_metrics: 'Sign-ups, Conversion Rate', // Changed to string for SystemFlywheelSchema
+    efficiency_metrics: ['Sign-ups', 'Conversion Rate'], // Changed to string[] for SystemFlywheelSchema
     owner_person: 'mock_user_2',
     owner_person_Name: 'Maria Garcia', // For compatibility in system map
     order_size_range: 'Small',
@@ -243,10 +243,10 @@ export const mockFlywheels: Flywheel[] = [
     flywheel_name: 'Enterprise Sales Motion',
     serves_segments: ['SEG-MOCK-2'], // Corrected to match schema `string[]`
     motion_sequence: 'Sales-Led',
-    acquisition_channels: '2', // Changed to string to match SystemFlywheelSchema
+    acquisition_channels: ['CH_3'], // Changed to string[] to match SystemFlywheelSchema
     annual_revenue_target_inr: 5000000,
     primary_bottleneck: 'High-touch sales process for large accounts.',
-    efficiency_metrics: 'SQLs, Close Rate', // Changed to string for SystemFlywheelSchema
+    efficiency_metrics: ['SQLs', 'Close Rate'], // Changed to string[] for SystemFlywheelSchema
     owner_person: 'mock_user_1',
     owner_person_Name: 'Alex Johnson', // For compatibility in system map
     order_size_range: 'Large',
@@ -592,6 +592,7 @@ export const mockInterfaces: Interface[] = [
 export const mockChannels: Channel[] = [
   {
     channelId: 'CH_1',
+    channelName: 'Website', // FIX: Added missing channelName
     channel_id: 'CH_1',
     channel_name: 'Website',
     channel_type: 'Owned',
@@ -607,6 +608,7 @@ export const mockChannels: Channel[] = [
   },
   {
     channelId: 'CH_2',
+    channelName: 'Facebook Ads', // FIX: Added missing channelName
     channel_id: 'CH_2',
     channel_name: 'Facebook Ads',
     channel_type: 'Paid Social',
@@ -622,6 +624,7 @@ export const mockChannels: Channel[] = [
   },
   {
     channelId: 'CH_3',
+    channelName: 'Google Ads', // FIX: Added missing channelName
     channel_id: 'CH_3',
     channel_name: 'Google Ads',
     channel_type: 'Paid Search',
