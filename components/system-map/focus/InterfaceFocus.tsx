@@ -1,3 +1,6 @@
+
+
+
 import React from 'react';
 import type { SystemInterface } from '../../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -13,7 +16,8 @@ interface FocusProps {
 const InterfaceFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
     const { systemHubs, systemPeople } = useData();
 
-    const responsiblePerson = systemPeople.find(p => p.person_id === item.responsible_person);
+// FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type.
+    const responsiblePerson = systemPeople.find(p => p.user_id === item.responsible_person);
     const ownerHub = systemHubs.find(h => h.hub_id === item.owned_by_hub);
 
     return (

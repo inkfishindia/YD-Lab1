@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useCallback } from 'react';
 
 import {
@@ -214,18 +215,18 @@ const SegmentRow: React.FC<{
               {relatedPlatforms.map((platform) => (
                 <a
                   key={platform.platform_id}
-                  href={platform.platform_link || '#'}
+                  href={platform.platform_link_url || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   title={platform.platform_name}
                   className="block"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {platform.platform_icon && (
+                  {platform.platform_icon_url && (
                     <img
-                      src={platform.platform_icon}
+                      src={platform.platform_icon_url}
                       alt={platform.platform_name}
-                      className="w-5 h-5 rounded-sm object-contain hover:scale-110 transition-transform"
+                      className="w-5 h-5 rounded-sm object-contain"
                     />
                   )}
                 </a>
@@ -257,8 +258,8 @@ const PlatformRow: React.FC<{
               : 'bg-gray-800 border-gray-700 text-gray-300 hover:bg-gray-700'
           }`}
         >
-          {platform.platform_icon && (
-            <img src={platform.platform_icon} alt="" className="w-5 h-5 rounded-sm object-contain" />
+          {platform.platform_icon_url && (
+            <img src={platform.platform_icon_url} alt="" className="w-5 h-5 rounded-sm object-contain" />
           )}
           <p className="text-sm font-semibold">{platform.platform_name}</p>
         </div>
@@ -364,18 +365,18 @@ const HubsAndPeopleSection: React.FC<{
             <div className="p-2 grid grid-cols-2 gap-1 flex-1 items-start content-start">
               {relatedPeople.map((person) => {
                 const isPersonSelected =
-                  selection?.type === 'person' && selection.id === person.person_id;
+                  selection?.type === 'person' && selection.id === person.user_id;
                 const isPersonHighlighted = highlightedPersonIds.has(
-                  person.person_id,
+                  person.user_id,
                 );
                 const isPersonDimmed = isFiltered && !isPersonHighlighted;
 
                 return (
                   <div
-                    key={person.person_id}
+                    key={person.user_id}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onSelect('person', person.person_id);
+                      onSelect('person', person.user_id);
                     }}
                     className={`p-2 rounded-md cursor-pointer transition-colors ${
                       isPersonDimmed ? 'opacity-30' : ''
@@ -400,550 +401,7 @@ const HubsAndPeopleSection: React.FC<{
   );
 };
 
-const ProjectCard: React.FC<{
-  project: MgmtProject & { milestones: (Milestone & { tasks: MgmtTask[] })[] };
-  isDimmed: boolean;
-  onClick: () => void;
-  onTooltip: (e: React.MouseEvent, content: React.ReactNode) => void;
-  onClearTooltip: () => void;
-}> = ({ project, isDimmed, onClick, onTooltip, onClearTooltip }) => {
-  const tooltipContent = (
-    <div className="text-xs max-w-xs">
-      <p className="font-bold text-base text-white mb-2">{project.project_name}</p>
-      {project.objective && (
-        <div>
-          <p className="font-semibold text-gray-400">Objective:</p>
-          <p>{project.objective}</p>
-        </div>
-      )}
-      {project.success_metric && (
-        <div className="mt-2">
-          <p className="font-semibold text-gray-400">Success Metric:</p>
-          <p>{project.success_metric}</p>
-        </div>
-      )}
-    </div>
-  );
-  const totalTasks = project.tasks_count || 0;
-  const completedTasks = project.tasks_complete || 0;
-  const completionPct = project.completion_pct || 0;
-
-  return (
-    <div
-      onClick={onClick}
-      onMouseEnter={(e) => onTooltip(e, tooltipContent)}
-      onMouseLeave={onClearTooltip}
-      className={`p-3 rounded-lg cursor-pointer transition-all duration-300 bg-gray-800 hover:bg-gray-700 border border-gray-700/50 ${
-        isDimmed ? 'opacity-30' : ''
-      }`}
-    >
-      <div className="flex justify-between items-start">
-        <h4 className="font-semibold text-white truncate pr-2 text-sm">
-          {project.project_name}
-        </h4>
-        <Badge
-          text={project.status}
-          colorClass={STATUS_COLORS[project.status as keyof typeof STATUS_COLORS]}
-          size="sm"
-        />
-      </div>
-      <div className="flex justify-between items-center mt-1 text-xs text-gray-400">
-        <span>{project.owner_name}</span>
-        <span>{project.end_date}</span>
-      </div>
-      <div className="mt-2 text-xs text-gray-500">
-        {totalTasks} Tasks ({completedTasks} Done)
-      </div>
-      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-1">
-        <div
-          className="bg-blue-500 h-1.5 rounded-full"
-          style={{ width: `${completionPct}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
-
-const ProgramColumn: React.FC<{
-  program: StructuredProgram;
-  isDimmed: boolean;
-  highlightedProjIds: Set<string>;
-  onCardClick: (type: ItemType, item: any) => void;
-  onTooltip: (e: React.MouseEvent, content: React.ReactNode) => void;
-  onClearTooltip: () => void;
-}> = ({
-  program,
-  isDimmed,
-  highlightedProjIds,
-  onCardClick,
-  onTooltip,
-  onClearTooltip,
-}) => {
-  const programTooltipContent = (
-    <div className="text-xs max-w-xs">
-      <p className="font-bold text-base text-white mb-2">{program.program_name}</p>
-      {program.customer_problem && (
-        <div>
-          <p className="font-semibold text-gray-400">Problem:</p>
-          <p>{program.customer_problem}</p>
-        </div>
-      )}
-      {program.our_solution && (
-        <div className="mt-2">
-          <p className="font-semibold text-gray-400">Solution:</p>
-          <p>{program.our_solution}</p>
-        </div>
-      )}
-      {program.blockers && (
-        <div className="mt-2">
-          <p className="font-semibold text-red-400">Blockers:</p>
-          <p className="text-red-300">{program.blockers}</p>
-        </div>
-      )}
-    </div>
-  );
-
-  return (
-    <div className="bg-gray-900 border border-gray-800 rounded-xl w-[340px] flex-shrink-0 flex flex-col">
-      <div
-        className={`p-3 border-b border-gray-800 flex-shrink-0 cursor-pointer transition-opacity duration-300 ${
-          isDimmed ? 'opacity-50' : ''
-        }`}
-        onClick={() => onCardClick('program', program)}
-        onMouseEnter={(e) => onTooltip(e, programTooltipContent)}
-        onMouseLeave={onClearTooltip}
-      >
-        <div className="flex justify-between items-start">
-          <h3 className="text-base font-semibold text-white">
-            {program.program_name}
-          </h3>
-          <Badge
-            text={program.priority || ''}
-            colorClass={PRIORITY_COLORS[program.priority as Priority]}
-            size="sm"
-          />
-        </div>
-        <p className="text-xs text-gray-400 mt-1">{program.owner_person_name}</p>
-
-        <div className="mt-3 space-y-1.5">
-          <div>
-            <div className="text-xs text-gray-500 flex justify-between">
-              <span>Timeline</span>
-              <span>{program.days_remaining} days left</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className={`${getHealthColor(
-                  program.health_status,
-                )} h-2 rounded-full`}
-                style={{ width: `${program.timeline_progress_pct || 0}%` }}
-              ></div>
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 flex justify-between">
-              <span>{program.success_metric}</span>
-              <span>
-                {formatNumber(program.current_value)}/
-                {formatNumber(program.target_value)}
-              </span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div
-                className="bg-blue-500 h-2 rounded-full"
-                style={{ width: `${program.metric_progress_pct || 0}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="p-2 space-y-2">
-        {program.projects.map((proj) => (
-          <ProjectCard
-            key={proj.project_id}
-            project={proj}
-            onClick={() => onCardClick('project', proj)}
-            onTooltip={onTooltip}
-            onClearTooltip={onClearTooltip}
-            isDimmed={!highlightedProjIds.has(proj.project_id)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-const TaskCard: React.FC<{
-  task: MgmtTask;
-  onClick: () => void;
-  isDimmed: boolean;
-}> = ({ task, onClick, isDimmed }) => (
-  <div
-    onClick={onClick}
-    className={`p-3 bg-gray-800 rounded-lg border border-gray-700/50 cursor-pointer hover:bg-gray-700 transition-opacity duration-300 ${
-      isDimmed ? 'opacity-30' : ''
-    }`}
-  >
-    <p className="font-medium text-white text-sm">{task.task_name}</p>
-    <div className="flex justify-between items-center mt-2 text-xs">
-      <Badge
-        text={task.status}
-        colorClass={STATUS_COLORS[task.status as keyof typeof STATUS_COLORS]}
-        size="sm"
-      />
-      <span className="text-gray-400">{task.owner_name}</span>
-      <span className="text-gray-400">{task.due_date}</span>
-    </div>
-  </div>
-);
-
-const TaskList: React.FC<{
-  tasks: MgmtTask[];
-  onCardClick: (type: ItemType, item: MgmtTask) => void;
-  showPrompt: boolean;
-  isFiltered: boolean;
-  highlightedTaskIds: Set<string>;
-}> = ({ tasks, onCardClick, showPrompt, isFiltered, highlightedTaskIds }) => (
-  <div className="flex flex-col bg-gray-900 border border-gray-800 rounded-xl h-full">
-    <div className="p-3 border-b border-gray-800">
-      <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-        <ClipboardCheckIcon className="w-5 h-5" /> Tasks
-      </h2>
-    </div>
-    <div className="flex-1 overflow-y-auto p-2 space-y-2">
-      {tasks.length > 0 ? (
-        tasks.map((task) => {
-          const isDimmed = isFiltered && !highlightedTaskIds.has(task.task_id);
-          return (
-            <TaskCard
-              key={task.task_id}
-              task={task}
-              onClick={() => onCardClick('task', task)}
-              isDimmed={isDimmed}
-            />
-          );
-        })
-      ) : (
-        showPrompt && (
-          <div className="text-center text-gray-500 p-8 h-full flex items-center justify-center">
-            Select an item to see related tasks.
-          </div>
-        )
-      )}
-    </div>
-  </div>
-);
-
-const DetailContent: React.FC<{
-  type: ItemType | null;
-  item: any | null;
-  onSelect: (type: ItemType, id: string) => void;
-}> = ({ type, item, onSelect }) => {
-  const { systemPeople, mgmtProjects, milestones, mgmtTasks, systemHubs } = useData();
-  if (!item) return <p className="text-gray-500">No item selected.</p>;
-
-  const renderField = (label: string, value: any, className?: string) =>
-    value ? (
-      <p className={className}>
-        <strong className="text-gray-400 w-28 inline-block">{label}:</strong>{' '}
-        {String(value)}
-      </p>
-    ) : null;
-
-  const DetailSection: React.FC<{ title: string; children: React.ReactNode }> =
-    ({ title, children }) => {
-      const hasContent = React.Children.toArray(children).some(
-        (child) => child || child === 0,
-      );
-      if (!hasContent) return null;
-      return (
-        <div className="pt-3 mt-3 border-t border-gray-700">
-          <h4 className="font-semibold text-white mb-2">{title}</h4>
-          <div className="space-y-2">{children}</div>
-        </div>
-      );
-    };
-
-  const RelatedItem: React.FC<{
-    icon: React.ElementType;
-    name: string;
-    detail: string;
-    onClick: () => void;
-  }> = ({ icon: Icon, name, detail, onClick }) => (
-    <div
-      onClick={onClick}
-      className="bg-gray-800/50 p-2 rounded-md flex items-center gap-3 border border-gray-700/50 cursor-pointer hover:bg-gray-700 hover:border-blue-600 transition-colors"
-    >
-      <Icon className="w-5 h-5 text-gray-400 flex-shrink-0" />
-      <div className="flex-grow overflow-hidden">
-        <p className="text-sm text-white truncate">{name}</p>
-        <p className="text-xs text-gray-400 truncate">{detail}</p>
-      </div>
-    </div>
-  );
-
-  switch (type) {
-    case 'program': {
-      const prog = item as Program;
-      const progOwner = systemPeople.find((p) => p.person_id === prog.owner_person_id);
-      const relatedProjects = mgmtProjects.filter(
-        (p) => p.program_id === prog.program_id,
-      );
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{prog.program_name}</h3>
-          {renderField('Owner', progOwner?.full_name)}
-          {renderField('Status', prog.status)}
-          {renderField('Priority', prog.priority)}
-          <DetailSection title="Problem">{prog.customer_problem}</DetailSection>
-          <DetailSection title="Solution">{prog.our_solution}</DetailSection>
-          <DetailSection title="Why Now?">{prog.why_now}</DetailSection>
-          <DetailSection title="Key Info">
-            {renderField('Success Metric', prog.success_metric)}
-            {renderField('Target Value', formatNumber(prog.target_value))}
-            {renderField('Current Value', formatNumber(prog.current_value))}
-          </DetailSection>
-          <DetailSection title="Financials">
-            {renderField('Total Budget', formatNumber(prog.budget_total, 'currency'))}
-            {renderField('Budget Spent', formatNumber(prog.budget_spent, 'currency'))}
-            {renderField(
-              'Burn Rate',
-              formatNumber(prog.budget_burn_rate_pct, 'percent'),
-            )}
-          </DetailSection>
-          <DetailSection title="Health & Status">
-            {renderField(
-              'Health',
-              prog.health_status,
-              `font-semibold ${getHealthColor(prog.health_status)?.replace(
-                'bg-',
-                'text-',
-              )}`,
-            )}
-            {renderField('Risk Level', prog.risk_level)}
-            {renderField('Blockers', prog.blockers, 'text-red-400')}
-            {renderField(
-              'Next Milestone',
-              `${prog.next_milestone} (${prog.next_milestone_date})`,
-            )}
-          </DetailSection>
-          <DetailSection title="Projects">
-            {relatedProjects.map((p) => (
-              <RelatedItem
-                key={p.project_id}
-                icon={FolderIcon}
-                name={p.project_name}
-                detail={p.status}
-                onClick={() => onSelect('project', p.project_id)}
-              />
-            ))}
-          </DetailSection>
-        </div>
-      );
-    }
-    case 'project': {
-      const proj = item as MgmtProject;
-      const projOwner = systemPeople.find((p) => p.person_id === proj.owner_id);
-      const relatedMilestones = milestones.filter(
-        (m) => m.project_id === proj.project_id,
-      );
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{proj.project_name}</h3>
-          {renderField('Owner', projOwner?.full_name)}
-          {renderField('Status', proj.status)}
-          {renderField('Priority', proj.priority)}
-          {renderField('Timeline', `${proj.start_date} to ${proj.end_date}`)}
-          <DetailSection title="Objective">{proj.objective}</DetailSection>
-          <DetailSection title="Financials">
-            {renderField('Budget', formatNumber(proj.budget, 'currency'))}
-            {renderField('Spent', formatNumber(proj.budget_spent, 'currency'))}
-            {renderField('Variance', formatNumber(proj.budget_variance, 'currency'))}
-          </DetailSection>
-          <DetailSection title="Progress">
-            {renderField('Health', proj.health_score)}
-            {renderField('On Time', proj.is_on_time)}
-            {renderField('Completion', formatNumber(proj.completion_pct, 'percent'))}
-            {renderField(
-              'Velocity',
-              `${proj.velocity_tasks_per_day?.toFixed(2)} tasks/day`,
-            )}
-          </DetailSection>
-          <DetailSection title="Milestones">
-            {relatedMilestones.map((m) => (
-              <RelatedItem
-                key={m.milestone_id}
-                icon={TargetIcon}
-                name={m.milestone_name}
-                detail={m.status}
-                onClick={() => onSelect('milestone', m.milestone_id)}
-              />
-            ))}
-          </DetailSection>
-        </div>
-      );
-    }
-    case 'milestone': {
-      const mile = item as Milestone;
-      const relatedTasks = mgmtTasks.filter(
-        (t) => t.milestone_id === mile.milestone_id,
-      );
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{mile.milestone_name}</h3>
-          {renderField('Owner', mile.owner_name)}
-          {renderField('Status', mile.status)}
-          {renderField('Target Date', mile.target_date)}
-          {renderField('Blocker', mile.blocker, 'text-red-400')}
-          <DetailSection title="Tasks">
-            {relatedTasks.map((t) => (
-              <RelatedItem
-                key={t.task_id}
-                icon={ClipboardCheckIcon}
-                name={t.task_name}
-                detail={t.status}
-                onClick={() => onSelect('task', t.task_id)}
-              />
-            ))}
-          </DetailSection>
-        </div>
-      );
-    }
-    case 'task': {
-      const task = item as MgmtTask;
-      const assignee = systemPeople.find((p) => p.person_id === task.assignee_ids);
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{task.task_name}</h3>
-          {renderField('Assignee', assignee?.full_name)}
-          {renderField('Status', task.status)}
-          {renderField('Priority', task.priority)}
-          {renderField('Due Date', task.due_date)}
-          {renderField('Effort', `${task.effort_hours}h`)}
-          <DetailSection title="Description">{task.description}</DetailSection>
-          <DetailSection title="Notes">{task.notes}</DetailSection>
-        </div>
-      );
-    }
-    case 'person': {
-      const person = item as SystemPerson;
-      const primaryHub = systemHubs.find((h) => h.hub_id === person.primary_hub);
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{person.full_name}</h3>
-          {renderField('Role', person.role)}
-          {renderField('Hub', primaryHub?.hub_name)}
-          {renderField('Email', person.email)}
-        </div>
-      );
-    }
-    case 'segment': {
-      const segment = item as SystemSegment;
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">
-            {segment.segment_name}
-          </h3>
-          {renderField('Promise', segment.Promise)}
-          {renderField('Vision', segment.vision)}
-          <DetailSection title="Customer Profile">
-            {segment.customer_profile}
-          </DetailSection>
-        </div>
-      );
-    }
-    case 'platform': {
-      const platform = item as SystemPlatform;
-      const platformOwnerHub = systemHubs.find(
-        (h) => h.hub_id === platform.owner_hub,
-      );
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">
-            {platform.platform_name}
-          </h3>
-          {renderField('Type', platform.platform_type)}
-          {platformOwnerHub && (
-            <DetailSection title="Owner Hub">
-              <RelatedItem
-                icon={Squares2X2Icon}
-                name={platformOwnerHub.hub_name}
-                detail={platformOwnerHub.hub_type}
-                onClick={() => onSelect('hub', platformOwnerHub.hub_id)}
-              />
-            </DetailSection>
-          )}
-        </div>
-      );
-    }
-    case 'channel': {
-      const channel = item as SystemChannel;
-      const channelOwner = systemPeople.find(
-        (p) => p.person_id === channel.responsible_person,
-      );
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">
-            {channel.channel_name}
-          </h3>
-          {renderField('Owner', channelOwner?.full_name)}
-          {renderField('Type', channel.channel_type)}
-        </div>
-      );
-    }
-    case 'hub': {
-      const hub = item as SystemHub;
-      const hubOwner = systemPeople.find((p) => p.person_id === hub.owner_person);
-      return (
-        <div className="space-y-2 text-sm text-gray-300">
-          <h3 className="text-xl font-bold text-white mb-2">{hub.hub_name}</h3>
-          {renderField('Owner', hubOwner?.full_name)}
-          {renderField('Type', hub.hub_type)}
-          <DetailSection title="Core Capabilities">
-            {hub.core_capabilities}
-          </DetailSection>
-        </div>
-      );
-    }
-    default:
-      return (
-        <pre className="text-xs text-gray-300 whitespace-pre-wrap">
-          {JSON.stringify(item, null, 2)}
-        </pre>
-      );
-  }
-};
-
-const DetailPane: React.FC<{
-  detail: { isOpen: boolean; type: ItemType | null; item: any | null };
-  onClose: () => void;
-  onSelect: (type: ItemType, id: string) => void;
-}> = ({ detail, onClose, onSelect }) => (
-  <div
-    className={`fixed top-16 right-0 h-[calc(100%-4rem)] bg-gray-950 border-l border-gray-800 shadow-2xl z-40 transition-transform duration-300 ease-in-out ${
-      detail.isOpen ? 'translate-x-0' : 'translate-x-full'
-    }`}
-    style={{ width: '400px' }}
-  >
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-800 flex justify-between items-center flex-shrink-0">
-        <h2 className="text-lg font-semibold text-white capitalize">
-          {detail.type} Details
-        </h2>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
-          <CloseIcon className="w-6 h-6" />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4">
-        <DetailContent type={detail.type} item={detail.item} onSelect={onSelect} />
-      </div>
-    </div>
-  </div>
-);
-
-// --- MAIN PAGE COMPONENT ---
-
-const ProgramsViewPage: React.FC = () => {
+export const ProgramsViewPage: React.FC = () => {
   const {
     programs,
     mgmtProjects,
@@ -955,495 +413,685 @@ const ProgramsViewPage: React.FC = () => {
     systemChannels,
     systemHubs,
     loading,
+    dataError,
   } = useData();
 
-  const [selection, setSelection] = useState<{ type: ItemType; id: string } | null>(
-    null,
-  );
-  const [detailPane, setDetailPane] = useState<{
-    isOpen: boolean;
-    type: ItemType | null;
-    item: any | null;
-  }>({ isOpen: false, type: null, item: null });
+  const [selectedItem, setSelectedItem] = useState<{
+    type: ItemType;
+    id: string;
+  } | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<{
     content: React.ReactNode;
     targetRect: DOMRect | null;
   }>({ content: null, targetRect: null });
 
-  const handleClosePane = useCallback(() => {
-    setDetailPane((d) => ({ ...d, isOpen: false }));
-  }, []);
-
-  const handleSelect = useCallback(
-    (type: ItemType, id: string) => {
-      const isDeselecting = selection?.type === type && selection.id === id;
-      setSelection(isDeselecting ? null : { type, id });
-
-      if (isDeselecting) {
-        if (
-          detailPane.isOpen &&
-          detailPane.type === type &&
-          detailPane.item &&
-          detailPane.item[`${type}_id`] === id
-        ) {
-          handleClosePane();
-        }
-      } else {
-        // Find the full item object to show in the detail pane
-        let itemToShow = null;
-        switch (type) {
-          case 'segment':
-            itemToShow = systemSegments.find((i) => i.segment_id === id);
-            break;
-          case 'platform':
-            itemToShow = systemPlatforms.find((i) => i.platform_id === id);
-            break;
-          case 'channel':
-            itemToShow = systemChannels.find((i) => i.channel_id === id);
-            break;
-          case 'hub':
-            itemToShow = systemHubs.find((i) => i.hub_id === id);
-            break;
-          case 'person':
-            itemToShow = systemPeople.find((i) => i.person_id === id);
-            break;
-        }
-        if (itemToShow) {
-          setDetailPane({ isOpen: true, type, item: itemToShow });
-        }
-      }
-    },
-    [
-      selection,
-      detailPane,
-      handleClosePane,
-      systemSegments,
-      systemPlatforms,
-      systemChannels,
-      systemHubs,
-      systemPeople,
-    ],
-  );
-
-  const handleCardClick = useCallback(
-    (type: ItemType, item: any) => {
-      const getId = (itemType: ItemType, itemObj: any) => {
-        if (!itemObj) return null;
-        const keyMap: Record<ItemType, string> = {
-          program: 'program_id',
-          project: 'project_id',
-          milestone: 'milestone_id',
-          task: 'task_id',
-          person: 'person_id',
-          segment: 'segment_id',
-          platform: 'platform_id',
-          channel: 'channel_id',
-          hub: 'hub_id',
-        };
-        return itemObj[keyMap[itemType]];
-      };
-
-      const currentId = getId(detailPane.type!, detailPane.item);
-      const newId = getId(type, item);
-
-      if (detailPane.isOpen && detailPane.type === type && currentId === newId) {
-        handleClosePane();
-      } else {
-        setDetailPane({ isOpen: true, type, item });
-      }
-    },
-    [detailPane, handleClosePane],
-  );
-
-  const handleTooltip = (e: React.MouseEvent, content: React.ReactNode) => {
-    e.stopPropagation();
-    setActiveTooltip({ content, targetRect: e.currentTarget.getBoundingClientRect() });
-  };
-
-  const sortedSegments = useMemo(
-    () =>
-      [...systemSegments].sort((a, b) =>
-        (a.priority_rank || '99').localeCompare(b.priority_rank || '99'),
-      ),
-    [systemSegments],
-  );
-  const sortedPeople = useMemo(
-    () => [...systemPeople].sort((a, b) => a.full_name.localeCompare(b.full_name)),
-    [systemPeople],
-  );
-
-  const selectionData = useMemo(() => {
-    const isFiltered = !!selection;
-
-    const allIds = {
-      programs: new Set(programs.map((p) => p.program_id)),
-      projects: new Set(mgmtProjects.map((p) => p.project_id)),
-      tasks: new Set(mgmtTasks.map((t) => t.task_id)),
-      hubs: new Set(systemHubs.map((h) => h.hub_id)),
-      people: new Set(systemPeople.map((p) => p.person_id)),
-    };
-
-    if (!isFiltered) {
-      return { isFiltered, highlights: allIds };
-    }
-
-    const highlights = {
-      programs: new Set<string>(),
-      projects: new Set<string>(),
-      tasks: new Set<string>(),
-      hubs: new Set<string>(),
-      people: new Set<string>(),
-    };
-
-    if (selection) {
-      switch (selection.type) {
-        case 'segment':
-          programs.forEach((p) => {
-            if (idStringIncludes(p.serves_segment_ids, selection.id))
-              highlights.programs.add(p.program_id);
-          });
-          mgmtProjects.forEach((p) => {
-            if (idStringIncludes(p.segment_impact, selection.id))
-              highlights.projects.add(p.project_id);
-          });
-          break;
-        case 'platform':
-          programs.forEach((p) => {
-            if (idStringIncludes(p.platform_ids, selection.id))
-              highlights.programs.add(p.program_id);
-          });
-          mgmtProjects.forEach((p) => {
-            if (p.platform_id === selection.id)
-              highlights.projects.add(p.project_id);
-          });
-          break;
-        case 'channel':
-          programs.forEach((p) => {
-            if (idStringIncludes(p.channel_ids, selection.id))
-              highlights.programs.add(p.program_id);
-          });
-          mgmtProjects.forEach((p) => {
-            if (idStringIncludes(p.channel_ids, selection.id))
-              highlights.projects.add(p.project_id);
-          });
-          break;
-        case 'hub':
-          highlights.hubs.add(selection.id);
-          programs.forEach((p) => {
-            if (
-              p.owner_hub_id === selection.id ||
-              idStringIncludes(p.contributing_hub_ids, selection.id)
-            )
-              highlights.programs.add(p.program_id);
-          });
-          mgmtProjects.forEach((p) => {
-            if (p.hub_id === selection.id) highlights.projects.add(p.project_id);
-          });
-          mgmtTasks.forEach((t) => {
-            if (t.hub_id === selection.id) highlights.tasks.add(t.task_id);
-          });
-          systemPeople.forEach((p) => {
-            if (p.primary_hub === selection.id)
-              highlights.people.add(p.person_id);
-          });
-          break;
-        case 'person':
-          highlights.people.add(selection.id);
-          programs.forEach((p) => {
-            if (p.owner_person_id === selection.id)
-              highlights.programs.add(p.program_id);
-          });
-          mgmtProjects.forEach((p) => {
-            if (p.owner_id === selection.id) highlights.projects.add(p.project_id);
-          });
-          mgmtTasks.forEach((t) => {
-            if (
-              t.owner_id === selection.id ||
-              idStringIncludes(t.assignee_ids, selection.id)
-            )
-              highlights.tasks.add(t.task_id);
-          });
-          const person = systemPeople.find((p) => p.person_id === selection.id);
-          if (person?.primary_hub) highlights.hubs.add(person.primary_hub);
-          break;
-      }
-    }
-
-    // Propagate from programs to projects and tasks
-    mgmtProjects.forEach((p) => {
-      if (p.program_id && highlights.programs.has(p.program_id))
-        highlights.projects.add(p.project_id);
-    });
-    mgmtTasks.forEach((t) => {
-      const milestone = milestones.find((m) => m.milestone_id === t.milestone_id);
-      if (
-        (t.project_id && highlights.projects.has(t.project_id)) ||
-        (milestone &&
-          milestone.project_id &&
-          highlights.projects.has(milestone.project_id))
-      ) {
-        highlights.tasks.add(t.task_id);
-      }
-    });
-
-    return {
-      isFiltered,
-      highlights,
-    };
-  }, [
-    selection,
-    programs,
-    mgmtProjects,
-    mgmtTasks,
-    milestones,
-    systemHubs,
-    systemPeople,
-  ]);
-
-  const structuredData: StructuredProgram[] = useMemo(() => {
-    const tasksByMilestone = new Map<string, MgmtTask[]>();
-    mgmtTasks.forEach((task) => {
-      if (task.milestone_id) {
-        if (!tasksByMilestone.has(task.milestone_id)) {
-          tasksByMilestone.set(task.milestone_id, []);
-        }
-        tasksByMilestone.get(task.milestone_id)!.push(task);
-      }
-    });
-    const milestonesByProject = new Map<string, (Milestone & { tasks: MgmtTask[] })[]>();
-    milestones.forEach((mile) => {
-      if (mile.project_id) {
-        if (!milestonesByProject.has(mile.project_id)) {
-          milestonesByProject.set(mile.project_id, []);
-        }
-        milestonesByProject
-          .get(mile.project_id)!
-          .push({ ...mile, tasks: tasksByMilestone.get(mile.milestone_id) || [] });
-      }
-    });
-    const projectsByProgram = new Map<string, StructuredProject[]>();
+  const structuredPrograms = useMemo(() => {
+    const projectMap = new Map<string, StructuredProject>();
     mgmtProjects.forEach((proj) => {
-      if (proj.program_id) {
-        if (!projectsByProgram.has(proj.program_id)) {
-          projectsByProgram.set(proj.program_id, []);
-        }
-        projectsByProgram
-          .get(proj.program_id)!
-          .push({
-            ...proj,
-            milestones: milestonesByProject.get(proj.project_id) || [],
-          });
+      projectMap.set(proj.project_id, { ...proj, milestones: [] });
+    });
+
+    const milestoneMap = new Map<string, Milestone & { tasks: MgmtTask[] }>();
+    milestones.forEach((ms) => {
+      milestoneMap.set(ms.milestone_id, { ...ms, tasks: [] });
+    });
+
+    mgmtTasks.forEach((task) => {
+      if (task.milestone_id && milestoneMap.has(task.milestone_id)) {
+        milestoneMap.get(task.milestone_id)?.tasks.push(task);
       }
     });
-    return programs.map((prog) => ({
-      ...prog,
-      projects: projectsByProgram.get(prog.program_id) || [],
-    }));
+
+    milestoneMap.forEach((ms) => {
+      if (ms.project_id && projectMap.has(ms.project_id)) {
+        projectMap.get(ms.project_id)?.milestones.push(ms);
+      }
+    });
+
+    const programMap = new Map<string, StructuredProgram>();
+    programs.forEach((program) => {
+      programMap.set(program.program_id, { ...program, projects: [] });
+    });
+
+    projectMap.forEach((proj) => {
+      if (proj.program_id && programMap.has(proj.program_id)) {
+        programMap.get(proj.program_id)?.projects.push(proj);
+      }
+    });
+
+    return Array.from(programMap.values()).sort((a, b) =>
+      a.program_name.localeCompare(b.program_name),
+    );
   }, [programs, mgmtProjects, milestones, mgmtTasks]);
 
-  const displayedTasks = useMemo(() => {
-    const { type, item } = detailPane;
-    let tasksToShow: MgmtTask[] = [];
+  const allItems = useMemo(() => {
+    const items = new Map<string, ItemType>();
+    structuredPrograms.forEach((p) => {
+      items.set(p.program_id, 'program');
+      p.projects.forEach((proj) => {
+        items.set(proj.project_id, 'project');
+        proj.milestones.forEach((ms) => {
+          items.set(ms.milestone_id, 'milestone');
+          ms.tasks.forEach((task) => items.set(task.task_id, 'task'));
+        });
+      });
+    });
+    systemPeople.forEach((p) => items.set(p.user_id, 'person'));
+    systemSegments.forEach((s) => items.set(s.segment_id, 'segment'));
+    systemPlatforms.forEach((p) => items.set(p.platform_id, 'platform'));
+    systemChannels.forEach((c) => items.set(c.channel_id, 'channel'));
+    systemHubs.forEach((h) => items.set(h.hub_id, 'hub'));
+    return items;
+  }, [
+    structuredPrograms,
+    systemPeople,
+    systemSegments,
+    systemPlatforms,
+    systemChannels,
+    systemHubs,
+  ]);
 
-    if (item) {
-      if (type === 'program') {
-        const programProjectIds = new Set(
-          (item as StructuredProgram).projects.map((p) => p.project_id),
-        );
-        tasksToShow = mgmtTasks.filter(
-          (t) => t.project_id && programProjectIds.has(t.project_id),
-        );
-      } else if (type === 'project') {
-        tasksToShow = mgmtTasks.filter(
-          (t) => t.project_id === (item as MgmtProject).project_id,
-        );
-      } else if (type === 'milestone') {
-        tasksToShow = mgmtTasks.filter(
-          (t) => t.milestone_id === (item as Milestone).milestone_id,
-        );
-      } else if (type === 'task') {
-        tasksToShow = mgmtTasks.filter(
-          (t) => t.task_id === (item as MgmtTask).task_id,
-        );
-      }
-    } else if (selectionData.isFiltered) {
-      tasksToShow = mgmtTasks.filter((t) =>
-        selectionData.highlights.tasks.has(t.task_id),
+  const highlightedIds = useMemo(() => {
+    const sets: Record<ItemType, Set<string>> = {
+      program: new Set(),
+      project: new Set(),
+      milestone: new Set(),
+      task: new Set(),
+      person: new Set(),
+      segment: new Set(),
+      platform: new Set(),
+      channel: new Set(),
+      hub: new Set(),
+    };
+
+    if (!selectedItem) return sets;
+
+    sets[selectedItem.type].add(selectedItem.id);
+
+    let changed = true;
+    while (changed) {
+      const currentSize = Object.values(sets).reduce(
+        (acc, set) => acc + set.size,
+        0,
       );
+
+      // Propagate highlights upwards (children highlight parents)
+      structuredPrograms.forEach((p) => {
+        p.projects.forEach((proj) => {
+          if (sets.milestone.has(proj.project_id))
+            sets.project.add(proj.project_id);
+          proj.milestones.forEach((ms) => {
+            if (sets.task.has(ms.milestone_id))
+              sets.milestone.add(ms.milestone_id);
+          });
+        });
+      });
+
+      // Propagate highlights downwards and sideways (parents/peers highlight children/related)
+      structuredPrograms.forEach((p) => {
+        if (sets.program.has(p.program_id)) {
+          // Program -> Segment, Platform, Channel, Hub, Person
+          p.serves_segment_ids?.forEach((id) => sets.segment.add(id));
+          p.platform_ids?.forEach((id) => sets.platform.add(id));
+          p.channel_ids?.forEach((id) => sets.channel.add(id));
+          p.contributing_hub_ids?.forEach((id) => sets.hub.add(id));
+          if (p.owner_person_id) sets.person.add(p.owner_person_id);
+          p.projects.forEach((proj) => sets.project.add(proj.project_id));
+        }
+        p.projects.forEach((proj) => {
+          if (sets.project.has(proj.project_id)) {
+            // Project -> Person, Hub, Channel
+            if (proj.owner_id) sets.person.add(proj.owner_id);
+            if (proj.hub_id) sets.hub.add(proj.hub_id);
+            proj.channel_ids?.forEach((id) => sets.channel.add(id));
+            proj.milestones.forEach((ms) => sets.milestone.add(ms.milestone_id));
+          }
+          proj.milestones.forEach((ms) => {
+            if (sets.milestone.has(ms.milestone_id)) {
+              // Milestone -> Person
+              if (ms.owner_id) sets.person.add(ms.owner_id);
+              ms.tasks.forEach((task) => sets.task.add(task.task_id));
+            }
+            ms.tasks.forEach((task) => {
+              if (sets.task.has(task.task_id)) {
+                // Task -> Person, Hub
+                if (task.assignee_ids) sets.person.add(task.assignee_ids);
+                if (task.hub_id) sets.hub.add(task.hub_id);
+              }
+            });
+          });
+        });
+      });
+
+      // From System entities to Programs
+      systemSegments.forEach((s) => {
+        if (sets.segment.has(s.segment_id)) {
+          structuredPrograms.forEach((p) => {
+            if (idStringIncludes(p.serves_segment_ids?.join(','), s.segment_id))
+              sets.program.add(p.program_id);
+          });
+        }
+      });
+      systemPlatforms.forEach((p) => {
+        if (sets.platform.has(p.platform_id)) {
+          structuredPrograms.forEach((prog) => {
+            if (idStringIncludes(prog.platform_ids?.join(','), p.platform_id))
+              sets.program.add(prog.program_id);
+          });
+        }
+      });
+      systemChannels.forEach((c) => {
+        if (sets.channel.has(c.channel_id)) {
+          structuredPrograms.forEach((prog) => {
+            if (idStringIncludes(prog.channel_ids?.join(','), c.channel_id))
+              sets.program.add(prog.program_id);
+          });
+          mgmtProjects.forEach((proj) => {
+            if (idStringIncludes(proj.channel_ids?.join(','), c.channel_id))
+              sets.project.add(proj.project_id);
+          });
+        }
+      });
+      systemHubs.forEach((h) => {
+        if (sets.hub.has(h.hub_id)) {
+          structuredPrograms.forEach((prog) => {
+            if (idStringIncludes(prog.contributing_hub_ids?.join(','), h.hub_id))
+              sets.program.add(prog.program_id);
+          });
+          mgmtProjects.forEach((proj) => {
+            if (proj.hub_id === h.hub_id) sets.project.add(proj.project_id);
+          });
+          mgmtTasks.forEach((task) => {
+            if (task.hub_id === h.hub_id) sets.task.add(task.task_id);
+          });
+        }
+      });
+      systemPeople.forEach((p) => {
+        if (sets.person.has(p.user_id)) {
+          structuredPrograms.forEach((prog) => {
+            if (prog.owner_person_id === p.user_id) sets.program.add(prog.program_id);
+          });
+          mgmtProjects.forEach((proj) => {
+            if (proj.owner_id === p.user_id) sets.project.add(proj.project_id);
+          });
+          milestones.forEach((ms) => {
+            if (ms.owner_id === p.user_id) sets.milestone.add(ms.milestone_id);
+          });
+          mgmtTasks.forEach((task) => {
+            if (task.assignee_ids === p.user_id) sets.task.add(task.task_id);
+          });
+        }
+      });
+
+      const newSize = Object.values(sets).reduce(
+        (acc, set) => acc + set.size,
+        0,
+      );
+      changed = newSize > currentSize;
     }
-    return tasksToShow.sort((a, b) =>
-      (a.due_date || 'z').localeCompare(b.due_date || 'z'),
+
+    return sets;
+  }, [
+    selectedItem,
+    structuredPrograms,
+    systemPeople,
+    systemSegments,
+    systemPlatforms,
+    systemChannels,
+    systemHubs,
+    mgmtProjects,
+    milestones,
+    mgmtTasks,
+  ]);
+
+  const handleSelectItem = useCallback((type: ItemType, id: string) => {
+    setSelectedItem((prev) =>
+      prev?.type === type && prev.id === id ? null : { type, id },
     );
-  }, [detailPane, mgmtTasks, selectionData]);
+    setActiveTooltip({ content: null, targetRect: null });
+  }, []);
+
+  const handleTooltip = useCallback(
+    (e: React.MouseEvent, content: React.ReactNode) => {
+      e.stopPropagation();
+      setActiveTooltip({ content, targetRect: e.currentTarget.getBoundingClientRect() });
+    },
+    [],
+  );
+
+  const handleClearTooltip = useCallback(() => {
+    setActiveTooltip({ content: null, targetRect: null });
+  }, []);
+
+  const isFiltered = !!selectedItem;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col h-full overflow-hidden space-y-6">
+        <RowSkeleton />
+        <RowSkeleton />
+        <div className="flex flex-1 gap-4 overflow-hidden">
+          <ProgramColumnSkeleton />
+          <ProgramColumnSkeleton />
+          <ProgramColumnSkeleton />
+          <TaskListSkeleton />
+        </div>
+      </div>
+    );
+  }
+
+  if (dataError.length > 0) {
+    return (
+      <div className="flex items-center justify-center h-full bg-gray-950 text-white p-4">
+        <div className="max-w-2xl w-full text-center p-8 bg-gray-900 rounded-lg shadow-xl border border-red-500/50">
+          <h2 className="text-2xl font-bold text-red-400 mb-4">
+            Data Loading Error
+          </h2>
+          <p className="text-gray-300 text-left whitespace-pre-wrap">
+            {dataError.map((e) => e.message).join('\n')}
+          </p>
+          <p className="mt-4 text-gray-400">
+            Please check your spreadsheet configurations and network connection.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-4 pr-2 pb-4">
+    <div
+      className="flex flex-col h-full overflow-hidden"
+      onClick={() => setSelectedItem(null)}
+    >
       <Tooltip
         content={activeTooltip.content}
         targetRect={activeTooltip.targetRect}
       />
+      <div className="flex-shrink-0 mb-6 text-center">
+        <h1 className="text-2xl font-bold text-white mb-2">
+          E2E Delivery Map
+        </h1>
+        <p className="text-gray-400 text-sm mb-4">
+          Visualizing the interconnectedness of your programs, projects, and
+          teams. Click an item to highlight its dependencies.
+        </p>
 
-      {/* --- TOP: SEGMENTS --- */}
-      <div className="flex-shrink-0">
-        <div className="flex justify-between items-center mb-2 px-1">
-          <div className="text-center flex-grow">
-            <h2 className="text-xl font-semibold text-white">Segments</h2>
-            <p className="text-sm text-gray-400 -mt-1">
-              Filter programs and projects by customer segment
-            </p>
+        {/* Filters/Swimlanes */}
+        <div className="space-y-6">
+          {/* Segment Row */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">
+              Customer Segments
+            </h3>
+            <SegmentRow
+              segments={systemSegments}
+              selectedId={
+                selectedItem?.type === 'segment' ? selectedItem.id : null
+              }
+              onSelect={handleSelectItem}
+              onTooltip={handleTooltip}
+              onClearTooltip={handleClearTooltip}
+              platforms={systemPlatforms}
+            />
           </div>
-          {selection && (
-            <button
-              onClick={() => {
-                setSelection(null);
-                handleClosePane();
-              }}
-              className="flex items-center gap-2 text-sm text-gray-400 hover:text-white flex-shrink-0"
+
+          {/* Platforms Row */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">
+              Platforms
+            </h3>
+            <PlatformRow
+              platforms={systemPlatforms}
+              selectedId={
+                selectedItem?.type === 'platform' ? selectedItem.id : null
+              }
+              onSelect={handleSelectItem}
+            />
+          </div>
+
+          {/* Channels Row */}
+          <div>
+            <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-2">
+              Channels
+            </h3>
+            <ChannelRow
+              channels={systemChannels}
+              selectedId={
+                selectedItem?.type === 'channel' ? selectedItem.id : null
+              }
+              onSelect={handleSelectItem}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content: Programs, Projects, Milestones, Tasks */}
+      <div className="flex-grow flex gap-4 overflow-x-auto overflow-y-auto pb-4">
+        {structuredPrograms.map((program) => {
+          const isProgramSelected =
+            selectedItem?.type === 'program' &&
+            selectedItem.id === program.program_id;
+          const isProgramHighlighted = highlightedIds.program.has(
+            program.program_id,
+          );
+          const isProgramDimmed = isFiltered && !isProgramHighlighted;
+
+          return (
+            <div
+              key={program.program_id}
+              className={`bg-gray-900 border rounded-xl flex-shrink-0 w-[340px] flex flex-col transition-opacity duration-300 ${
+                isProgramDimmed ? 'opacity-30' : ''
+              } ${isProgramSelected ? 'border-blue-500' : 'border-gray-800'}`}
             >
-              <CloseIcon className="w-4 h-4" />
-              Clear filter
-            </button>
-          )}
-        </div>
-        {loading ? (
-          <RowSkeleton />
-        ) : (
-          <SegmentRow
-            segments={sortedSegments}
-            selectedId={selection?.type === 'segment' ? selection.id : null}
-            onSelect={handleSelect}
-            onTooltip={handleTooltip}
-            onClearTooltip={() => setActiveTooltip({ content: null, targetRect: null })}
-            platforms={systemPlatforms}
-          />
-        )}
-      </div>
-
-      <div className="w-full h-px bg-gray-800 flex-shrink-0"></div>
-
-      {/* --- MIDDLE: PROGRAMS, PROJECTS, TASKS --- */}
-      <div className="flex flex-col gap-4">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-white">
-            Programs, Projects & Tasks
-          </h2>
-        </div>
-        <div className="flex gap-4 items-start">
-          <div className="w-2/3">
-            <div className="flex gap-4 overflow-x-auto pb-4 px-1">
-              {loading ? (
-                <>
-                  <ProgramColumnSkeleton />
-                  <ProgramColumnSkeleton />
-                </>
-              ) : (
-                structuredData.map((program) => (
-                  <ProgramColumn
-                    key={program.program_id}
-                    program={program}
-                    isDimmed={
-                      selectionData.isFiltered &&
-                      !selectionData.highlights.programs.has(program.program_id)
+              {/* Program Header */}
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSelectItem('program', program.program_id);
+                }}
+                className="p-3 border-b border-gray-800 cursor-pointer"
+              >
+                <h2 className="text-lg font-bold text-white truncate">
+                  {program.program_name}
+                </h2>
+                <p className="text-sm text-gray-400 italic mt-1 truncate">
+                  {program.objective}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <Badge
+                    text={program.status}
+                    colorClass={
+                      STATUS_COLORS[program.status as keyof typeof STATUS_COLORS] ||
+                      'bg-gray-700 text-gray-300'
                     }
-                    highlightedProjIds={selectionData.highlights.projects}
-                    onCardClick={handleCardClick}
-                    onTooltip={handleTooltip}
-                    onClearTooltip={() =>
-                      setActiveTooltip({ content: null, targetRect: null })
-                    }
+                    size="sm"
                   />
-                ))
-              )}
+                  <Badge
+                    text={program.priority}
+                    colorClass={
+                      PRIORITY_COLORS[
+                        program.priority as keyof typeof PRIORITY_COLORS
+                      ] || 'bg-gray-700 text-gray-300'
+                    }
+                    size="sm"
+                  />
+                  {program.health_status && (
+                    <span
+                      title={`Health: ${program.health_status}`}
+                      className={`w-3 h-3 rounded-full ${getHealthColor(
+                        program.health_status,
+                      )}`}
+                    ></span>
+                  )}
+                </div>
+              </div>
+
+              {/* Projects */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-2">
+                {program.projects.map((project) => {
+                  const isProjectSelected =
+                    selectedItem?.type === 'project' &&
+                    selectedItem.id === project.project_id;
+                  const isProjectHighlighted = highlightedIds.project.has(
+                    project.project_id,
+                  );
+                  const isProjectDimmed = isFiltered && !isProjectHighlighted; // Variable correctly defined here
+
+                  const projectTooltipContent = (
+                    <div className="text-xs">
+                      <p className="font-bold text-gray-300">Objective</p>
+                      <p>{project.objective}</p>
+                      <p className="font-bold text-gray-300 mt-2">Budget</p>
+                      <p>
+                        Planned:{' '}
+                        {formatNumber(project.budget, 'currency')}
+                        , Spent:{' '}
+                        {formatNumber(project.budget_spent, 'currency')}
+                      </p>
+                    </div>
+                  );
+
+                  return (
+                    <ProjectCard
+                      key={project.project_id}
+                      project={project}
+                      isDimmed={isProjectDimmed}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectItem('project', project.project_id);
+                      }}
+                      onTooltip={handleTooltip}
+                      onClearTooltip={handleClearTooltip}
+                      projectTooltipContent={projectTooltipContent}
+                      selectedItem={selectedItem}
+                      highlightedIds={highlightedIds}
+                      isFiltered={isFiltered}
+                      handleSelectItem={handleSelectItem}
+                      handleTooltip={handleTooltip}
+                      handleClearTooltip={handleClearTooltip}
+                      systemPeople={systemPeople} // Pass systemPeople here
+                    />
+                  );
+                })}
+              </div>
             </div>
-          </div>
+          );
+        })}
 
-          <div className="w-px bg-gray-800 self-stretch flex-shrink-0"></div>
-
-          <div className="w-1/3 flex-shrink-0">
-            {loading ? (
-              <TaskListSkeleton />
-            ) : (
-              <TaskList
-                tasks={displayedTasks}
-                onCardClick={handleCardClick}
-                showPrompt={!detailPane.isOpen && !selectionData.isFiltered}
-                isFiltered={selectionData.isFiltered}
-                highlightedTaskIds={selectionData.highlights.tasks}
-              />
-            )}
-          </div>
+        {/* Hubs and People Sidebar */}
+        <div
+          className={`flex-shrink-0 w-[400px] transition-opacity duration-300 ${
+            isFiltered ? 'opacity-100' : 'opacity-30'
+          }`}
+        >
+          <HubsAndPeopleSection
+            hubs={systemHubs}
+            people={systemPeople}
+            selection={selectedItem}
+            onSelect={handleSelectItem}
+            isFiltered={isFiltered}
+            highlightedHubIds={highlightedIds.hub}
+            highlightedPersonIds={highlightedIds.person}
+          />
         </div>
       </div>
-
-      <div className="w-full h-px bg-gray-800 flex-shrink-0"></div>
-
-      {/* --- BOTTOM: HUBS, PEOPLE, CHANNELS, PLATFORMS --- */}
-      <div className="flex-shrink-0 pt-2">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-          {/* LEFT COLUMN */}
-          <div className="space-y-6">
-            <div className="flex-shrink-0">
-              <div className="text-center mb-2">
-                <h2 className="text-xl font-semibold text-white">Channels</h2>
-              </div>
-              {loading ? (
-                <RowSkeleton />
-              ) : (
-                <ChannelRow
-                  channels={systemChannels}
-                  selectedId={selection?.type === 'channel' ? selection.id : null}
-                  onSelect={handleSelect}
-                />
-              )}
-            </div>
-            <div className="flex-shrink-0">
-              <div className="text-center mb-2">
-                <h2 className="text-xl font-semibold text-white">Platforms</h2>
-              </div>
-              {loading ? (
-                <RowSkeleton />
-              ) : (
-                <PlatformRow
-                  platforms={systemPlatforms}
-                  selectedId={selection?.type === 'platform' ? selection.id : null}
-                  onSelect={handleSelect}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN */}
-          <div className="flex flex-col">
-            <div className="text-center mb-2">
-              <h2 className="text-xl font-semibold text-white">Hubs & People</h2>
-            </div>
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <SkeletonCard className="h-48" />
-                <SkeletonCard className="h-48" />
-              </div>
-            ) : (
-              <HubsAndPeopleSection
-                hubs={systemHubs}
-                people={sortedPeople}
-                selection={selection}
-                onSelect={handleSelect}
-                isFiltered={selectionData.isFiltered}
-                highlightedHubIds={selectionData.highlights.hubs}
-                highlightedPersonIds={selectionData.highlights.people}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      <DetailPane
-        detail={detailPane}
-        onClose={handleClosePane}
-        onSelect={handleCardClick}
-      />
     </div>
   );
 };
 
-export default ProgramsViewPage;
+interface ProjectCardProps {
+  project: StructuredProject;
+  isDimmed: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  onTooltip: (e: React.MouseEvent, content: React.ReactNode) => void;
+  onClearTooltip: () => void;
+  projectTooltipContent: React.ReactNode;
+  selectedItem: { type: ItemType; id: string } | null;
+  highlightedIds: Record<ItemType, Set<string>>;
+  isFiltered: boolean;
+  handleSelectItem: (type: ItemType, id: string) => void;
+  handleTooltip: (e: React.MouseEvent, content: React.ReactNode) => void;
+  handleClearTooltip: () => void;
+  systemPeople: SystemPerson[]; // Add systemPeople prop here
+}
+
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  project,
+  isDimmed,
+  onClick,
+  onTooltip,
+  onClearTooltip,
+  projectTooltipContent,
+  selectedItem,
+  highlightedIds,
+  isFiltered,
+  handleSelectItem,
+  handleTooltip,
+  handleClearTooltip,
+  systemPeople, // Destructure systemPeople here
+}) => {
+  const isProjectSelected =
+    selectedItem?.type === 'project' && selectedItem.id === project.project_id;
+  const isProjectHighlighted = highlightedIds.project.has(project.project_id);
+
+  return (
+    <div
+      onClick={onClick}
+      className={`bg-gray-800 rounded-lg p-3 cursor-pointer group relative transition-all duration-300 ${
+        isDimmed ? 'opacity-30' : ''
+      } ${isProjectSelected ? 'border border-blue-500' : 'hover:bg-gray-700'}`}
+    >
+      <div className="flex justify-between items-start">
+        <h3
+          onMouseEnter={(e) => onTooltip(e, projectTooltipContent)}
+          onMouseLeave={onClearTooltip}
+          className={`font-medium ${
+            isProjectSelected ? 'text-white' : 'text-gray-200'
+          } truncate`}
+        >
+          {project.project_name}
+        </h3>
+        {isProjectHighlighted && !isProjectSelected && (
+          <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse-fade-in" />
+        )}
+      </div>
+      <p className="text-xs text-gray-400 mt-1 truncate">
+        Owner:{' '}
+        {
+          systemPeople.find((p) => p.user_id === project.owner_id)
+            ?.full_name
+        }
+      </p>
+      <div className="flex items-center gap-2 mt-2">
+        <Badge
+          text={project.status}
+          colorClass={
+            STATUS_COLORS[project.status as keyof typeof STATUS_COLORS] ||
+            'bg-gray-700 text-gray-300'
+          }
+          size="sm"
+        />
+        <Badge
+          text={project.priority}
+          colorClass={
+            PRIORITY_COLORS[project.priority as keyof typeof PRIORITY_COLORS] ||
+            'bg-gray-700 text-gray-300'
+          }
+          size="sm"
+        />
+      </div>
+
+      {project.milestones.map((milestone) => {
+        const isMilestoneSelected =
+          selectedItem?.type === 'milestone' &&
+          selectedItem.id === milestone.milestone_id;
+        const isMilestoneHighlighted = highlightedIds.milestone.has(
+          milestone.milestone_id,
+        );
+        const isMilestoneDimmed = isFiltered && !isMilestoneHighlighted;
+
+        const milestoneTooltipContent = (
+          <div className="text-xs">
+            <p className="font-bold text-gray-300">Status</p>
+            <p>{milestone.status}</p>
+            <p className="font-bold text-gray-300 mt-2">Target Date</p>
+            <p>{milestone.target_date}</p>
+          </div>
+        );
+
+        return (
+          <div
+            key={milestone.milestone_id}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSelectItem('milestone', milestone.milestone_id);
+            }}
+            className={`bg-gray-900 rounded-lg p-2 mt-2 cursor-pointer group relative transition-all duration-300 ${
+              isMilestoneDimmed ? 'opacity-30' : ''
+            } ${
+              isMilestoneSelected
+                ? 'border border-blue-500'
+                : 'hover:bg-gray-800'
+            }`}
+          >
+            <div className="flex justify-between items-start">
+              <h4
+                onMouseEnter={(e) => onTooltip(e, milestoneTooltipContent)}
+                onMouseLeave={onClearTooltip}
+                className={`text-sm font-medium ${
+                  isMilestoneSelected ? 'text-white' : 'text-gray-200'
+                } truncate`}
+              >
+                {milestone.milestone_name}
+              </h4>
+              {isMilestoneHighlighted && !isMilestoneSelected && (
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse-fade-in" />
+              )}
+            </div>
+            <p className="text-xs text-gray-500">
+              Tasks:{' '}
+              {milestone.tasks.filter((t) => t.status === 'Completed').length}/
+              {milestone.tasks.length}
+            </p>
+
+            {milestone.tasks.map((task) => {
+              const isTaskSelected =
+                selectedItem?.type === 'task' && selectedItem.id === task.task_id;
+              const isTaskHighlighted = highlightedIds.task.has(task.task_id);
+              const isTaskDimmed = isFiltered && !isTaskHighlighted;
+
+              const taskTooltipContent = (
+                <div className="text-xs">
+                  <p className="font-bold text-gray-300">Description</p>
+                  <p>{task.description}</p>
+                  <p className="font-bold text-gray-300 mt-2">Due Date</p>
+                  <p>{task.due_date}</p>
+                </div>
+              );
+
+              return (
+                <div
+                  key={task.task_id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelectItem('task', task.task_id);
+                  }}
+                  className={`bg-gray-700/50 rounded-md p-2 mt-1 flex items-center justify-between group relative transition-all duration-300 ${
+                    isTaskDimmed ? 'opacity-30' : ''
+                  } ${
+                    isTaskSelected
+                      ? 'border border-blue-500'
+                      : 'hover:bg-gray-700'
+                  }`}
+                >
+                  <div className="overflow-hidden pr-2">
+                    <h5
+                      onMouseEnter={(e) => onTooltip(e, taskTooltipContent)}
+                      onMouseLeave={onClearTooltip}
+                      className={`text-xs font-medium ${
+                        isTaskSelected ? 'text-white' : 'text-gray-300'
+                      } truncate`}
+                    >
+                      {task.task_name}
+                    </h5>
+                  </div>
+                  {isTaskHighlighted && !isTaskSelected && (
+                    <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse-fade-in" />
+                  )}
+                  <Badge
+                    text={task.status}
+                    colorClass={
+                      STATUS_COLORS[task.status as keyof typeof STATUS_COLORS] ||
+                      'bg-gray-600 text-gray-300'
+                    }
+                    size="sm"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+};

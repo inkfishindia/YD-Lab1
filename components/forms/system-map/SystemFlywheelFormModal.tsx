@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemFlywheel } from '../../../types';
@@ -12,7 +15,8 @@ interface FormModalProps {
 
 const getInitialFormData = (): Omit<SystemFlywheel, 'flywheel_id'> => ({
     flywheel_name: '',
-    serves_segments: '',
+// FIX: Changed initial value of 'serves_segments' to an empty array to match its 'string[]' type.
+    serves_segments: [],
     owner_person: '',
     customer_struggle: '',
     jtbd_trigger_moment: '',
@@ -56,12 +60,13 @@ const SystemFlywheelFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, in
                     <label>Owner</label>
                     <select name="owner_person" value={formData.owner_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Owner --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                  <div>
                     <label>Serves Segments (comma-separated IDs)</label>
-                    <input name="serves_segments" value={formData.serves_segments} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <input name="serves_segments" value={Array.isArray(formData.serves_segments) ? formData.serves_segments.join(', ') : formData.serves_segments} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                  <div>
                     <label>Primary Bottleneck</label>

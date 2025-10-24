@@ -13,16 +13,16 @@ interface FocusProps {
 const BusinessUnitFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
     const { systemSegments, systemFlywheels, systemPeople } = useData();
     
-    const owner = systemPeople.find(p => p.person_id === item.owner_person);
-    const primaryFlywheel = systemFlywheels.find(f => f.flywheel_id === item.primary_flywheel);
-    const servedSegment = systemSegments.find(s => s.segment_id === item.serves_segment);
+    const owner = systemPeople.find(p => p.user_id === item.owner_person_id);
+    const primaryFlywheel = systemFlywheels.find(f => f.flywheel_id === item.primary_flywheel_id);
+    const servedSegment = systemSegments.find(s => item.serves_segments_ids?.includes(s.segment_id));
 
     return (
         <div className="p-4 space-y-5">
             <div>
                 <h3 className="text-xl font-bold text-white">{item.bu_name}</h3>
                 {owner && <p className="text-sm text-gray-400">Owner: {owner.full_name}</p>}
-                <p className="text-sm text-gray-400 mt-1">Status: <span className="font-semibold text-gray-300">{item.current_status}</span></p>
+                <p className="text-sm text-gray-400 mt-1">Status: <span className="font-semibold text-gray-300">{item.status}</span></p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

@@ -1,6 +1,6 @@
+
 import React from 'react';
 
-// FIX: Updated to accept and handle a `title` prop for accessibility, which also resolves the TypeScript error in consuming components.
 const createOutlineIcon =
   (path: React.ReactNode) => (props: React.SVGProps<SVGSVGElement> & { title?: string }) => {
     const { title, ...rest } = props;
@@ -46,7 +46,7 @@ export const BriefcaseIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="M20.25 14.15v4.075c0 1.313-.972 2.4-2.215 2.521-1.4.14-2.585-.935-2.585-2.252V14.15M15.75 14.15v4.075a2.25 2.25 0 01-2.25 2.25h-4.5a2.25 2.25 0 01-2.25-2.25V14.15M15.75 14.15L18 12.75l-2.25-1.4M15.75 14.15L12 12.75m3.75 1.4L12 12.75m-3.75 1.4L9 12.75l-2.25 1.4m2.25-1.4L6 12.75m7.5 15l-3-3m0 0l-3 3m3-3v-6m-1.5 9H5.625c-.621 0-1.125-.504-1.125-1.125V10.5a1.125 1.125 0 011.125-1.125h12.75c.621 0 1.125.504 1.125 1.125v8.625c0 .621-.504 1.125-1.125 1.125H13.5"
+    d="M20.25 14.15v4.075c0 1.313-.972 2.4-2.215 2.521-1.4.14-2.585-.935-2.585-2.252V14.15M15.75 14.15v4.075a2.25 2.25 0 01-2.25 2.25h-4.5a2.25 2.25 0 01-2.25-2.25V14.15M15.75 14.15L18 12.75l-2.25-1.4M15.75 14.15L12 12.75m3.75 1.4L12 12.75m-3.75 1.4L9 12.75l-2.25 1.4m2.25-1.4L6 12.75m7.5 1.5l-3-3m0 0l-3 3m3-3v-6m-1.5 9H5.625c-.621 0-1.125-.504-1.125-1.125V10.5a1.125 1.125 0 011.125-1.125h12.75c.621 0 1.125.504 1.125 1.125v8.625c0 .621-.504 1.125-1.125 1.125H13.5"
   />,
 );
 export const PresentationChartLineIcon = createOutlineIcon(
@@ -81,7 +81,7 @@ export const Cog6ToothIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="M9.594 3.94c.09-.542.56-1.006 1.11-1.226.554-.22 1.196-.22 1.75 0 .554.22 1.02.684 1.11 1.226l.094.542c.063.372.333.693.668.867.336.174.712.265 1.08.265h.542c.554 0 1.055.343 1.282.843.228.502.16.92-.19 1.31l-.094.13c-.173.245-.295.536-.328.843-.033.307.01.617.14.898l.094.13c.35.39.418.808.19 1.31-.228.502-.728.843-1.282.843h-.542c-.368 0-.744.09-.108.265-.335.174-.605.495-.668.867l-.094.542c-.09.542-.556 1.006-1.11 1.226-.554-.22-1.196-.22-1.75 0-.554-.22-1.02-.684-1.11-1.226l-.094-.542c-.063-.372-.333-.693-.668-.867-.336-.174-.712-.265-1.08-.265h-.542c-.554 0-1.055-.343-1.282-.843-.228-.502-.16-.92.19-1.31l.094-.13c.173-.245.295-.536.328-.843.033-.307-.01-.617-.14-.898l-.094-.13c-.35-.39-.418-.808-.19-1.31.228.502.728.843 1.282.843h.542c.368 0 .744-.09 1.08-.265.335-.174.605.495.668.867l.094-.542zM12 15a3 3 0 100-6 3 3 0 000 6z"
+    d="M9.594 3.94c.09-.542.56-1.006 1.11-1.226.554-.22 1.196-.22 1.75 0 .554.22 1.02.684 1.11 1.226l.094.542c.063.372.333.693.668.867.336.174.712.265 1.08.265h.542c.554 0 1.055.343 1.282.843.228.502.16.92-.19 1.31l-.094.13c-.173.245-.295.536-.328.843-.033.307.01.617.14.898l.094.13c.35.39.418.808.19 1.31-.228.502-.728.843-1.282.843h-.542c-.368 0-.744.09-.108.265-.335.174-.605.495-.668.867l-.094.542c-.09.542-.556 1.006-1.11 1.226-.554-.22-1.196-.22-1.75 0-.554-.22-1.02-.684-1.11-1.226l-.094-.542c-.063-.372-.333-.693-.668-.867-.336-.174-.712-.265-1.08-.265h-.542c-.554 0-1.055-.343-1.282-.843-.228-.502-.16-.92.19-1.31l.094-.13c.173-.245.295-.536.328-.843.033-.307-.01-.617-.14-.898l-.094-.13c-.35-.39-.418-.808-.19-1.31.228.502.728.843 1.282.843h.542c.368 0 .744-.09 1.08-.265.335-.174.605-.495.668-.867l-.094-.542zM12 15a3 3 0 100-6 3 3 0 000 6z"
   />,
 );
 export const PinIcon = (props: React.SVGProps<SVGSVGElement>) => (
@@ -157,7 +157,7 @@ export const ViewGridIcon = (props: React.SVGProps<SVGSVGElement>) => (
   >
     <path
       fillRule="evenodd"
-      d="M1 4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4Zm4 0a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5ZM4 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Zm7-7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-2Zm-1 8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2Z"
+      d="M1 4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4ZM4 0a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1H5ZM4 11a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-2Zm7-7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-2Zm-1 8a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2Z"
       clipRule="evenodd"
     />
   </svg>
@@ -214,6 +214,9 @@ export const GoogleAdsIcon = (props: React.SVGProps<SVGSVGElement>) => (
     {' '}
     <path d="M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0ZM4.5 9.5a.5.5 0 0 0 0 1h2.15l-1.3 1.3a.5.5 0 1 0 .7.7l2-2a.5.5 0 0 0 0-.7l-2-2a.5.5 0 0 0-.7.7l1.3 1.3H4.5ZM13.5 9a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0v-3a.5.5 0 0 1 .5-.5ZM11.5 7a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 1 0v-7a.5.5 0 0 0-.5-.5Z" />{' '}
   </svg>
+);
+export const SparklesIcon = createOutlineIcon(
+  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.502L16.5 21.75l-.398-1.248a3.375 3.375 0 00-2.456-2.456L12.75 18l1.248-.398a3.375 3.375 0 002.456 2.456l1.248.398-1.248.398a3.375 3.375 0 00-2.456 2.456z" />
 );
 export const ChartBarIcon = createOutlineIcon(
   <path
@@ -316,7 +319,6 @@ export const UserCircleIcon = createOutlineIcon(
     d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
   />,
 );
-// FIX: Add missing icons for System Map feature.
 export const BeakerIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
@@ -328,7 +330,7 @@ export const SwatchIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402a3.75 3.75 0 0 0-.61-6.21 3.75 3.75 0 0 0-6.21-.61l-6.401 6.402a3.75 3.75 0 0 0 0 5.304Zm12.13-1.06-6.401-6.402m6.401 6.402a3.75 3.75 0 0 1-5.304 0l-6.401-6.402a3.75 3.75 0 0 1 0-5.304l6.401-6.402a3.75 3.75 0 0 1 5.304 0l6.401 6.402a3.75 3.75 0 0 1 0 5.304l-6.401 6.402Z"
+    d="M4.098 19.902a3.75 3.75 0 0 0 5.304 0l6.401-6.402a3.75 3.75 0 0 0-.61-6.21 3.75 3.75 0 0 0-6.21-.61l-6.401 6.402a3.75 3.75 0 000 5.304Zm12.13-1.06-6.401-6.402m6.401 6.402a3.75 3.75 0 0 1-5.304 0l-6.401-6.402a3.75 3.75 0 0 1 0-5.304l6.401-6.402a3.75 3.75 0 015.304 0l6.401 6.402a3.75 3.75 0 010 5.304l-6.401 6.402Z"
   />,
 );
 export const TargetIcon = createOutlineIcon(
@@ -363,130 +365,121 @@ export const ComputerDesktopIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25"
+    d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 01"
   />,
 );
-export const Squares2X2Icon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z"
-  />,
-);
-export const UserGroupIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962c.513-.346 1.063-.628 1.626-.826M9 9.75a3 3 0 116 0 3 3 0 01-6 0zM3.75 20.25a9.094 9.094 0 013.741-.479 3 3 0 014.682-2.72M12 12.75a3 3 0 110-6 3 3 0 010 6zM3.75 15.75c-.513.346-1.063.628-1.626.826"
-  />,
-);
-export const QueueListIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z"
-  />,
-);
-export const CursorArrowRaysIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
-  />,
-);
-export const ShoppingCartIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c.51 0 .962-.328 1.093-.822l.938-3.752A3.375 3.375 0 0012.75 3H3.75z"
-  />,
-);
-export const CloseIcon = createOutlineIcon(
-  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />,
-);
-export const TrashIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-  />,
-);
-export const EditIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-  />,
-);
-export const SortIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    {...props}
-  >
-    {' '}
-    <path
-      fillRule="evenodd"
-      d="M2.24 6.53a.75.75 0 0 0 1.06 0L6 3.841V16.5a.75.75 0 0 0 1.5 0V3.841l2.72 2.689a.75.75 0 1 0 1.06-1.06l-4-4.25a.75.75 0 0 0-1.06 0l-4 4.25a.75.75 0 0 0 0 1.06Zm15.52 6.94a.75.75 0 0 0-1.06 0L14 16.159V3.5a.75.75 0 0 0-1.5 0v12.659l-2.72-2.689a.75.75 0 1 0-1.06 1.06l4 4.25a.75.75 0 0 0 1.06 0l4-4.25a.75.75 0 0 0 0-1.06Z"
-      clipRule="evenodd"
-    />{' '}
-  </svg>
-);
-export const ExclamationTriangleIcon = createOutlineIcon(
-  <path
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
-  />,
-);
-// FIX: Updated to accept and handle a `title` prop for accessibility, which also resolves the TypeScript error in consuming components.
-export const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement> & { title?: string }) => {
-  const { title, ...rest } = props;
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      {...rest}
-    >
-      {title && <title>{title}</title>}
-      <path
-        fillRule="evenodd"
-        d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-};
-export const XCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 20 20"
-    fill="currentColor"
-    {...props}
-  >
-    <path
-      fillRule="evenodd"
-      d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16ZM8.28 7.22a.75.75 0 0 0-1.06 1.06L8.94 10l-1.72 1.72a.75.75 0 1 0 1.06 1.06L10 11.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L11.06 10l1.72-1.72a.75.75 0 0 0-1.06-1.06L10 8.94 8.28 7.22Z"
-      clipRule="evenodd"
-    />
-  </svg>
-);
-export const RefreshIcon = createOutlineIcon(
-  <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 16.023c1.863-1.863 3.001-4.38 3.001-7.172 0-5.523-4.477-10-10-10S2.024 3.328 2.024 8.851c0 2.792 1.138 5.309 3.001 7.172m11.002 0a10.003 10.003 0 01-11.002 0m11.002 0h-4.25m4.25 0v-4.25" />
-);
+
+// --- Newly added icons based on error report ---
+
 export const ScaleIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0011.667 0l3.181-3.183m-4.991-2.691L7.5 5.942M18 14.634l-4.22-4.22"
+    d="M12 3v18M15 6.75l-6 6V6.75A2.25 2.25 0 0111.25 4.5h1.5A2.25 2.25 0 0115 6.75zm-3 9L9 11.25l-3 3v-7.5A2.25 2.25 0 018.25 4.5h3A2.25 2.25 0 0113.5 6.75V11.25z"
   />,
 );
+
 export const PencilIcon = createOutlineIcon(
   <path
     strokeLinecap="round"
     strokeLinejoin="round"
-    d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14.25v4.5a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 18.75V5.25A2.25 2.25 0 015.25 3h4.5"
+  />,
+);
+
+export const QueueListIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 18.75h16.5M3.75 9.75h16.5M3.75 6.75h16.5"
+  />,
+);
+
+export const RefreshIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M16.023 9.348h4.992v-.001M2.985 15.348A10.146 10.146 0 0112 3.75c4.665 0 8.448 3.55 8.794 8.008L20.5 12M2.985 15.348A10.146 10.146 0 0012 20.25c4.665 0 8.448-3.55 8.794-8.008L20.5 12"
+  />,
+);
+
+export const CloseIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M6 18L18 6M6 6l12 12"
+  />,
+);
+
+export const EditIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+  />,
+);
+
+export const TrashIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M14.746 9.172v1.077m-4.646 0v1.077m-4.647 0v1.077M18 17.25c0 .414-.336.75-.75.75H5.25a.75.75 0 01-.75-.75V8.25c0-.414.336-.75.75-.75h1.25L7.75 3c0-.414.336-.75.75-.75h7.25c.414 0 .75.336.75.75l.5 4.5h1.25c.414 0 .75.336.75.75v8.75z"
+  />,
+);
+
+export const SortIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v9m0 0l-3.25-3.25M17.25 18l3.25-3.25"
+  />,
+);
+
+export const Squares2X2Icon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M3.75 12.75l1.5-1.5m-1.5 1.5l-1.5 1.5m1.5-1.5l1.5 1.5m-1.5-1.5l-1.5-1.5M12.75 3.75l-1.5 1.5m1.5-1.5l1.5 1.5m-1.5-1.5l-1.5-1.5m1.5-1.5l-1.5 1.5"
+  />,
+);
+
+export const UserGroupIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+  />,
+);
+
+export const ExclamationTriangleIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M12 9v3.75m-9.303 3.376c-.866 1.5.174 3.374 1.945 3.374h14.71c1.771 0 2.812-1.874 1.945-3.374L13.949 3.376c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+  />,
+);
+
+export const CursorArrowRaysIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M15.042 2.25L13.5 7.5M15.042 2.25L12 7.5M15.042 2.25L10.5 7.5M15.042 2.25L9 7.5M15.042 2.25L7.5 7.5M15.042 2.25L6 7.5M15.042 2.25L4.5 7.5M15.042 2.25L3 7.5M15.042 2.25L1.5 7.5M15.042 2.25L0 7.5M15.042 2.25L-1.5 7.5"
+  />,
+);
+
+export const ShoppingCartIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M2.25 3h1.386c.51 0 .955.343 1.023.828L5.75 20.25H20.25c.414 0 .749-.335.749-.75V15.75a.75.75 0 00-.749-.75H13.5c-.414 0-.75-.335-.75-.75V9.75c0-.414-.336-.75-.75-.75H5.75c-.414 0-.75-.336-.75-.75V4.5A2.25 2.25 0 003.75 2.25H2.25zM18.75 15a.75.75 0 00-.75-.75h-2.25a.75.75 0 00-.75.75v.75a.75.75 0 00.75.75h2.25a.75.75 0 00.75-.75v-.75z"
+  />,
+);
+
+// FIX: Added CheckCircleIcon
+export const CheckCircleIcon = createOutlineIcon(
+  <path
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
   />,
 );

@@ -1,3 +1,10 @@
+
+
+
+
+
+
+
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -22,7 +29,7 @@ const DetailCard: React.FC<{ title: string; children: React.ReactNode }> = ({ ti
 
 const PositioningPage: React.FC = () => {
     const { flywheelStrategies, segmentPositionings, funnelStages, interfaceMaps } = useData();
-    const [selectedFlywheel, setSelectedFlywheel] = useState<FlywheelStrategy | null>(null);
+    const [selectedFlywheel, setSelectedFlywheel] = useState<FlywheelStrategy | null>(flywheelStrategies[0] || null);
     const [selectedStageId, setSelectedStageId] = useState<string | null>(null);
     const navigate = useNavigate();
 

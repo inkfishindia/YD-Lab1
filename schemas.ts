@@ -12,7 +12,7 @@ const stringToArray = z.preprocess(
 // Coerce values to a number, treating empty strings, null, or undefined as undefined. This makes numeric fields optional.
 const optionalNumber = z.preprocess(val => {
     if (val === '' || val === null || val === undefined) return undefined;
-    const num = Number(String(val).replace(/[^0-9.-]+/g, ''));
+    const num = Number(String(val).replace(/[^0-9.-]+/g, ""));
     return isNaN(num) ? undefined : num;
 }, z.number().optional());
 
@@ -28,11 +28,35 @@ const optionalBoolean = z.preprocess(val => {
 const optionalString = z.string().optional().nullable();
 
 // --- Zod Schemas for Enums ---
-export const StatusSchema = z.enum(['Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled']);
-export const PrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical']);
+export const StatusSchema = z.enum(['Not Started', 'In Progress', 'Completed', 'On Hold', 'Cancelled', '⚠️ AT RISK', '✅ VALIDATED']);
+export const PrioritySchema = z.enum(['Low', 'Medium', 'High', 'Critical', 'P0']);
 export const HealthStatusSchema = z.enum(['On Track', 'At Risk', 'Off Track']);
 export const LeadStatusSchema = z.enum(['New', 'Contacted', 'Qualified', 'Disqualified']);
 export const OpportunityStageSchema = z.enum(['Prospecting', 'Qualification', 'Proposal', 'Negotiation', 'Closed - Won', 'Closed - Lost']);
+
+// --- Zod Schema Preprocessors for Enums ---
+const statusPreprocessor = z.preprocess(val => {
+    if (typeof val !== 'string' || val.trim() === '') return 'Not Started'; // Default for empty
+    const lowerVal = val.trim().toLowerCase();
+    if (lowerVal.includes('not started')) return 'Not Started';
+    if (lowerVal.includes('in progress')) return 'In Progress';
+    if (lowerVal.includes('completed')) return 'Completed';
+    if (lowerVal.includes('on hold')) return 'On Hold';
+    if (lowerVal.includes('cancelled')) return 'Cancelled';
+    return val; // Let it fail validation if it's an unknown string
+}, StatusSchema);
+
+const priorityPreprocessor = z.preprocess(val => {
+    if (typeof val !== 'string' || val.trim() === '') return 'Medium'; // Default for empty
+    const lowerVal = val.trim().toLowerCase();
+    if (lowerVal === 'low') return 'Low';
+    if (lowerVal === 'medium') return 'Medium';
+    if (lowerVal === 'high') return 'High';
+    if (lowerVal === 'critical') return 'Critical';
+    if (lowerVal === 'p0') return 'P0';
+    return val; // Let it fail validation
+}, PrioritySchema);
+
 
 // --- Zod Schemas for Entities ---
 
@@ -42,14 +66,22 @@ export const RoleSchema = z.object({
 });
 
 export const PersonSchema = z.object({
-  user_id: z.string(),
-  full_name: z.string(),
+  personId: z.string(),
+  fullName: z.string(),
   email: z.string().email(),
+  role: optionalString,
+  primaryHub: optionalString,
+  ownsBusinessUnits: optionalString,
+  keyResponsibility: optionalString,
+  notes: optionalString,
+  // For compatibility with older system
+  user_id: z.string().optional(),
+  full_name: z.string().optional(),
   department: optionalString,
   role_title: optionalString,
   is_active: optionalBoolean,
   manager_id: optionalString,
-  role_name: z.string(),
+  role_name: z.string().optional(),
 });
 
 export const ProjectSchema = z.object({
@@ -94,70 +126,60 @@ export const TaskSchema = z.object({
 });
 
 export const BusinessUnitSchema = z.object({
-  bu_id: z.string(),
-  bu_name: z.string(),
-  bu_type: z.string(),
-  owner_user_id: z.string(),
-  health_status: HealthStatusSchema,
-  priority_level: PrioritySchema,
-  primary_flywheel_id: z.string(),
-  upsell_flywheel_id: optionalString,
-  customerType: z.string(),
-  order_volume_range: z.string(),
-  offering: z.string(),
-  platform_type: z.string(),
-  interface: z.string(),
-  pricing_model: z.string(),
-  avg_order_value: optionalNumber,
-  target_margin_pct: optionalNumber,
-  tech_build: z.string(),
-  sales_motion: z.string(),
-  support_type: z.string(),
-  pricing_logic: z.string(),
-  current_revenue: optionalNumber,
-  current_orders: optionalNumber,
-  variance_pct: optionalString,
-  growth_rate_required: optionalNumber,
-  status: z.string(),
-});
+  businessUnitId: z.string(),
+  businessUnitName: z.string(),
+  coreOffering: optionalString,
+  primarySegments: optionalString,
+  flywheelId: optionalString,
+  volumeRange: optionalString,
+  primaryOwner: optionalString,
+  nineMonthRevenue: optionalNumber,
+  percentRevenue: z.union([z.string(), z.number()]).optional(),
+  pricingModel: optionalString,
+  notes: optionalString,
+  // For compatibility
+  bu_id: z.string().optional(),
+  bu_name: z.string().optional(),
+  owner_person_id: optionalString,
+}).passthrough();
+
 
 export const CustomerSegmentSchema = z.object({
-  customer_segment: z.string(),
-  purpose: optionalString,
-  vission: optionalString,
-  mission: optionalString,
-  expression: optionalString,
-  psychological_job_to_be_done: optionalString,
-  behavioral_truth: optionalString,
-  brand_position_for_them: optionalString,
-  messaging_tone: optionalString,
-  design_pov: optionalString,
-  flywheel_id: z.string(),
-});
+  segmentId: z.string(),
+  segmentName: z.string(),
+  customerProfile: optionalString,
+  flywheelId: optionalString,
+  status: optionalString,
+  nineMonthRevenue: optionalNumber,
+  percentRevenue: z.union([z.string(), z.number()]).optional(),
+  aov: optionalNumber,
+  jobsToBeDone: optionalString,
+  keyPainPoints: optionalString,
+  decisionCriteria: optionalString,
+  notes: optionalString,
+  // For compatibility
+  segment_id: z.string().optional(),
+  segment_name: z.string().optional(),
+  served_by_flywheels_ids: stringToArray,
+  Promise: optionalString,
+}).passthrough();
 
 export const FlywheelSchema = z.object({
-  flywheel_id: z.string(),
-  flywheel_name: z.string(),
-  customer_type: z.string(),
-  motion: z.string(),
-  primary_channels: stringToArray,
-  target_revenue: optionalNumber,
-  description: optionalString,
-  interface: z.string(),
-  customer_acquisition_motion: optionalString,
-  notes: optionalString,
-  order_size: z.string(),
-  hub_dependencies: stringToArray,
-  key_metrics: stringToArray,
-  revenue_driver: optionalNumber,
-  revenue_model: optionalNumber,
-  what_drives_growth: optionalString,
-  economics: stringToArray,
-  target_orders: optionalNumber,
-  avg_cac: optionalNumber,
-  avg_ltv: optionalNumber,
-  conversion_rate_pct: optionalNumber,
-});
+    flywheelId: z.string(),
+    flywheelName: z.string(),
+    customerStruggleSolved: optionalString,
+    acquisitionModel: optionalString,
+    serviceModel: optionalString,
+    serves: optionalString,
+    keyMetrics: optionalString,
+    // For compatibility
+    flywheel_id: z.string().optional(),
+    flywheel_name: z.string().optional(),
+    serves_segments: stringToArray,
+    owner_person: optionalString,
+    validated_aov_inr: optionalNumber,
+}).passthrough();
+
 
 export const AccountSchema = z.object({
   account_id: z.string(),
@@ -172,7 +194,7 @@ export const OpportunitySchema = z.object({
   opportunity_name: z.string(),
   account_id: z.string(),
   stage: OpportunityStageSchema,
-  amount: optionalNumber,
+  amount: optionalNumber.default(0),
   close_date: optionalString,
   owner_user_id: z.string(),
 });
@@ -187,7 +209,7 @@ export const LeadSchema = z.object({
   source_channel: z.string(),
   created_at: optionalString,
   status_stage: LeadStatusSchema,
-  sdr_owner_fk: z.string(),
+  sdr_owner_fk: optionalString,
   last_activity_date: optionalString,
   lead_score: optionalString,
   disqualified_reason: optionalString,
@@ -218,263 +240,278 @@ export const LogEntrySchema = z.object({
 });
 
 export const HubSchema = z.object({
-  hub_id: z.string(),
-  hub_name: z.string(),
-  function_category: z.string(),
-  owner_user_id: z.string(),
-  what_they_enable: optionalString,
-  serves_flywheel_ids: stringToArray,
-  capacity_constraint: optionalBoolean,
-  hiring_priority: z.string(),
-  monthly_budget: optionalNumber,
-  serves_bu1: optionalBoolean,
-  serves_bu2: optionalBoolean,
-  serves_bu3: optionalBoolean,
-  serves_bu4: optionalBoolean,
-  serves_bu5: optionalBoolean,
-  serves_bu6: optionalBoolean,
+  hubId: z.string(),
+  hubName: z.string(),
+  hubType: optionalString,
+  headCount: optionalNumber,
+  primaryOwner: optionalString,
+  keyActivities: optionalString,
   notes: optionalString,
-});
+  // For compatibility
+  hub_id: z.string().optional(),
+  hub_name: z.string().optional(),
+  owner_person: optionalString,
+  core_capabilities: optionalString,
+  interfaces_owned: stringToArray,
+  monthly_capacity_constraint: optionalBoolean,
+  hiring_priority: optionalString,
+  budget_monthly_inr: optionalNumber,
+  note: optionalString,
+}).passthrough();
 
 export const InterfaceSchema = z.object({
   interface_id: z.string(),
   interface_name: z.string(),
-  interface_category: z.string(),
-  interface_type: z.string(),
-  flywheel_id: z.string(),
-  bu_ids_served: stringToArray,
-  interface_owner: z.string(),
-  monthly_budget: optionalNumber,
-  channel_id: z.string(),
-  interface_goal: optionalString,
-  cost_model: optionalNumber,
-  avg_cac: optionalNumber,
-  avg_conversion_rate: optionalNumber,
-  interface_status: z.string(),
+  interface_type: optionalString,
+  serves_flywheels_ids: stringToArray,
+  serves_bus_ids: stringToArray,
+  responsible_person: optionalString,
+  monthly_mau: optionalNumber,
   notes: optionalString,
-  platform_id: optionalString,
-});
+}).passthrough();
 
 export const ChannelSchema = z.object({
-  channel_id: z.string(),
-  channel_type: z.string(),
-  channel_name: z.string(),
-  interfaces: optionalString,
-  focus: optionalString,
+    channelId: z.string(),
+    channelName: z.string(),
+    channelType: optionalString,
+    platformId: optionalString,
+    servesSegments: optionalString,
+    flywheelId: optionalString,
+    motionType: optionalString,
+    notes: optionalString,
+    // For compatibility
+    channel_id: z.string().optional(),
+    channel_name: z.string().optional(),
+    Platform: optionalString,
+    Notes: optionalString,
+}).passthrough();
+
+export const PartnerSchema = z.object({
+    partnerId: z.string(),
+    partnerName: z.string(),
+    partnerType: optionalString,
+    role: optionalString,
+    riskLevel: optionalString,
+    status: optionalString,
+    contractTerms: optionalString,
+    notes: optionalString,
 });
 
-export const SystemSegmentSchema = z.object({
-  segment_id: z.string(),
-  segment_name: z.string(),
-  customer_facing: optionalString,
-  Positioning: optionalString,
-  For: optionalString,
-  Against: optionalString,
-  Promise: optionalString,
-  priority_rank: optionalString,
-  customer_profile: optionalString,
-  psychological_job: optionalString,
-  served_by_flywheels: stringToArray,
-  Platforms: optionalString,
-  behavioral_truth: optionalString,
-  validated_aov: optionalNumber,
-  annual_orders: optionalNumber,
-  contribution_margin_pct: optionalString,
-  validated_cac: optionalString,
-  annual_ltv: optionalNumber,
-  ltv_cac_ratio: optionalString,
-  validation_status: optionalString,
-  owner_person: optionalString,
-  owner_person_Name: optionalString,
-  strategic_notes: optionalString,
-  revenue_9mo_actual_inr: optionalNumber,
-  '9mo_actual_orders': optionalNumber,
-  annual_revenue_projected_inr: optionalNumber,
-  current_customers: optionalNumber,
-  avg_orders_per_customer: optionalNumber,
-  revenue_share_pct: optionalNumber,
-  growth_rate_target: optionalNumber,
-  served_by_bus: stringToArray,
-  includes_legacy_segments: optionalString,
-  identity: optionalString,
-  vision: optionalString,
-  mission: optionalString,
-  expression: optionalString,
-  messaging_tone: optionalString,
-  old_world_pain: optionalString,
-  new_world_gain: optionalString,
-  brand_position: optionalString,
-  competitive_alt_1: optionalString,
-  competitive_alt_2: optionalString,
-  competitive_alt_3: optionalString,
-  differentiated_value: optionalString,
-  market_category: optionalString,
-  design_pov: optionalString,
-  category_entry_points: optionalString,
-  buying_situations: optionalString,
-  distinctive_assets: optionalString,
-  age_min: optionalNumber,
-  age_max: optionalNumber,
-  company_size: optionalString,
-  psychographic: optionalString,
-  purchase_trigger_1: optionalString,
-  purchase_trigger_2: optionalString,
-  purchase_trigger_3: optionalString,
-  current_solution_efficiency: optionalNumber,
-  our_solution_efficiency: optionalNumber,
-  delta_score: optionalNumber,
-  adoption_threshold: optionalString,
-  irreversibility_trigger: optionalString,
+export const CostStructureSchema = z.object({
+    costId: z.string(),
+    costCategory: z.string(),
+    costType: optionalString,
+    monthlyAmount: optionalNumber,
+    annualAmount: optionalNumber,
+    owner: optionalString,
+    notes: optionalString,
 });
 
-export const SystemFlywheelSchema = z.object({
-  flywheel_id: z.string(),
-  flywheel_name: z.string(),
-  customer_struggle: optionalString,
-  jtbd_trigger_moment: optionalString,
-  motion_sequence: optionalString,
-  serves_segments: optionalString,
-  serves_bus: optionalString,
-  acquisition_channels: optionalString,
-  order_size_range: optionalString,
-  efficiency_metrics: optionalString,
-  owner_person: optionalString,
-  owner_person_Name: optionalString,
-  cac_target: optionalNumber,
-  validation_status: optionalString,
-  '9mo_actual_revenue_inr': optionalNumber,
-  '9mo_actual_orders': optionalNumber,
-  validated_aov_inr: optionalNumber,
-  annual_revenue_target_inr: optionalNumber,
-  annual_orders_target: optionalNumber,
-  primary_bottleneck: optionalString,
-  conversion_rate_pct: optionalNumber,
-  reorder_rate_6mo_pct: optionalString,
-  avg_sale_cycle_days: optionalString,
+export const RevenueStreamSchema = z.object({
+    revenueStreamId: z.string(),
+    businessUnitId: optionalString,
+    segmentId: optionalString,
+    aov: optionalNumber,
+    grossMargin: z.union([z.string(), z.number()]).optional(),
+    grossProfitPerOrder: optionalNumber,
+    cac: z.union([z.string(), z.number()]).optional(),
+    contributionMargin: z.union([z.string(), z.number()]).optional(),
+    nineMonthRevenue: optionalNumber,
+    estimatedOrders: optionalNumber,
+    notes: optionalString,
 });
 
-export const SystemBusinessUnitSchema = z.object({
-  bu_id: z.string(),
-  bu_name: z.string(),
-  bu_type: optionalString,
-  in_form_of: optionalString,
-  serves_segment: optionalString,
-  offering_description: optionalString,
-  order_volume_range: optionalString,
-  validated_aov: optionalNumber,
-  target_contribution_margin: optionalNumber,
-  primary_flywheel: optionalString,
-  primary_flywheel_Name: optionalString,
-  upsell_path: optionalString,
-  pricing_model: optionalString,
-  pricing_model_Name: optionalString,
-  owner_person: optionalString,
-  owner_rollup_name: optionalString,
-  monthly_capacity_orders: optionalNumber,
-  current_status: optionalString,
-  '9mo_actual_revenue_inr': optionalNumber,
-  '9mo_actual_orders': optionalNumber,
-  annual_revenue_target_inr: optionalNumber,
-  annual_orders_target: optionalNumber,
-  current_utilization_pct: optionalNumber,
-  sales_motion: optionalString,
-  support_model: optionalString,
-  production_sla_hours: optionalString,
-  gross_margin_pct: optionalNumber,
-  variable_cost_per_order: optionalNumber,
-  fixed_costs_monthly: optionalNumber,
-  break_even_orders: optionalNumber,
-});
+export const SystemSegmentSchema = CustomerSegmentSchema.extend({
+  // Adding fields from CSV which may not be in initial CustomerSegmentSchema, or overriding types
+  bu_id: optionalString, // From CSV
+  owner_person_id: optionalString, // From CSV
+  Platforms: optionalString, // From CSV
+  Positioning: optionalString, // From CSV
+  For: optionalString, // From CSV
+  Against: optionalString, // From CSV
+  vision: optionalString, // From CSV
+  mission: optionalString, // From CSV
+  expression: optionalString, // From CSV
+  market_category: optionalString, // From CSV
+  brand_position: optionalString, // From CSV
+  differentiated_value: optionalString, // From CSV
+  design_pov: optionalString, // From CSV
+  category_entry_points: optionalString, // From CSV
+  buying_situations: optionalString, // From CSV
+  distinctive_assets: optionalString, // From CSV
+  competitive_alt_1: optionalString, // From CSV
+  competitive_alt_2: optionalString, // From CSV
+  competitive_alt_3: optionalString, // From CSV
+  'age group': optionalString, // From CSV
+  company_size: optionalString, // From CSV
+  psychographic: optionalString, // From CSV
+  purchase_trigger_1: optionalString, // From CSV
+  purchase_trigger_2: optionalString, // From CSV
+  purchase_trigger_3: optionalString, // From CSV
+  current_solution_efficiency: optionalString, // From CSV
+  our_solution_efficiency: optionalString, // From CSV
+  delta_score: optionalString, // From CSV
+  adoption_threshold: optionalString, // From CSV
+  irreversibility_trigger: optionalString, // From CSV
+  old_world_pain: optionalString, // From CSV
+  new_world_gain: optionalString, // From CSV
+  messaging_tone: optionalString, // From CSV
+  ltv_cac_ratio: optionalString, // From CSV
+  validated_cac: optionalString, // From CSV
+  priority_rank: optionalString, // From CSV
+  current_customers: optionalNumber, // From CSV
+}).passthrough();
 
-export const SystemChannelSchema = z.object({
-  channel_id: z.string(),
-  channel_name: z.string(),
-  channel_type: optionalString,
-  serves_flywheels: optionalString,
-  serves_bus: optionalString,
-  'Segment arrayed': optionalString,
-  'Segment selected': optionalString,
-  monthly_budget_inr: optionalNumber,
-  cac_target: optionalNumber,
-  current_cac: optionalNumber,
-  cac_gap: optionalNumber,
-  conversion_rate_pct: optionalNumber,
-  responsible_person: optionalString,
-  responsible_person_Name: optionalString,
-  status: optionalString,
-  Monthly_Volume: optionalNumber,
-  Annual_Revenue: optionalString,
-  Platform: optionalString,
-  Notes: optionalString,
-  LTV: optionalString,
-  ROI: optionalString,
-});
+export const SystemFlywheelSchema = FlywheelSchema.extend({
+  // Adding fields from CSV or overriding types
+  customer_struggle: optionalString, // From CSV
+  jtbd_trigger_moment: optionalString, // From CSV
+  motion_sequence: optionalString, // From CSV
+  serves_bus: stringToArray, // From CSV, assuming it's an array
+  acquisition_channels: optionalString, // From CSV, assuming this is a single ID/string
+  order_size_range: optionalString, // From CSV
+  efficiency_metrics: optionalString, // From CSV, can be string array
+  owner_person: optionalString, // From CSV
+  owner_person_Name: optionalString, // From CSV
+  cac_target: optionalString, // From CSV
+  validation_status: optionalString, // From CSV
+  '9mo_actual_revenue_inr': optionalNumber, // From CSV
+  '9mo_actual_orders': optionalNumber, // From CSV
+  validated_aov_inr: optionalNumber, // From CSV
+  annual_revenue_target_inr: optionalNumber, // From CSV
+  annual_orders_target: optionalNumber, // From CSV
+  primary_bottleneck: optionalString, // From CSV
+  conversion_rate_pct: optionalNumber, // From CSV
+  reorder_rate_6mo_pct: optionalString, // From CSV
+  avg_sale_cycle_days: optionalString, // From CSV
+}).passthrough();
 
-export const SystemInterfaceSchema = z.object({
-  interface_id: z.string(),
-  interface_name: z.string(),
-  interface_type: optionalString,
-  primary_user: optionalString,
-  serves_flywheels: optionalString,
-  serves_bus: optionalString,
-  tech_stack: optionalString,
-  owned_by_hub: optionalString,
-  owned_by_hub_Name: optionalString,
-  responsible_person: optionalString,
-  priority_level: optionalString,
-  build_status: optionalString,
-  monthly_mau: optionalNumber,
-  integration_points: optionalString,
-  critical_to_operation: optionalString,
-  bottleneck_risk: optionalString,
-  annual_volume: optionalNumber,
-  notes: optionalString,
-  channel_id: optionalString,
-});
+export const SystemBusinessUnitSchema = BusinessUnitSchema.extend({
+  // Adding fields from CSV or overriding types
+  bu_type: optionalString, // From CSV
+  offering_description: optionalString, // From CSV
+  in_form_of: optionalString, // From CSV
+  order_volume_range: optionalString, // From CSV
+  sales_motion: optionalString, // From CSV
+  support_model: optionalString, // From CSV
+  pricing_model: optionalString, // From CSV
+  pricing_model_name: optionalString, // From CSV
+  owner_person_id: optionalString, // From CSV
+  owner_rollup_name: optionalString, // From CSV
+  serves_segments_ids: stringToArray, // From CSV
+  primary_flywheel_id: optionalString, // From CSV
+  primary_flywheel_name: optionalString, // From CSV
+  upsell_path: optionalString, // From CSV
+  monthly_capacity_orders: optionalNumber, // From CSV
+  status: optionalString, // From CSV
+  target_contribution_margin_pct: optionalString, // From CSV
+  validated_aov: optionalNumber, // From CSV
+  '9mo_actual_revenue_inr': optionalNumber, // From CSV
+  '9mo_actual_orders': optionalNumber, // From CSV
+  annual_revenue_target_inr: optionalNumber, // From CSV
+  annual_orders_target: optionalNumber, // From CSV
+  current_utilization_pct: optionalNumber, // From CSV
+  production_sla_hours: optionalNumber, // From CSV
+  gross_margin_pct: optionalNumber, // From CSV
+  variable_cost_per_order: optionalNumber, // From CSV
+  fixed_costs_monthly: optionalNumber, // From CSV
+  break_even_orders: optionalNumber, // From CSV
+}).passthrough();
 
-export const SystemHubSchema = z.object({
-  hub_id: z.string(),
-  hub_name: z.string(),
-  hub_type: optionalString,
-  owner_person: optionalString,
-  owner_person_Name: optionalString,
-  core_capabilities: optionalString,
-  team_size: optionalNumber,
-  monthly_capacity_constraint: optionalString,
-  current_utilization_pct: optionalNumber,
-  budget_monthly_inr: optionalNumber,
-  status: optionalString,
-  revenue_attribution_monthly: optionalNumber,
-  cost_center_or_profit: optionalString,
-  interfaces_owned: optionalString,
-  channels_owned: optionalString,
-  primary_bottleneck: optionalString,
-  scale_trigger_point: optionalString,
-  Note: optionalString,
-});
+export const SystemChannelSchema = ChannelSchema.extend({
+  // Adding fields from CSV or overriding types
+  channel_type: optionalString, // From CSV
+  serves_primary_platform_ids: stringToArray, // From CSV
+  serves_bus: stringToArray, // From CSV
+  serves_flywheels: stringToArray, // From CSV
+  segments_arrayed: optionalString, // From CSV
+  Platform: optionalString, // From CSV
+  segment_id: optionalString, // From CSV
+  monthly_budget_inr: optionalNumber, // From CSV
+  cac_target: optionalString, // From CSV
+  current_cac: optionalNumber, // From CSV
+  cac_gap: optionalString, // From CSV
+  conversion_rate_pct: optionalNumber, // From CSV
+  responsible_person: optionalString, // From CSV
+  responsible_person_Name: optionalString, // From CSV
+  status: optionalString, // From CSV
+  Monthly_Volume: optionalNumber, // From CSV
+  Annual_Revenue: optionalNumber, // From CSV
+  Notes: optionalString, // From CSV
+  LTV: optionalString, // From CSV
+  ROI: optionalString, // From CSV
+}).passthrough();
+
+export const SystemInterfaceSchema = InterfaceSchema.extend({
+  // Adding fields from CSV or overriding types
+  interface_type: optionalString, // From CSV
+  primary_user: optionalString, // From CSV
+  serves_flywheels_ids: stringToArray, // From CSV
+  serves_bus_ids: stringToArray, // From CSV
+  tech_stack: optionalString, // From CSV
+  owned_by_hub: optionalString, // From CSV
+  owned_by_hub_name: optionalString, // From CSV
+  responsible_person: optionalString, // From CSV
+  priority_level: optionalString, // From CSV
+  build_status: optionalString, // From CSV
+  monthly_mau: optionalNumber, // From CSV
+  integration_points: optionalString, // From CSV
+  critical_to_operation: optionalString, // From CSV
+  bottleneck_risk: optionalString, // From CSV
+  annual_volume: optionalNumber, // From CSV
+  notes: optionalString, // From CSV
+}).passthrough();
+
+export const SystemHubSchema = HubSchema.extend({
+  // Adding fields from CSV or overriding types
+  hub_type: optionalString, // From CSV
+  owner_person: optionalString, // From CSV
+  owner_person_name: optionalString, // From CSV
+  core_capabilities: optionalString, // From CSV
+  team_size: optionalNumber, // From CSV
+  monthly_capacity_constraint: optionalString, // From CSV (assuming text like "26500 users/month")
+  current_utilization_pct: optionalNumber, // From CSV
+  budget_monthly_inr: optionalNumber, // From CSV
+  status: optionalString, // From CSV
+  revenue_attribution_monthly: optionalNumber, // From CSV
+  cost_center_or_profit: optionalString, // From CSV
+  interfaces_owned: stringToArray, // From CSV
+  channels_owned: stringToArray, // From CSV
+  primary_bottleneck: optionalString, // From CSV
+  scale_trigger_point: optionalString, // From CSV
+  note: optionalString, // From CSV
+}).passthrough();
 
 export const SystemPersonSchema = z.object({
-  person_id: z.string(),
-  full_name: z.string(),
+  user_id: z.string(), // The primary key
+  full_name: optionalString,
+  email: z.string().email().optional(), // Made optional for cases where it's derived later
   role: optionalString,
   primary_hub: optionalString,
-  primary_hub_Name: optionalString,
-  owns_flywheels: optionalString,
-  owns_segments: optionalString,
-  owns_bus: optionalString,
+  owns_business_units_ids: stringToArray,
+  owns_channels_ids: stringToArray,
+  owns_flywheels_ids: stringToArray,
+  owns_interfaces_ids: stringToArray,
+  owns_platforms_ids: stringToArray,
+  owns_segments_ids: stringToArray,
+  owns_stages_ids: stringToArray,
+  owns_touchpoints_ids: stringToArray,
   annual_comp_inr: optionalNumber,
   capacity_utilization_pct: optionalNumber,
   primary_okrs: optionalString,
-  email: optionalString,
-  phone: optionalString,
-  department: optionalString,
-  role_title: optionalString,
-  manager_id: optionalString,
-  employment_type: optionalString,
-  weekly_hours_capacity: optionalNumber,
-  location: optionalString,
-  notes: optionalString,
-});
+  // Additions from CSV that may overlap or augment:
+  // owner_person_name is often the full_name
+  // role_title can map to role
+  primary_hub_name: optionalString, // From CSV
+  phone: optionalString, // From CSV
+  department: optionalString, // From CSV
+  role_title: optionalString, // From CSV
+  manager_id: optionalString, // From CSV
+  employment_type: optionalString, // From CSV
+  weekly_hours_capacity: optionalNumber, // From CSV
+  location: optionalString, // From CSV
+  notes: optionalString, // From CSV
+}).passthrough(); // Allow extra fields for flexibility
 
 export const SystemStageSchema = z.object({
   stage_id: z.string(),
@@ -493,19 +530,19 @@ export const SystemStageSchema = z.object({
   monthly_volume_out: optionalNumber,
   revenue_per_stage: optionalNumber,
   stage_description: optionalString,
-});
+}).passthrough();
 
 export const SystemTouchpointSchema = z.object({
   touchpoint_id: z.string(),
   touchpoint_name: z.string(),
-  stage: optionalString,
-  flywheel: optionalString,
+  stage_id: optionalString,
+  flywheel_id: optionalString,
   customer_action: optionalString,
   serves_segments: optionalString,
-  channel: optionalString,
-  interface: optionalString,
-  responsible_hub: optionalString,
-  responsible_person: optionalString,
+  channel_id: optionalString,
+  interface_id: optionalString,
+  responsible_hub_id: optionalString,
+  responsible_person_id: optionalString,
   success_metric: optionalString,
   target_value: optionalNumber,
   current_value: optionalNumber,
@@ -518,32 +555,36 @@ export const SystemTouchpointSchema = z.object({
   friction_points: optionalString,
   intervention_cost: optionalNumber,
   roi_score: optionalNumber,
-  optimization_priority: optionalString,
   current_status: optionalString,
-});
+}).passthrough();
 
 export const SystemPlatformSchema = z.object({
-  platform_id: z.string(),
-  platform_name: z.string(),
-  platform_type: z.string(),
-  owner_hub: z.string(),
-  primary_segments: optionalString,
-  secondary_segments: optionalString,
-  platform_icon: optionalString,
-  platform_link: optionalString,
-});
+    platformId: z.string(),
+    platformName: z.string(),
+    platformType: optionalString,
+    purpose: optionalString,
+    status: optionalString,
+    owner: optionalString,
+    notes: optionalString,
+    // For compatibility
+    platform_id: z.string().optional(),
+    platform_name: z.string().optional(),
+    platform_icon_url: optionalString,
+    platform_link_url: optionalString,
+}).passthrough();
 
 export const ProgramSchema = z.object({
   program_id: z.string(),
   program_name: z.string(),
+  serves_segment_ids: stringToArray,
   flywheel_id: optionalString,
   status: z.string(),
   priority: z.string(),
   owner_person_id: optionalString,
+  owner_person_name: optionalString,
   owner_hub_id: optionalString,
-  contributing_hub_ids: optionalString,
-  serves_segment_ids: optionalString,
-  linked_business_unit_ids: optionalString,
+  contributing_hub_ids: stringToArray,
+  linked_business_unit_ids: stringToArray,
   customer_problem: optionalString,
   our_solution: optionalString,
   why_now: optionalString,
@@ -552,24 +593,33 @@ export const ProgramSchema = z.object({
   success_metric: optionalString,
   target_value: optionalNumber,
   current_value: optionalNumber,
-  days_total: optionalNumber,
-  days_elapsed: optionalNumber,
-  days_remaining: optionalNumber,
-  timeline_progress_pct: optionalNumber,
   metric_progress_pct: optionalNumber,
   budget_total: optionalNumber,
   budget_spent: optionalNumber,
   budget_remaining: optionalNumber,
-  budget_burn_rate_pct: optionalNumber,
   risk_level: optionalString,
   health_status: optionalString,
   blockers: optionalString,
   next_milestone: optionalString,
   next_milestone_date: optionalString,
   days_to_next_milestone: optionalNumber,
-  dependent_program_ids: optionalString,
-  platform_ids: optionalString,
-  channel_ids: optionalString,
+  dependent_program_ids: stringToArray,
+  platform_ids: stringToArray,
+  channel_ids: stringToArray,
+  created_date: optionalString,
+  last_updated: optionalString,
+  updated_by_person_id: optionalString,
+  notes: optionalString,
+  days_total: optionalNumber,
+  days_elapsed: optionalNumber,
+  days_remaining: optionalNumber,
+  timeline_progress_pct: optionalNumber,
+  budget_variance: optionalNumber,
+  velocity_score: optionalNumber,
+  weekly_burn_rate: optionalNumber,
+  runway_days: optionalNumber,
+  on_track_indicator: optionalString,
+  budget_burn_rate_pct: optionalNumber,
   projects_count: optionalNumber,
   projects_active: optionalNumber,
   projects_blocked: optionalNumber,
@@ -578,11 +628,13 @@ export const ProgramSchema = z.object({
   tasks_total: optionalNumber,
   tasks_complete: optionalNumber,
   tasks_blocked: optionalNumber,
-  created_date: optionalString,
-  last_updated: optionalString,
-  updated_by_person_id: optionalString,
-  notes: optionalString,
-  owner_person_name: optionalString,
+  budget_original: optionalNumber,
+  budget_revised1: optionalNumber,
+  created_at: optionalString,
+  created_by: optionalString,
+  updated_at: optionalString,
+  updated_by: optionalString,
+  objective: optionalString, // Keep for form compatibility
 });
 
 export const MgmtProjectSchema = z.object({
@@ -594,8 +646,8 @@ export const MgmtProjectSchema = z.object({
   owner_name: optionalString,
   hub_id: optionalString,
   hub_name: optionalString,
-  status: z.string(),
-  priority: z.string(),
+  status: statusPreprocessor,
+  priority: priorityPreprocessor,
   start_date: optionalString,
   end_date: optionalString,
   budget: optionalNumber,
@@ -606,21 +658,27 @@ export const MgmtProjectSchema = z.object({
   business_unit_impact: optionalString,
   segment_impact: optionalString,
   platform_id: optionalString,
-  channel_ids: optionalString,
+  channel_ids: stringToArray,
   completion_pct: optionalNumber,
-  health_score: optionalString,
+  health_score: optionalNumber,
   actual_end_date: optionalString,
   milestones_count: optionalNumber,
   tasks_count: optionalNumber,
   tasks_complete: optionalNumber,
   tasks_in_progress: optionalNumber,
   tasks_blocked: optionalNumber,
-  days_to_deadline: optionalString,
+  days_to_deadline: optionalNumber,
   budget_spent: optionalNumber,
   budget_variance: optionalNumber,
   velocity_tasks_per_day: optionalNumber,
   is_on_time: optionalString,
-  objective: optionalString,
+  budget_original: optionalNumber,
+  budget_revised: optionalNumber,
+  created_at: optionalString,
+  created_by: optionalString,
+  updated_at: optionalString,
+  updated_by: optionalString,
+  objective: optionalString, // Keep for form compatibility
 });
 
 export const MilestoneSchema = z.object({
@@ -631,8 +689,8 @@ export const MilestoneSchema = z.object({
   start_date: optionalString,
   target_date: optionalString,
   status: z.string(),
-  completion_pct: optionalNumber,
-  blocker: optionalString,
+  'completion_%': optionalNumber,
+  task_blocker: optionalString,
   owner_id: optionalString,
   owner_name: optionalString,
   Tasks_Count: optionalString,
@@ -643,7 +701,11 @@ export const MilestoneSchema = z.object({
   blocker_type: optionalString,
   dependent_milestone_ids: optionalString,
   actual_completion_date: optionalString,
-});
+  created_at: optionalString,
+  created_by: optionalString,
+  updated_at: optionalString,
+  updated_by: optionalString,
+}).passthrough(); // Passthrough to allow 'Task_blocker' if it exists in data
 
 export const MgmtTaskSchema = z.object({
   task_id: z.string(),
@@ -655,18 +717,22 @@ export const MgmtTaskSchema = z.object({
   hub_id: optionalString,
   hub_name: optionalString,
   description: optionalString,
-  priority: z.string(),
-  status: z.string(),
+  priority: priorityPreprocessor,
+  status: statusPreprocessor,
   effort_hours: optionalNumber,
   due_date: optionalString,
   dependencies: optionalString,
   assignee_ids: optionalString,
   task_category: optionalString,
   task_type: optionalString,
-  actual_completion_date: optionalString,
+  actual_completion_date: optionalNumber,
   notes: optionalString,
   impact_if_delayed: optionalString,
-  assignee_User_id: optionalString,
+  age_days: optionalNumber,
+  created_at: optionalString,
+  created_by: optionalString,
+  updated_at: optionalString,
+  updated_by: optionalString,
 });
 
 export const MgmtHubSchema = z.object({
@@ -753,31 +819,44 @@ export const AppSheetRowSchema = z.object({
   spreadsheet_id: optionalString,
   sheet_name: optionalString,
   table_alias: optionalString,
+  sheet_id: optionalString, // Explicitly add sheet_id as it is derived from 'gid' in the sheet
+  header: optionalString, // Added from user's provided App sheet columns
 }).catchall(z.any());
 
 export const MasterSchemaRowSchema = z.object({
   _rowIndex: z.number().optional(), // Internal helper for updates
-  spreadsheet_name: z.string().optional(),
-  spreadsheet_code: z.string().optional(),
-  spreadsheet_id: z.string().optional(),
-  sheet_name: z.string().optional(),
-  table_alias: z.string().optional(),
-  gid: z.string().optional(),
-  key_field: z.string().optional(), // Retained for compatibility if needed
-  named_data_range: z.string().optional(),
-  range: z.string().optional(),
-  sheet_type: z.string().optional(),
-  system_role: z.string().optional(),
-  data_tier: z.string().optional(),
-  description: z.string().optional(),
+  // Core fields for the application's configuration
+  table_alias: optionalString, // Changed to optional for better parsing of partial data, existing logic handles presence
+  app_field: optionalString, // Changed to optional for better parsing of partial data
+  header: optionalString, // User-provided list explicitly includes 'header'
+
+  // New fields provided by the user for comprehensive schema definition
+  spreadsheet_id: optionalString,
+  spreadsheet_name: optionalString,
+  sheet_name: optionalString,
+  gid: optionalString, // Matches the new header name
+  A1_Column_Range: optionalString, // New field
+  Named_Range_Name: optionalString, // New field
   col_index: optionalNumber,
-  app_field: z.string().optional(),
-  header: z.string().optional(),
-  sample_value: z.string().optional(),
-  detected_type: z.string().optional(),
+  'Column Letter': optionalString, // New field
+  sample_value: optionalString,
+  Protection_Status: optionalString, // New field
+  Data_Type: z.enum(['STRING', 'NUMBER', 'BLANK']).optional(), // Explicit enum type based on CSV
+  Contains_Formula: optionalBoolean, // New field
+  Data_Validation: optionalString, // New field
+  Column_aliases: optionalString, // New field
+
+  // Existing/retained fields for compatibility or specific app use (some may overlap with new user-provided headers)
+  key_field: optionalString, 
+  named_data_range: optionalString,
+  range: optionalString,
+  sheet_type: optionalString,
+  system_role: optionalString,
+  data_tier: optionalString,
+  description: optionalString,
+  detected_type: optionalString,
   has_formula: optionalBoolean,
-  snapshot_ts: z.string().optional(),
-  data_type: z.enum(['string', 'number', 'boolean', 'string_array']).optional(),
+  snapshot_ts: optionalString,
   is_pk: z.preprocess(val => String(val).toUpperCase() === 'TRUE', z.boolean()).optional(),
-  fk_ref: z.string().optional().nullable(),
+  fk_ref: optionalString,
 }).catchall(z.any());

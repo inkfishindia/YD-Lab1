@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { useData } from '../../contexts/DataContext';
@@ -6,8 +7,7 @@ import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import { Status, Priority, Task } from '../../types';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../../constants';
-// FIX: Changed import from googleSheetService to sheetGateway
-import { fetchUnreadGmailCount, fetchNextCalendarEvent } from '../../services/sheetGateway';
+import { fetchUnreadGmailCount, fetchNextCalendarEvent } from '../../services/googleSheetService';
 import { EnvelopeIcon, CalendarIcon, FolderIcon } from '../../components/Icons';
 
 
@@ -89,7 +89,6 @@ const HeroSection: React.FC = () => {
         return 'Good evening';
     };
 
-// FIX: Use bracket notation for enum members with spaces.
     const activeProjects = projects.filter(p => p.status === Status['In Progress'] || p.status === Status['Not Started']).length;
 
     const formatEvent = () => {

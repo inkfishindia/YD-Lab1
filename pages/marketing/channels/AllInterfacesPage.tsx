@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Interface } from '../../../types';
@@ -17,7 +18,8 @@ const AllInterfacesPage: React.FC = () => {
   const filteredInterfaces = useMemo(() => {
     return interfaces.filter(i =>
       i.interface_name.toLowerCase().includes(filters.name.toLowerCase()) &&
-      i.interface_category.toLowerCase().includes(filters.category.toLowerCase())
+// FIX: Add a null check before calling toLowerCase() on a potentially undefined property.
+      (i.interface_category ?? '').toLowerCase().includes(filters.category.toLowerCase())
     );
   }, [interfaces, filters]);
 
@@ -25,8 +27,8 @@ const AllInterfacesPage: React.FC = () => {
     let sortableInterfaces = [...filteredInterfaces];
     if (sortConfig !== null) {
       sortableInterfaces.sort((a, b) => {
-        const valA = a[sortConfig.key] || '';
-        const valB = b[sortConfig.key] || '';
+        const valA = a[sortConfig.key] as any;
+        const valB = b[sortConfig.key] as any;
         if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
         if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
@@ -58,6 +60,7 @@ const AllInterfacesPage: React.FC = () => {
   };
 
   const handleSave = (ifaceData: Omit<Interface, 'interface_id'> | Interface) => {
+// FIX: Use an if/else block to ensure proper type narrowing for the 'ifaceData' parameter, resolving the TypeScript error.
     if ('interface_id' in ifaceData) {
       updateInterface(ifaceData);
     } else {
@@ -109,7 +112,8 @@ const AllInterfacesPage: React.FC = () => {
               <TableHeader sortKey="interface_name" label="Interface Name" />
               <TableHeader sortKey="interface_category" label="Category" />
               <TableHeader sortKey="interface_type" label="Type" />
-              <TableHeader sortKey="interface_owner" label="Owner" />
+{/* FIX: Corrected property name from 'interface_owner' to 'responsible_person' to match the schema. */}
+              <TableHeader sortKey="responsible_person" label="Owner" />
               <TableHeader sortKey="monthly_budget" label="Monthly Budget" />
               <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
             </tr>
@@ -120,8 +124,9 @@ const AllInterfacesPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{iface.interface_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{iface.interface_category}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{iface.interface_type}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(iface.interface_owner)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${iface.monthly_budget.toLocaleString()}</td>
+{/* FIX: Corrected property name from 'interface_owner' to 'responsible_person' to match the schema. */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(iface.responsible_person || '')}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">${(iface.monthly_budget || 0).toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                   <button onClick={() => openModal(iface)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
                   <button onClick={() => deleteInterface(iface.interface_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>

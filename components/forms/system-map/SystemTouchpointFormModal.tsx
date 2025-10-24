@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemTouchpoint } from '../../../types';
@@ -12,10 +13,13 @@ interface FormModalProps {
 
 const getInitialFormData = (): Omit<SystemTouchpoint, 'touchpoint_id'> => ({
     touchpoint_name: '',
-    stage: '',
-    flywheel: '',
-    responsible_hub: '',
-    responsible_person: '',
+// FIX: Changed 'stage' to 'stage_id' to match schema.
+    stage_id: '',
+    flywheel_id: '',
+// FIX: Changed 'responsible_hub' to 'responsible_hub_id' to match schema.
+    responsible_hub_id: '',
+// FIX: Changed 'responsible_person' to 'responsible_person_id' to match schema.
+    responsible_person_id: '',
 });
 
 const SystemTouchpointFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, initialData }) => {
@@ -51,23 +55,24 @@ const SystemTouchpointFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, 
                 </div>
                 <div>
                     <label>Stage</label>
-                    <select name="stage" value={formData.stage} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                    <select name="stage_id" value={formData.stage_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Stage --</option>
                         {systemStages.map(s => <option key={s.stage_id} value={s.stage_id}>{s.stage_name}</option>)}
                     </select>
                 </div>
                  <div>
                     <label>Responsible Hub</label>
-                    <select name="responsible_hub" value={formData.responsible_hub} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                    <select name="responsible_hub_id" value={formData.responsible_hub_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Hub --</option>
                         {systemHubs.map(h => <option key={h.hub_id} value={h.hub_id}>{h.hub_name}</option>)}
                     </select>
                 </div>
                  <div>
                     <label>Responsible Person</label>
-                    <select name="responsible_person" value={formData.responsible_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                    <select name="responsible_person_id" value={formData.responsible_person_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Person --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                 <div className="flex justify-end gap-2 pt-4">

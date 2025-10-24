@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemPerson } from '../../../types';
@@ -10,10 +11,12 @@ interface FormModalProps {
   initialData: SystemPerson | null;
 }
 
-const getInitialFormData = (): Omit<SystemPerson, 'person_id'> => ({
+// FIX: Corrected Omit type to use 'user_id' instead of 'person_id' and added user_id to initial data.
+const getInitialFormData = (): Omit<SystemPerson, 'user_id'> => ({
     full_name: '',
     role: '',
     primary_hub: '',
+    email: '',
 });
 
 const SystemPersonFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, initialData }) => {
@@ -35,7 +38,7 @@ const SystemPersonFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, init
         if (initialData) {
             updateSystemPerson(formData as SystemPerson);
         } else {
-            addSystemPerson(formData as Omit<SystemPerson, 'person_id'>);
+            addSystemPerson(formData as Omit<SystemPerson, 'user_id'>);
         }
         onClose();
     };

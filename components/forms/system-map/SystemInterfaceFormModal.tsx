@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemInterface } from '../../../types';
@@ -56,7 +57,8 @@ const SystemInterfaceFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, i
                     <label>Responsible Person</label>
                     <select name="responsible_person" value={formData.responsible_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Person --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                  <div>

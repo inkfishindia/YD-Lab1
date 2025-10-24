@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import type { Flywheel, Hub, CustomerSegment } from '../../types';
 import Modal from '../ui/Modal';
@@ -14,35 +15,33 @@ interface FlywheelFormModalProps {
 
 const getInitialData = (segments: CustomerSegment[]): Omit<Flywheel, 'flywheel_id'> => ({
     flywheel_name: '',
-    customer_type: segments[0]?.customer_segment || '',
-    description: '',
-    motion: '',
-    interface: '',
-    customer_acquisition_motion: '',
-    notes: '',
+// FIX: Changed initial value of 'serves_segments' to an empty array to match its 'string[]' type.
+    serves_segments: segments[0] ? [segments[0].segment_id] : [],
+    motion_sequence: '',
+    owner_person: '',
     primary_channels: [],
-    order_size: '',
+    order_size_range: '',
     hub_dependencies: [],
-    key_metrics: [],
-    revenue_driver: 0,
-    revenue_model: 0,
-    what_drives_growth: '',
-    economics: [],
-    target_revenue: 0,
-    target_orders: 0,
-    avg_cac: 0,
-    avg_ltv: 0,
+    efficiency_metrics: [],
+    annual_revenue_target_inr: 0,
+    annual_orders_target: 0,
+    cac_target: '',
+    validated_aov_inr: 0,
     conversion_rate_pct: 0,
+    description: '',
+    interface: '',
 });
 
 const FlywheelFormModal: React.FC<FlywheelFormModalProps> = ({ isOpen, onClose, onSave, flywheel, hubs, customerSegments }) => {
-    const [formData, setFormData] = useState(getInitialData(customerSegments));
+    const [formData, setFormData] = useState<Partial<Flywheel>>(getInitialData(customerSegments));
 
     useEffect(() => {
         if (isOpen) {
             if (flywheel) {
-                const { flywheel_id, ...editableData } = flywheel;
-                setFormData(editableData);
+                setFormData({
+                    ...getInitialData(customerSegments),
+                    ...flywheel,
+                });
             } else {
                 setFormData(getInitialData(customerSegments));
             }
@@ -51,8 +50,11 @@ const FlywheelFormModal: React.FC<FlywheelFormModalProps> = ({ isOpen, onClose, 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        const numericFields = ['target_revenue', 'target_orders', 'avg_cac', 'avg_ltv', 'conversion_rate_pct', 'revenue_driver', 'revenue_model'];
-        if (numericFields.includes(name)) {
+        const numericFields = ['annual_revenue_target_inr', 'annual_orders_target', 'validated_aov_inr', 'conversion_rate_pct'];
+        if (name === 'serves_segments') {
+            // FIX: Correctly handle serves_segments as a string array
+            setFormData(prev => ({ ...prev, serves_segments: value.split(',').map(s => s.trim()).filter(Boolean) }));
+        } else if (numericFields.includes(name)) {
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -73,7 +75,7 @@ const FlywheelFormModal: React.FC<FlywheelFormModalProps> = ({ isOpen, onClose, 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSave(flywheel ? { ...formData, flywheel_id: flywheel.flywheel_id } : formData);
+        onSave(flywheel ? { ...formData, flywheel_id: flywheel.flywheel_id } as Flywheel : formData as Omit<Flywheel, 'flywheel_id'>);
     };
 
     return (
@@ -82,54 +84,60 @@ const FlywheelFormModal: React.FC<FlywheelFormModalProps> = ({ isOpen, onClose, 
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Flywheel Name</label>
-                        <input type="text" name="flywheel_name" value={formData.flywheel_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
+                        <input type="text" name="flywheel_name" value={formData.flywheel_name || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Customer Segment</label>
-                        <select name="customer_type" value={formData.customer_type} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
-                           {customerSegments.map(s => <option key={s.customer_segment} value={s.customer_segment}>{s.customer_segment}</option>)}
+                        <select name="serves_segments" value={formData.serves_segments?.[0] || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
+{/* FIX: Changed 'customer_segment' to 'segment_id' for the key and 'segment_name' for the value and display text. */}
+                           {customerSegments.map(s => <option key={s.segment_id} value={s.segment_id}>{s.segment_name}</option>)}
                         </select>
                     </div>
                 </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-300">Description</label>
-                    <textarea name="description" value={formData.description} onChange={handleChange} rows={2} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <textarea name="description" value={formData.description || ''} onChange={handleChange} rows={2} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Motion</label>
-                        <input type="text" name="motion" value={formData.motion} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                        <label className="block text-sm font-medium text-gray-300">Motion Sequence</label>
+                        <input type="text" name="motion_sequence" value={formData.motion_sequence || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Interface</label>
-                        <input type="text" name="interface" value={formData.interface} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                        <input type="text" name="interface" value={formData.interface || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                     </div>
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-gray-300">Primary Channels (comma-separated)</label>
-                    <input type="text" name="primary_channels" value={formData.primary_channels.join(', ')} onChange={handleArrayStringChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-300">Hub Dependencies</label>
-                    <select name="hub_dependencies" multiple value={formData.hub_dependencies} onChange={handleMultiSelectChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white h-24">
-                        {hubs.map(h => <option key={h.hub_id} value={h.hub_id}>{h.hub_name}</option>)}
+                    <label className="block text-sm font-medium text-gray-300">Owner</label>
+                    <select name="owner_person" value={formData.owner_person || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
+                        {hubs.map(h => <option key={h.hub_id} value={h.primaryOwner}>{h.primaryOwner}</option>)}
                     </select>
                 </div>
-                 <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Target Revenue</label>
-                        <input type="number" name="target_revenue" value={formData.target_revenue} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                        <label className="block text-sm font-medium text-gray-300">Annual Revenue Target (INR)</label>
+                        <input type="number" name="annual_revenue_target_inr" value={formData.annual_revenue_target_inr || 0} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Target Orders</label>
-                        <input type="number" name="target_orders" value={formData.target_orders} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
-                    </div>
-                     <div>
-                        <label className="block text-sm font-medium text-gray-300">Avg. CAC</label>
-                        <input type="number" name="avg_cac" value={formData.avg_cac} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                        <label className="block text-sm font-medium text-gray-300">Annual Orders Target</label>
+                        <input type="number" name="annual_orders_target" value={formData.annual_orders_target || 0} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                     </div>
                 </div>
-
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300">CAC Target</label>
+                        <input type="text" name="cac_target" value={formData.cac_target || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-300">Validated AOV (INR)</label>
+                        <input type="number" name="validated_aov_inr" value={formData.validated_aov_inr || 0} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    </div>
+                </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-300">Conversion Rate (%)</label>
+                    <input type="number" name="conversion_rate_pct" value={formData.conversion_rate_pct || 0} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                </div>
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700 mt-6">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
                     <Button type="submit">Save</Button>

@@ -7,7 +7,6 @@ import React, {
   useCallback,
 } from 'react';
 
-// FIX: Import API keys from api-keys.ts to resolve TypeScript error with import.meta.env.
 import { API_KEY, GOOGLE_CLIENT_ID } from '../api-keys';
 
 interface GoogleUser {
@@ -134,7 +133,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       (window as any).gapi.load('client', () => {
         (window as any).gapi.client
           .init({
-            // FIX: Use imported API_KEY instead of import.meta.env.
             apiKey: API_KEY,
             discoveryDocs: DISCOVERY_DOCS,
           })
@@ -175,7 +173,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 detailedError = e.message;
               } else {
                 // Fallback to stringifying the entire object safely.
-                // This handles cases where the error is not a standard Error object.
                 detailedError = JSON.stringify(e, null, 2);
               }
             } catch (stringifyError) {
@@ -183,29 +180,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
                 'Failed to stringify the error object. Check the console for the raw object.';
             }
 
-            let userFriendlyMessage = `Failed to initialize the Google API client. This is usually due to a configuration issue in your Google Cloud project.`;
-
-            if (
-              detailedError.includes('API not enabled') ||
-              detailedError.includes('PERMISSION_DENIED') ||
-              detailedError.includes('API_KEY_SERVICE_BLOCKED')
-            ) {
-              userFriendlyMessage =
-                'Configuration Error: An API required by this application (e.g., Sheets, Calendar, Gmail, Drive) is not enabled for your API key.\n\n' +
-                'To fix this, please visit the Google Cloud Console, find "APIs & Services > Library", ' +
-                'search for the required APIs, and click ENABLE for each one.';
-            } else if (detailedError.includes('API key not valid')) {
-              userFriendlyMessage =
-                'Configuration Error: The provided API Key is not valid.\n\n' +
-                'Please double-check the `VITE_API_KEY` in your environment file and ensure it has no restrictions in the Google Cloud Console.';
-            }
-
-            setInitError(
-              `${userFriendlyMessage}\n\nTechnical Details:\n${detailedError}`,
-            );
-
-            gapiReady = true;
-            checkAndFinalizeLoading();
+            const userFriendlyMessage = `Failed to initialize the Google API client. This is usually due to a configuration issue in your Google Cloud project or browser environment.\n\nCommon causes:\n- Google Sheets API is not enabled in your project.\n- Invalid API Key or Client ID.\n- Incorrectly configured OAuth Consent Screen or credentials.\n- Browser extensions blocking scripts.\n\nTechnical Error: ${detailedError}`;
+            
+            setInitError(userFriendlyMessage);
+            setIsLoading(false);
           });
       });
     };
@@ -213,25 +191,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     gisScript.onload = () => {
       try {
         const client = (window as any).google.accounts.oauth2.initTokenClient({
-          // FIX: Use imported GOOGLE_CLIENT_ID instead of import.meta.env.
           client_id: GOOGLE_CLIENT_ID,
           scope: SCOPES,
           callback: handleTokenResponse,
+          error_callback: (error: any) => {
+              console.error('Google token client error:', error);
+              setInitError(`Google Sign-In failed: ${error?.details || 'Check console for details.'}`);
+              setIsLoading(false);
+          }
         });
-        setTokenClient(() => client);
+        setTokenClient(client);
         gisReady = true;
         checkAndFinalizeLoading();
       } catch (e: any) {
-        const errorDetails = e.message || JSON.stringify(e);
-        console.error('Error initializing Google Identity Services:', errorDetails);
-        setInitError(
-          `Failed to initialize Google Identity Services: ${errorDetails}`,
-        );
-        gisReady = true;
-        checkAndFinalizeLoading();
+          console.error("Error initializing Google Identity Services:", e);
+          setInitError(`Failed to initialize Google Sign-In services. Error: ${e.message}`);
+          setIsLoading(false);
       }
     };
-
+    
     document.body.appendChild(gapiScript);
     document.body.appendChild(gisScript);
 
@@ -241,18 +219,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     };
   }, [handleTokenResponse]);
 
-  const signIn = () => {
+  const signIn = useCallback(() => {
     if (tokenClient) {
-      tokenClient.requestAccessToken({ prompt: 'consent' });
+      // Prompt the user to select an account.
+      tokenClient.requestAccessToken({ prompt: 'select_account' });
     } else {
-      console.error('Google Identity Services client not ready.');
-      setInitError(
-        'Google Sign-In client is not available. Please try refreshing the page.',
-      );
+      console.error('Token client not initialized.');
+      setInitError('Sign-in service is not ready. Please try again in a moment.');
     }
-  };
+  }, [tokenClient]);
 
-  const authContextValue: IAuthContext = {
+  const value = {
     isSignedIn,
     isLoading,
     currentUser,
@@ -262,7 +239,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

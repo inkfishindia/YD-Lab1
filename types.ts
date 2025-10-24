@@ -21,6 +21,9 @@ import {
   HubSchema,
   InterfaceSchema,
   ChannelSchema,
+  PartnerSchema,
+  CostStructureSchema,
+  RevenueStreamSchema,
   SystemSegmentSchema,
   SystemFlywheelSchema,
   SystemBusinessUnitSchema,
@@ -78,6 +81,9 @@ export type LogEntry = z.infer<typeof LogEntrySchema>;
 export type Hub = z.infer<typeof HubSchema>;
 export type Interface = z.infer<typeof InterfaceSchema>;
 export type Channel = z.infer<typeof ChannelSchema>;
+export type Partner = z.infer<typeof PartnerSchema>;
+export type CostStructure = z.infer<typeof CostStructureSchema>;
+export type RevenueStream = z.infer<typeof RevenueStreamSchema>;
 export type SystemSegment = z.infer<typeof SystemSegmentSchema>;
 export type SystemFlywheel = z.infer<typeof SystemFlywheelSchema>;
 export type SystemBusinessUnit = z.infer<typeof SystemBusinessUnitSchema>;
@@ -106,7 +112,8 @@ export type SystemEntityType =
   | 'person'
   | 'interface'
   | 'stage'
-  | 'touchpoint';
+  | 'touchpoint'
+  | 'platform';
 
 // Positioning Page types
 export type FlywheelStrategy = z.infer<typeof FlywheelStrategySchema>;

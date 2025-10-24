@@ -17,12 +17,12 @@ const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hu
     const [formData, setFormData] = useState({
         hub_name: '',
         function_category: '',
-        owner_user_id: '',
+        owner_person: '',
         what_they_enable: '',
         serves_flywheel_ids: [] as string[],
         capacity_constraint: false,
         hiring_priority: 'Low',
-        monthly_budget: 0,
+        budget_monthly_inr: 0,
         serves_bu1: false,
         serves_bu2: false,
         serves_bu3: false,
@@ -37,12 +37,12 @@ const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hu
             setFormData({
                 hub_name: hub?.hub_name || '',
                 function_category: hub?.function_category || '',
-                owner_user_id: hub?.owner_user_id || (people[0]?.user_id || ''),
+                owner_person: hub?.owner_person || (people[0]?.user_id || ''),
                 what_they_enable: hub?.what_they_enable || '',
                 serves_flywheel_ids: hub?.serves_flywheel_ids || [],
                 capacity_constraint: hub?.capacity_constraint || false,
                 hiring_priority: hub?.hiring_priority || 'Low',
-                monthly_budget: hub?.monthly_budget || 0,
+                budget_monthly_inr: hub?.budget_monthly_inr || 0,
                 serves_bu1: hub?.serves_bu1 || false,
                 serves_bu2: hub?.serves_bu2 || false,
                 serves_bu3: hub?.serves_bu3 || false,
@@ -62,7 +62,7 @@ const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hu
             setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
         } else if (isCheckbox) {
              setFormData(prev => ({ ...prev, [name]: (e.target as HTMLInputElement).checked }));
-        } else if (name === 'monthly_budget') {
+        } else if (name === 'budget_monthly_inr') {
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
@@ -102,13 +102,13 @@ const HubFormModal: React.FC<HubFormModalProps> = ({ isOpen, onClose, onSave, hu
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Owner</label>
-                        <select name="owner_user_id" value={formData.owner_user_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
+                        <select name="owner_person" value={formData.owner_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
                             {people.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Monthly Budget (₹)</label>
-                        <input type="number" name="monthly_budget" value={formData.monthly_budget} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                        <input type="number" name="budget_monthly_inr" value={formData.budget_monthly_inr} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                     </div>
                 </div>
                 

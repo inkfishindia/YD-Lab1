@@ -15,12 +15,14 @@ interface FocusProps {
 const SegmentFocus: React.FC<FocusProps> = ({ item: segment, onSelect }) => {
     const { systemFlywheels, systemBusinessUnits, systemPeople } = useData();
     
-    const owner = systemPeople.find(p => p.person_id === segment.owner_person);
+// FIX: Corrected property name from 'owner_person' to 'owner_person_id' and 'person_id' to 'user_id' to match schema.
+    const owner = systemPeople.find(p => p.user_id === segment.owner_person_id);
 
     // FIX: The 'served_by_flywheels' and 'served_by_bus' properties are already string arrays.
     // The 'splitAndTrim' helper function, which expects a string, is not needed here.
-    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels?.includes(fw.flywheel_id));
-    const relatedBUs = systemBusinessUnits.filter(bu => segment.served_by_bus?.includes(bu.bu_id));
+// FIX: Corrected 'served_by_flywheels' to 'served_by_flywheels_ids' and 'served_by_bus' to use the 'bu_id' property.
+    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels_ids?.includes(fw.flywheel_id));
+    const relatedBUs = systemBusinessUnits.filter(bu => bu.bu_id === segment.bu_id);
     
     return (
         <div className="p-4 space-y-5">

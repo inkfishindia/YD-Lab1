@@ -1,4 +1,5 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { Person, Project, Task, BusinessUnit } from '../../types';
@@ -13,6 +14,7 @@ import TaskFormModal from '../../components/forms/TaskFormModal';
 const ExecutiveDashboardPage: React.FC = () => {
     const { 
         businessUnits, addBusinessUnit, updateBusinessUnit, deleteBusinessUnit,
+        // FIX: Add missing properties to destructuring from useData context.
         projects, addProject, updateProject, deleteProject,
         tasks, addTask, updateTask, deleteTask,
         people 

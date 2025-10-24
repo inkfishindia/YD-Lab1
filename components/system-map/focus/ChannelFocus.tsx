@@ -1,3 +1,6 @@
+
+
+
 import React from 'react';
 import type { SystemChannel } from '../../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -15,9 +18,12 @@ const splitAndTrim = (str: string | undefined): string[] => str ? str.split(',')
 const ChannelFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
     const { systemFlywheels, systemBusinessUnits, systemInterfaces, systemPeople } = useData();
 
-    const responsiblePerson = systemPeople.find(p => p.person_id === item.responsible_person);
-    const relatedFlywheels = systemFlywheels.filter(fw => splitAndTrim(item.serves_flywheels).includes(fw.flywheel_id));
-    const relatedBUs = systemBusinessUnits.filter(bu => splitAndTrim(item.serves_bus).includes(bu.bu_id));
+// FIX: Changed 'person_id' to 'user_id' to match the 'SystemPerson' schema.
+    const responsiblePerson = systemPeople.find(p => p.user_id === item.responsible_person);
+// FIX: Removed unnecessary splitAndTrim as 'serves_flywheels' is already an array.
+    const relatedFlywheels = systemFlywheels.filter(fw => item.serves_flywheels?.includes(fw.flywheel_id));
+// FIX: Removed unnecessary splitAndTrim as 'serves_bus' is already an array.
+    const relatedBUs = systemBusinessUnits.filter(bu => item.serves_bus?.includes(bu.bu_id));
     const relatedInterfaces = systemInterfaces.filter(i => i.tech_stack?.includes(item.channel_id)); // Heuristic, might need better mapping
 
     return (

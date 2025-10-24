@@ -1,3 +1,6 @@
+
+
+
 import React from 'react';
 import type { SystemTouchpoint } from '../../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -13,11 +16,12 @@ interface FocusProps {
 const TouchpointFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
     const { systemStages, systemChannels, systemInterfaces, systemHubs, systemPeople } = useData();
 
-    const stage = systemStages.find(s => s.stage_id === item.stage);
-    const channel = systemChannels.find(c => c.channel_id === item.channel);
-    const iface = systemInterfaces.find(i => i.interface_id === item.interface);
-    const hub = systemHubs.find(h => h.hub_id === item.responsible_hub);
-    const person = systemPeople.find(p => p.person_id === item.responsible_person);
+// FIX: Corrected property names to their '_id' versions to match the schema.
+    const stage = systemStages.find(s => s.stage_id === item.stage_id);
+    const channel = systemChannels.find(c => c.channel_id === item.channel_id);
+    const iface = systemInterfaces.find(i => i.interface_id === item.interface_id);
+    const hub = systemHubs.find(h => h.hub_id === item.responsible_hub_id);
+    const person = systemPeople.find(p => p.user_id === item.responsible_person_id);
 
     return (
         <div className="p-4 space-y-5">
@@ -45,7 +49,8 @@ const TouchpointFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
                 {channel && <RelatedItem type="channel" name={channel.channel_name} detail="Channel" onClick={() => onSelect('channel', channel.channel_id)} />}
                 {iface && <RelatedItem type="interface" name={iface.interface_name} detail="Interface" onClick={() => onSelect('interface', iface.interface_id)} />}
                 {hub && <RelatedItem type="hub" name={hub.hub_name} detail="Responsible Hub" onClick={() => onSelect('hub', hub.hub_id)} />}
-                {person && <RelatedItem type="person" name={person.full_name} detail="Responsible Person" onClick={() => onSelect('person', person.person_id)} />}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                {person && <RelatedItem type="person" name={person.full_name} detail="Responsible Person" onClick={() => onSelect('person', person.user_id)} />}
             </div>
         </div>
     );

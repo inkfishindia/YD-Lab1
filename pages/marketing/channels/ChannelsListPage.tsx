@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Channel } from '../../../types';
@@ -17,7 +18,7 @@ const ChannelsListPage: React.FC = () => {
   const filteredChannels = useMemo(() => {
     return channels.filter(c =>
       c.channel_name.toLowerCase().includes(filters.name.toLowerCase()) &&
-      c.channel_type.toLowerCase().includes(filters.type.toLowerCase())
+      (c.channel_type || '').toLowerCase().includes(filters.type.toLowerCase())
     );
   }, [channels, filters]);
 
@@ -25,8 +26,8 @@ const ChannelsListPage: React.FC = () => {
     let sortableChannels = [...filteredChannels];
     if (sortConfig !== null) {
       sortableChannels.sort((a, b) => {
-        const valA = a[sortConfig.key] || '';
-        const valB = b[sortConfig.key] || '';
+        const valA = a[sortConfig.key] as any;
+        const valB = b[sortConfig.key] as any;
         if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
         if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
@@ -58,6 +59,7 @@ const ChannelsListPage: React.FC = () => {
   };
 
   const handleSave = (channelData: Omit<Channel, 'channel_id'> | Channel) => {
+// FIX: Use an if/else block to ensure proper type narrowing for the 'channelData' parameter, resolving the TypeScript error.
     if ('channel_id' in channelData) {
       updateChannel(channelData);
     } else {

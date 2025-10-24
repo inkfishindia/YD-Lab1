@@ -34,6 +34,8 @@ import {
   BuildingStorefrontIcon,
   QueueListIcon,
   RefreshIcon,
+  SparklesIcon,
+  TargetIcon,
 } from './Icons';
 
 interface HeaderProps {
@@ -77,6 +79,8 @@ const navigationTabs: Record<
   ],
   '/strategy': [
     { name: 'System Map', href: 'dashboard', icon: PresentationChartLineIcon },
+    { name: 'Business Model Canvas', href: 'business-model-canvas', icon: DocumentTextIcon },
+    { name: 'Positioning', href: 'positioning', icon: TargetIcon },
     {
       name: 'Business Units',
       href: 'business-units',
@@ -96,6 +100,7 @@ const navigationTabs: Record<
   '/tools': [
     { name: 'BrainDump', href: 'braindump', icon: ChatBubbleOvalLeftEllipsisIcon },
     { name: 'AI Assistant', href: 'ai-assistant', icon: LightBulbIcon },
+    { name: 'Notebook LLM', href: 'notebook-llm', icon: SparklesIcon },
     { name: 'Inbox', href: 'inbox', icon: EnvelopeIcon },
     { name: 'Calendar', href: 'calendar', icon: CalendarIcon },
     { name: 'Notes & Docs', href: 'notes', icon: DocumentTextIcon },
@@ -113,228 +118,120 @@ const navigationTabs: Record<
   ],
   '/profile': [
     { name: 'My Settings', href: 'settings', icon: UserCircleIcon },
-    { name: 'Notifications', href: 'notifications', icon: UserCircleIcon },
-    { name: 'Preferences', href: 'preferences', icon: UserCircleIcon },
+    { name: 'Notifications', href: 'notifications', icon: BellIcon },
+    { name: 'Preferences', href: 'preferences', icon: Cog6ToothIcon },
     { name: 'Role Management', href: 'roles', icon: UsersIcon },
   ],
 };
 
-const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
+export const Header: React.FC<HeaderProps> = ({ onSearchClick }) => {
+  const { isSignedIn, signOut, currentUser } = useAuth();
+  const { refreshData, loading: dataLoading } = useData();
   const location = useLocation();
   const navigate = useNavigate();
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { isSignedIn, currentUser, signIn, signOut } = useAuth();
-  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const { hasPermission } = usePermissions();
-  const { refreshData, loading: dataLoading, dataError } = useData();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const canCreateSomething = hasPermission('people:write');
+  const currentPath = `/${location.pathname.split('/')[1]}`;
+  const tabs = navigationTabs[currentPath] || [];
 
-  const getTitle = () => {
-    const pathParts = location.pathname.split('/').filter((p) => p);
-    if (pathParts.length === 0) return 'Dashboard';
-
-    // Use the top-level section for the main title
-    const section = pathParts[0]
-      .replace(/-/g, ' ')
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-
-    return section;
+  const handleSignOut = () => {
+    signOut();
+    navigate('/login');
   };
-
-  const sectionPrefix = '/' + location.pathname.split('/')[1];
-  const currentTabs = navigationTabs[sectionPrefix];
-
-  const handleNavigation = (path: string) => {
-    navigate(path);
-    setDropdownOpen(false);
-  };
-
-  const handleRefresh = () => {
-    if (!dataLoading) {
-      refreshData();
-    }
-  };
-
-  const hasError = dataError.length > 0;
-  const errorTitle = hasError
-    ? `Data Errors:\n${dataError.map(e => `- ${e.message}`).join('\n')}`
-    : 'Data connection is healthy';
 
   return (
-    <header className="flex-shrink-0 bg-gray-950 border-b border-gray-800 flex flex-col">
-      {/* --- Top Row --- */}
-      <div className="flex items-center justify-between h-16 px-6">
-        <div className="flex items-center">
-          <button
-            onClick={handleRefresh}
-            disabled={dataLoading || !isSignedIn}
-            title={
-              isSignedIn ? 'Refresh data from Google Sheets' : 'Sign in to refresh data'
-            }
-            className="flex items-center gap-2 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <h1 className="text-xl font-semibold text-white">
-              {getTitle()}
-            </h1>
-            {isSignedIn && (
-              <RefreshIcon
-                className={`w-5 h-5 text-gray-400 ${
-                  dataLoading ? 'animate-spin' : ''
-                }`}
-              />
-            )}
-          </button>
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onSearchClick}
-            className="flex items-center bg-gray-800 border border-gray-700 text-gray-400 rounded-lg py-2 px-4 w-64 hover:bg-gray-700 hover:text-white transition-colors"
-          >
-            <SearchIcon className="w-5 h-5 text-gray-500 mr-3" />
-            Search...
-            <kbd className="ml-auto text-xs font-mono bg-gray-700/50 rounded px-1.5 py-0.5 border border-gray-600">
-              ⌘K
-            </kbd>
-          </button>
-
-          {canCreateSomething && (
-            <div className="relative">
-              <Button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center justify-center"
-              >
-                <PlusIcon className="w-5 h-5" />
-                <span className="hidden md:inline ml-2">Create New</span>
-                <ChevronDownIcon className="w-5 h-5 ml-1 hidden md:inline" />
-              </Button>
-              {dropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-10 border border-gray-700">
-                  {hasPermission('people:write') && (
-                    <button
-                      onClick={() => handleNavigation('/execution/people')}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      New Person
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          <div className="relative">
-            <button className="text-gray-400 hover:text-white">
-              <BellIcon className="w-6 h-6" />
-            </button>
-            <span
-              className={`absolute top-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-gray-950 ${
-                dataLoading
-                  ? 'bg-yellow-500 animate-pulse'
-                  : hasError
-                  ? 'bg-red-500'
-                  : 'bg-green-500'
-              }`}
-              title={
-                dataLoading
-                  ? 'Loading data from Google Sheets...'
-                  : errorTitle
+    <header className="flex-shrink-0 h-16 bg-gray-950 border-b border-gray-800 flex items-center justify-between px-6 z-10">
+      <div className="flex items-center">
+        <nav className="flex space-x-4">
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.href}
+              to={`${currentPath}/${tab.href}`}
+              className={({ isActive }) =>
+                `px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-gray-800 text-white'
+                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                }`
               }
-            />
-          </div>
-
-          {isSignedIn && currentUser ? (
-            <div className="relative">
-              <button
-                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center space-x-2 focus:outline-none"
-              >
-                <img
-                  src={currentUser.imageUrl}
-                  alt={currentUser.name}
-                  className="w-8 h-8 rounded-full"
-                />
-                <ChevronDownIcon className="w-5 h-5 text-gray-400" />
-              </button>
-              {userDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-gray-800 rounded-lg shadow-lg z-20 border border-gray-700">
-                  <div className="px-4 py-3 border-b border-gray-700">
-                    <p className="text-sm text-white font-medium truncate">
-                      {currentUser.name}
-                    </p>
-                    <p className="text-sm text-gray-400 truncate">
-                      {currentUser.email}
-                    </p>
-                  </div>
-                  <div className="py-1">
-                    <Link
-                      to="/profile/settings"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      My Settings
-                    </Link>
-                    <Link
-                      to="/profile/notifications"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      Notifications
-                    </Link>
-                    <Link
-                      to="/profile/preferences"
-                      onClick={() => setUserDropdownOpen(false)}
-                      className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      Preferences
-                    </Link>
-                  </div>
-                  <div className="border-t border-gray-700">
-                    <button
-                      onClick={() => {
-                        signOut();
-                        setUserDropdownOpen(false);
-                      }}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Button onClick={signIn}>Sign In</Button>
-          )}
-        </div>
-      </div>
-      {/* --- Bottom Row (Contextual Tabs) --- */}
-      {currentTabs && (
-        <nav className="px-6 -mb-px">
-          <div className="flex space-x-6" aria-label="Tabs">
-            {currentTabs.map((tab) => (
-              <NavLink
-                key={tab.name}
-                to={`${sectionPrefix}/${tab.href}`}
-                end={tab.href === ''} // Use `end` prop for index-like routes
-                className={({ isActive }) =>
-                  `${
-                    isActive
-                      ? 'border-blue-500 text-blue-400'
-                      : 'border-transparent text-gray-400 hover:border-gray-500 hover:text-gray-200'
-                  } flex items-center whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm transition-colors`
-                }
-              >
-                <tab.icon className="w-5 h-5 mr-2" />
-                {tab.name}
-              </NavLink>
-            ))}
-          </div>
+            >
+              <div className="flex items-center gap-2">
+                {<tab.icon className="w-4 h-4" />}
+                <span>{tab.name}</span>
+              </div>
+            </NavLink>
+          ))}
         </nav>
-      )}
+      </div>
+
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onSearchClick}
+          className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+          title="Search (Ctrl+K)"
+        >
+          <SearchIcon className="w-5 h-5" />
+        </button>
+        <button
+          className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
+          title="Notifications"
+        >
+          <BellIcon className="w-5 h-5" />
+        </button>
+
+        <Button
+          onClick={refreshData}
+          disabled={dataLoading}
+          variant="secondary"
+          className="!p-2"
+          title="Refresh Data"
+        >
+          <RefreshIcon className={`w-5 h-5 ${dataLoading ? 'animate-spin' : ''}`} />
+        </Button>
+
+        {isSignedIn ? (
+          <div className="relative">
+            <button
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors"
+            >
+              <img
+                src={
+                  currentUser?.imageUrl ||
+                  `https://api.dicebear.com/7.x/initials/svg?seed=${currentUser?.name || 'User'}`
+                }
+                alt="User Avatar"
+                className="w-8 h-8 rounded-full"
+              />
+              <span className="text-sm font-medium hidden md:inline">
+                {currentUser?.name || 'User'}
+              </span>
+              <ChevronDownIcon className="w-4 h-4 ml-1" />
+            </button>
+            {userMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg py-1 z-20">
+                <Link
+                  to="/profile/settings"
+                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700"
+                  onClick={() => setUserMenuOpen(false)}
+                >
+                  My Settings
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Link to="/login">
+            <Button>Sign In</Button>
+          </Link>
+        )}
+      </div>
     </header>
   );
 };

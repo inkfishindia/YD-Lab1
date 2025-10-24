@@ -5,12 +5,16 @@ import React, {
   useEffect,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
-// FIX: Corrected import syntax for sheetConfig.
-import * as config from '../sheetConfig';
-// FIX: Changed import from googleSheetService to sheetGateway and included SheetConfig
-import { getHeaderMap, SheetConfig } from '../services/sheetGateway';
+import { z } from 'zod';
+
+import { appStructure } from '../config/appStructure';
+import { getHeaderMap, SheetConfig, getAllSheetNames } from '../services/googleSheetService';
 import type { AppSheetRow, MasterSchemaRow } from '../types';
+import { AppSheetRowSchema, MasterSchemaRowSchema } from '../schemas'; // Import schemas
+import * as googleSheetService from '../services/googleSheetService';
+import { allSheetConfigs } from '../sheetConfig'; // Import allSheetConfigs
 
 import { useAuth } from './AuthContext';
 
@@ -26,40 +30,23 @@ export interface SpreadsheetIds {
 }
 
 export type SheetMappings = Record<string, Record<string, string>>;
-export type SheetRelations = Record<string, Record<string, string>>;
-export type SheetDataTypes = Record<
-  string,
-  Record<string, 'string' | 'number' | 'boolean' | 'string_array'>
->;
-
-// FIX: Added explicit type for dynamically built grouped configs.
-type DynamicGroupedConfigs = Record<
-  string,
-  {
-    spreadsheetIdKey: keyof SpreadsheetIds;
-    configs: Record<string, (ids: SpreadsheetIds) => SheetConfig<any>>;
-  }
->;
 
 interface ISpreadsheetConfigContext {
   spreadsheetIds: SpreadsheetIds;
-  sheetMappings: SheetMappings;
-  sheetRelations: SheetRelations;
-  sheetDataTypes: SheetDataTypes;
   isConfigured: boolean;
   isConfigLoading: boolean;
+  finalConfigs: Record<string, SheetConfig<any>>;
   saveSheetConfiguration: (config: {
     ids?: SpreadsheetIds;
-    mappings?: SheetMappings;
-    relations?: SheetRelations;
-    dataTypes?: SheetDataTypes;
-    sheetNameMappings?: Record<string, string>;
-    aliasMappings?: Record<number, string>; // rowIndex -> table_alias
-    sheetNameUpdates?: Record<number, string>; // rowIndex -> sheet_name
+    aliasMappings?: Record<number, string>;
+    headerMappings?: Record<string, Record<string, string>>;
   }) => Promise<void>;
-  masterSchemaRows: MasterSchemaRow[];
   appSheetRows: AppSheetRow[];
-  dynamicGroupedConfigs: DynamicGroupedConfigs;
+  masterSchemaRows: MasterSchemaRow[]; // Still needed for SheetHealthCheck
+  addAppSheetRow: (rowData: Omit<AppSheetRow, '_rowIndex'>) => Promise<void>;
+  updateAppSheetRow: (rowData: AppSheetRow) => Promise<void>;
+  deleteAppSheetRow: (rowIndex: number) => Promise<void>;
+  getSheetNamesInSpreadsheet: (spreadsheetId: string) => Promise<{name: string, gid: string}[]>;
 }
 
 const SpreadsheetConfigContext = createContext<
@@ -72,7 +59,7 @@ const initialIds: SpreadsheetIds = {
   YDS_APP: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
   YDC_BASE: '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY',
   YDS_MANAGEMENT: '1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA',
-  MASTER_SCHEMA: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw', // Master schema is in the YDS_APP sheet
+  MASTER_SCHEMA: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
 };
 
 export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
@@ -81,392 +68,339 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
   const { isSignedIn } = useAuth();
   const [spreadsheetIds, setSpreadsheetIds] =
     useState<SpreadsheetIds>(initialIds);
-  const [sheetMappings, setSheetMappings] = useState<SheetMappings>({});
-  const [sheetRelations, setSheetRelations] = useState<SheetRelations>({});
-  const [sheetDataTypes, setSheetDataTypes] = useState<SheetDataTypes>({});
   const [isConfigured, setIsConfigured] = useState(false);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [appSheetRows, setAppSheetRows] = useState<AppSheetRow[]>([]);
   const [masterSchemaRows, setMasterSchemaRows] = useState<MasterSchemaRow[]>(
     [],
   );
-  // FIX: Used explicit type for dynamic grouped configs state.
-  const [dynamicGroupedConfigs, setDynamicGroupedConfigs] =
-    useState<DynamicGroupedConfigs>({});
 
-  // Load configuration from local storage on mount
-  useEffect(() => {
+  const getSheetNamesInSpreadsheet = useCallback(async (spreadsheetId: string) => {
     try {
-      const storedConfigJson = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedConfigJson) {
-        const { ids, mappings, relations, dataTypes } =
-          JSON.parse(storedConfigJson);
-        if (ids) {
-          const mergedIds = { ...initialIds, ...ids };
-          setSpreadsheetIds(mergedIds);
-          if (
-            mergedIds.STRATEGY &&
-            mergedIds.PARTNERS &&
-            mergedIds.YDS_APP &&
-            mergedIds.YDC_BASE &&
-            mergedIds.YDS_MANAGEMENT
-          ) {
-            setIsConfigured(true);
-          }
-        }
-        // These will be merged with the master schema later
-        if (mappings) setSheetMappings(mappings);
-        if (relations) setSheetRelations(relations);
-        if (dataTypes) setSheetDataTypes(dataTypes);
-      }
+      return await getAllSheetNames(spreadsheetId);
     } catch (error) {
-      console.error(
-        'Failed to load spreadsheet config from local storage:',
-        error,
-      );
-    } finally {
-      setIsConfigLoading(false);
+      console.error(`Failed to get sheet names for ${spreadsheetId}:`, error);
+      return [];
     }
   }, []);
 
-  // Fetch and process master schema
-  useEffect(() => {
-    const fetchMasterSchema = async () => {
-      if (!spreadsheetIds.MASTER_SCHEMA || !isSignedIn) return;
+  // Helper to construct AppSheetRow values for writing back to Google Sheets
+  // Ensures the order matches the actual sheet headers and populates derived fields
+  const buildAppSheetRowValues = useCallback((
+      rowData: Partial<AppSheetRow>,
+      currentHeaders: Record<string, number>, // headerName -> index
+      resolvedSpreadsheetIds: SpreadsheetIds // for looking up spreadsheet_id from code
+  ): any[] => {
+      const values: any[] = new Array(Object.keys(currentHeaders).length).fill('');
+      const headerMap = Object.entries(currentHeaders).reduce((acc, [h, idx]) => ({...acc, [h]: idx}), {} as Record<string, number>);
 
-      setIsConfigLoading(true);
-      try {
-        // --- Phase 1: Fetch Spreadsheet IDs from 'App' sheet ---
-        const appSheetResponse =
-          await (window as any).gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetIds.MASTER_SCHEMA,
-            range: 'App!A:Z', // spreadsheet_name, spreadsheet_code, spreadsheet_id, sheet_name, table_alias
-          });
-        const appRows = appSheetResponse.result.values || [];
-        const appSheetHeaders = appRows.shift() || [];
-        const appSheetHeaderMap = appSheetHeaders.reduce(
-          (acc: any, h: string, i: number) => ({ ...acc, [h.toLowerCase()]: i }),
-          {},
-        );
+      // Determine spreadsheet_id and spreadsheet_name based on code and global IDs
+      const resolvedSpreadsheetId = rowData.spreadsheet_id || (rowData.spreadsheet_code ? resolvedSpreadsheetIds[rowData.spreadsheet_code as keyof SpreadsheetIds] : '');
+      const resolvedSpreadsheetName = rowData.spreadsheet_name || (
+          rowData.spreadsheet_code 
+          ? Object.values(allSheetConfigs).find(cfg => cfg(resolvedSpreadsheetIds).spreadsheetId === resolvedSpreadsheetId)?.(resolvedSpreadsheetIds).range.split('!')[0].replace(/'/g, '') // Try to derive name
+          : ''
+      );
 
-        const parsedAppRows: AppSheetRow[] = appRows
-          .map((row: any[], index: number) => ({
-            _rowIndex: index + 2, // 1-based index + header row
-            spreadsheet_name: row[appSheetHeaderMap['spreadsheet_name']],
-            spreadsheet_code: row[appSheetHeaderMap['spreadsheet_code']],
-            spreadsheet_id: row[appSheetHeaderMap['spreadsheet_id']],
-            sheet_name: row[appSheetHeaderMap['sheet_name']],
-            table_alias: row[appSheetHeaderMap['table_alias']],
-            sheet_id: row[appSheetHeaderMap['sheet_id']],
-          }))
-          .filter((r: AppSheetRow) => r.spreadsheet_id || r.sheet_name);
+      // Determine GID: ALWAYS prioritize from allSheetConfigs for the given alias.
+      const hardcodedSheetConfig = rowData.table_alias ? allSheetConfigs[rowData.table_alias as keyof typeof allSheetConfigs]?.(resolvedSpreadsheetIds) : undefined;
+      const resolvedGid = rowData.sheet_id || hardcodedSheetConfig?.gid || '';
 
-        setAppSheetRows(parsedAppRows);
-        const appSheetIds = parsedAppRows.reduce(
-          (acc: Partial<SpreadsheetIds>, row) => {
-            if (row.spreadsheet_code && row.spreadsheet_id) {
-              acc[row.spreadsheet_code as keyof SpreadsheetIds] =
-                row.spreadsheet_id;
-            }
-            return acc;
-          },
-          {},
-        );
-
-        // --- Phase 2: Fetch Mappings from 'HEADERS_SNAPSHOT_PARENT' ---
-        const schemaResponse =
-          await (window as any).gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetIds.MASTER_SCHEMA,
-            range: 'HEADERS_SNAPSHOT_PARENT!A2:AC', // Fetch a wide range
-          });
-
-        const rows = schemaResponse.result.values || [];
-        const headerResponse =
-          await (window as any).gapi.client.sheets.spreadsheets.values.get({
-            spreadsheetId: spreadsheetIds.MASTER_SCHEMA,
-            range: 'HEADERS_SNAPSHOT_PARENT!1:1',
-          });
-        const headers = headerResponse.result.values?.[0] || [];
-        const headerMap: { [key: string]: number } = {};
-        headers.forEach((h: string, i: number) => (headerMap[h.toLowerCase()] = i));
-
-        const parsedSchema: MasterSchemaRow[] = rows
-          .map((row: any[], index: number) => {
-            const rowObject: { [key: string]: any } = {};
-            for (const key in headerMap) {
-              rowObject[key] = row[headerMap[key]];
-            }
-            if (rowObject.table_alias && rowObject.app_field) {
-              return { ...rowObject, _rowIndex: index + 2 } as MasterSchemaRow;
-            }
-            return null;
-          })
-          .filter((r: MasterSchemaRow | null): r is MasterSchemaRow => r !== null);
-
-        setMasterSchemaRows(parsedSchema);
-
-        const baseMappings: SheetMappings = {};
-        const baseDataTypes: SheetDataTypes = {};
-        const baseRelations: SheetRelations = {};
-
-        for (const row of parsedSchema) {
-          const { table_alias, app_field, header, data_type, fk_ref } = row;
-          if (!table_alias || !app_field) continue;
-          if (!baseMappings[table_alias]) baseMappings[table_alias] = {};
-          if (!baseDataTypes[table_alias]) baseDataTypes[table_alias] = {};
-          if (!baseRelations[table_alias]) baseRelations[table_alias] = {};
-
-          if (header) baseMappings[table_alias][app_field] = header;
-          if (data_type) baseDataTypes[table_alias][app_field] = data_type;
-          if (fk_ref) baseRelations[table_alias][app_field] = fk_ref;
-        }
-
-        // --- Phase 3: Set the grouped config for Health Check page from static config ---
-        // The structure of the health check page must be defined by the app's static requirements,
-        // not the current state of the mappings in the 'App' sheet. The static groupedSheetConfigs
-        // from sheetConfig.ts is the single source of truth for the page's structure.
-        setDynamicGroupedConfigs(config.groupedSheetConfigs);
-
-
-        // Merge IDs: Local Storage > App Sheet > Initial
-        setSpreadsheetIds((prev) => ({ ...initialIds, ...appSheetIds, ...prev }));
-
-        // Merge Mappings: Master Schema > Local Storage
-        setSheetMappings((prev) => deepMerge(baseMappings, prev));
-        setSheetDataTypes((prev) => deepMerge(baseDataTypes, prev));
-        setSheetRelations((prev) => deepMerge(baseRelations, prev));
-        setIsConfigured(true);
-      } catch (error) {
-        console.error('Failed to fetch or parse master schema:', error);
-        setIsConfigured(false);
-      } finally {
-        setIsConfigLoading(false);
-      }
-    };
-
-    fetchMasterSchema();
-  }, [spreadsheetIds.MASTER_SCHEMA, isSignedIn]);
-
-  const saveSheetConfiguration = useCallback(
-    async (config: {
-      ids?: SpreadsheetIds;
-      mappings?: SheetMappings;
-      relations?: SheetRelations;
-      dataTypes?: SheetDataTypes;
-      sheetNameMappings?: Record<string, string>;
-      aliasMappings?: Record<number, string>;
-      sheetNameUpdates?: Record<number, string>;
-    }) => {
-      try {
-        const newIds = { ...spreadsheetIds, ...config.ids };
-        const newMappings = config.mappings ?? sheetMappings;
-        const newRelations = config.relations ?? sheetRelations;
-        const newDataTypes = config.dataTypes ?? sheetDataTypes;
-
-        // --- WRITE-BACK TO GOOGLE SHEETS ---
-        const writeData: { range: string; values: any[][] }[] = [];
-
-        if (appSheetRows.length > 0 && spreadsheetIds.MASTER_SCHEMA) {
-            const headerMap = await getHeaderMap(spreadsheetIds.MASTER_SCHEMA, 'App');
-            
-            // Handle Spreadsheet ID updates
-            if (config.ids) {
-              const idColIndex = headerMap['spreadsheet_id'];
-              const codeColIndex = headerMap['spreadsheet_code'];
-              const codeToSheetNameMap: Partial<Record<keyof SpreadsheetIds, string>> = {
-                MASTER_SCHEMA: 'YD - App', YDS_MANAGEMENT: 'YDS - Management',
-                YDS_APP: 'YD - App', YDC_BASE: 'YDC - Base',
-                PARTNERS: 'Partners', STRATEGY: 'Strategy',
-              };
-
-              if (idColIndex !== undefined) {
-                const idColLetter = String.fromCharCode(65 + idColIndex);
-                for (const [code, newId] of Object.entries(config.ids)) {
-                  if (spreadsheetIds[code as keyof SpreadsheetIds] !== newId) {
-                    let rowToUpdate = appSheetRows.find(row => row.spreadsheet_code === code);
-                    if (!rowToUpdate) {
-                      const sheetNameMatch = codeToSheetNameMap[code as keyof SpreadsheetIds];
-                      if (sheetNameMatch) {
-                        rowToUpdate = appSheetRows.find(r => r.spreadsheet_name && r.spreadsheet_name.trim().toLowerCase() === sheetNameMatch.trim().toLowerCase());
-                      }
-                    }
-                    if (rowToUpdate && rowToUpdate._rowIndex) {
-                      writeData.push({ range: `App!${idColLetter}${rowToUpdate._rowIndex}`, values: [[newId]] });
-                      if (codeColIndex !== undefined && !rowToUpdate.spreadsheet_code) {
-                        const codeColLetter = String.fromCharCode(65 + codeColIndex);
-                        writeData.push({ range: `App!${codeColLetter}${rowToUpdate._rowIndex}`, values: [[code]] });
-                      }
-                    }
-                  }
-                }
-              }
-            }
-            
-            // Handle Table Alias updates
-            if (config.aliasMappings) {
-               const aliasColIndex = headerMap['table_alias'];
-               if (aliasColIndex !== undefined) {
-                    const aliasColLetter = String.fromCharCode(65 + aliasColIndex);
-                    for (const [rowIndexStr, alias] of Object.entries(config.aliasMappings)) {
-                        const rowIndex = parseInt(rowIndexStr, 10);
-                         writeData.push({
-                            range: `App!${aliasColLetter}${rowIndex}`,
-                            values: [[alias || null]]
-                        });
-                    }
-               } else {
-                   console.warn("Could not save alias mappings: 'table_alias' column not found in 'App' sheet.");
-               }
-            }
-
-            // Handle Sheet Name updates
-            if (config.sheetNameUpdates) {
-                const sheetNameColIndex = headerMap['sheet_name'];
-                if (sheetNameColIndex !== undefined) {
-                    const sheetNameColLetter = String.fromCharCode(65 + sheetNameColIndex);
-                    for (const [rowIndexStr, sheetName] of Object.entries(config.sheetNameUpdates)) {
-                        const rowIndex = parseInt(rowIndexStr, 10);
-                        writeData.push({
-                            range: `App!${sheetNameColLetter}${rowIndex}`,
-                            values: [[sheetName || null]]
-                        });
-                    }
-                } else {
-                    console.warn("Could not save sheet name updates: 'sheet_name' column not found in 'App' sheet.");
-                }
-            }
-        }
-
-        if (masterSchemaRows.length > 0 && spreadsheetIds.MASTER_SCHEMA) {
-          const headerMap = await getHeaderMap(
-            spreadsheetIds.MASTER_SCHEMA,
-            'HEADERS_SNAPSHOT_PARENT',
-          );
-
-          const headerCol =
-            headerMap['header'] !== undefined
-              ? String.fromCharCode(65 + headerMap['header'])
-              : null;
-          const dataTypeCol =
-            headerMap['data_type'] !== undefined
-              ? String.fromCharCode(65 + headerMap['data_type'])
-              : null;
-          const fkRefCol =
-            headerMap['fk_ref'] !== undefined
-              ? String.fromCharCode(65 + headerMap['fk_ref'])
-              : null;
-          const sheetNameCol =
-            headerMap['sheet_name'] !== undefined
-              ? String.fromCharCode(65 + headerMap['sheet_name'])
-              : null;
-
-          if (sheetNameCol && config.sheetNameMappings) {
-            masterSchemaRows.forEach((row) => {
-              const { table_alias, _rowIndex, sheet_name } = row;
-              if (!table_alias || !_rowIndex) return;
-
-              const newSheetName = config.sheetNameMappings![table_alias];
-              if (newSheetName && newSheetName !== sheet_name) {
-                writeData.push({
-                  range: `HEADERS_SNAPSHOT_PARENT!${sheetNameCol}${_rowIndex}`,
-                  values: [[newSheetName]],
-                });
-              }
-            });
+      const populateField = (header: string, value: any) => {
+          const idx = headerMap[header];
+          if (idx !== undefined) {
+              values[idx] = value !== undefined && value !== null ? String(value) : '';
           }
+      };
 
-          masterSchemaRows.forEach((row) => {
-            const { table_alias, app_field, _rowIndex } = row;
-            if (!table_alias || !app_field || !_rowIndex) return;
+      populateField('spreadsheet_name', rowData.spreadsheet_name || resolvedSpreadsheetName);
+      populateField('spreadsheet_code', rowData.spreadsheet_code);
+      populateField('spreadsheet_id', resolvedSpreadsheetId);
+      populateField('sheet_name', rowData.sheet_name);
+      populateField('table_alias', rowData.table_alias);
+      populateField('gid', resolvedGid);
+      populateField('header', rowData.header); // This `header` here is for `App` sheet itself, not for data sheets
+      
+      return values;
+  }, [allSheetConfigs]);
 
-            const newHeader =
-              newMappings[table_alias]?.[app_field] || row.header;
-            const newDataType =
-              newDataTypes[table_alias]?.[app_field] || row.data_type;
-            const newRelation =
-              newRelations[table_alias]?.[app_field] || row.fk_ref || '';
 
-            if (headerCol && newHeader !== row.header) {
-              writeData.push({
-                range: `HEADERS_SNAPSHOT_PARENT!${headerCol}${_rowIndex}`,
-                values: [[newHeader]],
-              });
-            }
-            if (dataTypeCol && newDataType !== row.data_type) {
-              writeData.push({
-                range: `HEADERS_SNAPSHOT_PARENT!${dataTypeCol}${_rowIndex}`,
-                values: [[newDataType]],
-              });
-            }
-            if (fkRefCol && newRelation !== (row.fk_ref || '')) {
-              writeData.push({
-                range: `HEADERS_SNAPSHOT_PARENT!${fkRefCol}${_rowIndex}`,
-                values: [[newRelation]],
-              });
-            }
-          });
-        }
+  const loadConfig = useCallback(async () => {
+    if (!isSignedIn) {
+      setIsConfigLoading(false);
+      return;
+    }
 
-        if (writeData.length > 0) {
-          await (window as any).gapi.client.sheets.spreadsheets.values.batchUpdate(
-            {
-              spreadsheetId: spreadsheetIds.MASTER_SCHEMA,
-              resource: { valueInputOption: 'USER_ENTERED', data: writeData },
-            },
-          );
-        }
+    setIsConfigLoading(true);
 
-        // --- UPDATE LOCAL STATE & LOCALSTORAGE ---
-        const newLocalConfig = {
-          ids: newIds,
-          mappings: newMappings,
-          relations: newRelations,
-          dataTypes: newDataTypes,
-        };
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newLocalConfig));
-
-        setSpreadsheetIds(newIds);
-        setSheetMappings(newMappings);
-        setSheetRelations(newRelations);
-        setSheetDataTypes(newDataTypes);
-
-        const allIdsPresent = !!(
-          newIds.STRATEGY &&
-          newIds.PARTNERS &&
-          newIds.YDS_APP &&
-          newIds.YDC_BASE &&
-          newIds.YDS_MANAGEMENT
-        );
-        setIsConfigured(allIdsPresent);
-      } catch (error) {
-        console.error('Failed to save configuration:', error);
-        alert(
-          'Could not save settings. Your browser might be in private mode or has storage disabled. Check console for details.',
-        );
-        throw error;
+    try {
+      // --- Load Local Storage ---
+      const storedConfigJson = localStorage.getItem(LOCAL_STORAGE_KEY);
+      let localIds: Partial<SpreadsheetIds> = {};
+      if (storedConfigJson) {
+        const storedConfig = JSON.parse(storedConfigJson);
+        if (storedConfig.ids) localIds = storedConfig.ids;
       }
-    },
-    [
-      spreadsheetIds,
-      sheetMappings,
-      sheetRelations,
-      sheetDataTypes,
-      masterSchemaRows,
-      appSheetRows,
-    ],
-  );
+      
+      const masterSpreadsheetId = localIds.MASTER_SCHEMA || initialIds.MASTER_SCHEMA;
+      
+      // --- Fetch Layer 1 Config from 'App' sheet ---
+      const appSheetHeadersMap = await getHeaderMap(masterSpreadsheetId, 'App');
+      const appSheetResponse: any = await (window as any).gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: masterSpreadsheetId,
+        range: 'App!A:Z',
+      });
+      const appRowsData = appSheetResponse.result.values || [];
+      const appSheetHeaders = appRowsData.shift() || []; // Headers for parsing
+      const appSheetHeaderIndexMap = appSheetHeaders.reduce((acc: any, h: string, i: number) => ({ ...acc, [h.toLowerCase()]: i }), {});
+
+
+      const parsedAppRows: AppSheetRow[] = appRowsData.map((row: any[], index: number) => {
+        const rowData: Partial<AppSheetRow> = {
+            _rowIndex: index + 2,
+            spreadsheet_name: row[appSheetHeaderIndexMap['spreadsheet_name']],
+            spreadsheet_code: row[appSheetHeaderIndexMap['spreadsheet_code']],
+            spreadsheet_id: row[appSheetHeaderIndexMap['spreadsheet_id']],
+            sheet_name: row[appSheetHeaderIndexMap['sheet_name']],
+            table_alias: row[appSheetHeaderIndexMap['table_alias']],
+            sheet_id: row[appSheetHeaderIndexMap['gid']], // Map 'gid' column from sheet to 'sheet_id' in schema
+            header: row[appSheetHeaderIndexMap['header']], // Header field from App sheet itself
+        };
+        return AppSheetRowSchema.parse(rowData); // Validate and potentially fill defaults
+      }).filter((r: AppSheetRow) => r.spreadsheet_code || r.sheet_name); // Filter out empty rows
+
+      setAppSheetRows(parsedAppRows);
+
+      const dynamicIds = parsedAppRows.reduce((acc: Partial<SpreadsheetIds>, row) => {
+        if (row.spreadsheet_code && row.spreadsheet_id) {
+          acc[row.spreadsheet_code as keyof SpreadsheetIds] = row.spreadsheet_id;
+        }
+        return acc;
+      }, {});
+
+      // Merge initial, dynamic (from App sheet), and local storage IDs
+      const finalIds = { ...initialIds, ...dynamicIds, ...localIds };
+      setSpreadsheetIds(finalIds);
+
+      // --- Fetch Master Schema Rows (for Health Check, not for runtime mapping) ---
+      // This logic remains to support the SheetHealthCheckPage, but these rows are NOT used
+      // to construct `finalConfigs` or resolve headers for actual data sheets.
+      const schemaHeadersMap = await getHeaderMap(masterSpreadsheetId, 'HEADERS_SNAPSHOT_PARENT');
+      const schemaResponse: any = await (window as any).gapi.client.sheets.spreadsheets.values.get({
+        spreadsheetId: masterSpreadsheetId,
+        range: 'HEADERS_SNAPSHOT_PARENT!A:AZ',
+      });
+      const schemaRowsData = schemaResponse.result.values || [];
+      const schemaHeaders = schemaRowsData.shift() || [];
+      const schemaHeaderIndexMap = schemaHeaders.reduce((acc: any, h: string, i: number) => ({ ...acc, [h.toLowerCase()]: i }), {});
+
+      const parsedSchemaRows: MasterSchemaRow[] = schemaRowsData.map((row: any[], index: number) => {
+        const rowData: Partial<MasterSchemaRow> = {
+            _rowIndex: index + 2,
+            table_alias: row[schemaHeaderIndexMap['table_alias']],
+            app_field: row[schemaHeaderIndexMap['app_field']],
+            header: row[schemaHeaderIndexMap['header']],
+            spreadsheet_id: row[schemaHeaderIndexMap['spreadsheet_id']],
+            spreadsheet_name: row[schemaHeaderIndexMap['spreadsheet_name']],
+            sheet_name: row[schemaHeaderIndexMap['sheet_name']],
+            gid: row[schemaHeaderIndexMap['gid']],
+            A1_Column_Range: row[schemaHeaderIndexMap['a1_column_range']],
+            Named_Range_Name: row[schemaHeaderIndexMap['named_range_name']],
+            col_index: row[schemaHeaderIndexMap['col_index']],
+            'Column Letter': row[schemaHeaderIndexMap['column letter']],
+            sample_value: row[schemaHeaderIndexMap['sample_value']],
+            Protection_Status: row[schemaHeaderIndexMap['protection_status']],
+            Data_Type: row[schemaHeaderIndexMap['data_type']],
+            Contains_Formula: row[schemaHeaderIndexMap['contains_formula']],
+            Data_Validation: row[schemaHeaderIndexMap['data_validation']],
+            Column_aliases: row[schemaHeaderIndexMap['column_aliases']],
+            key_field: row[schemaHeaderIndexMap['key_field']],
+            named_data_range: row[schemaHeaderIndexMap['named_data_range']],
+            range: row[schemaHeaderIndexMap['range']],
+            sheet_type: row[schemaHeaderIndexMap['sheet_type']],
+            system_role: row[schemaHeaderIndexMap['system_role']],
+            data_tier: row[schemaHeaderIndexMap['data_tier']],
+            description: row[schemaHeaderIndexMap['description']],
+            detected_type: row[schemaHeaderIndexMap['detected_type']],
+            has_formula: row[schemaHeaderIndexMap['has_formula']],
+            snapshot_ts: row[schemaHeaderIndexMap['snapshot_ts']],
+            is_pk: row[schemaHeaderIndexMap['is_pk']],
+            fk_ref: row[schemaHeaderIndexMap['fk_ref']],
+        };
+        return MasterSchemaRowSchema.parse(rowData);
+      }).filter((r: MasterSchemaRow) => r.table_alias && r.app_field);
+      
+      setMasterSchemaRows(parsedSchemaRows);
+      
+      const allIdsPresent = Object.values(finalIds).every(
+        (id) => typeof id === 'string' && id.trim() !== '',
+      );
+      setIsConfigured(allIdsPresent);
+
+    } catch (error) {
+      console.error('Failed to load master configuration:', error);
+      setIsConfigured(false);
+    } finally {
+      setIsConfigLoading(false);
+    }
+  }, [isSignedIn, getSheetNamesInSpreadsheet, buildAppSheetRowValues]);
+
+  useEffect(() => {
+    const initConfig = async () => {
+      await loadConfig();
+    };
+    initConfig();
+  }, [loadConfig]);
+
+  const finalConfigs: Record<string, SheetConfig<any>> = useMemo(() => {
+    if (isConfigLoading) return {}; 
+
+    const generatedConfigs: Record<string, SheetConfig<any>> = {};
+    const appTableAliases = Object.keys(appStructure);
+
+    appTableAliases.forEach((alias) => {
+        const schemaConfig = appStructure[alias as keyof typeof appStructure];
+        const appRow = appSheetRows.find(row => row.table_alias === alias);
+        
+        // Retrieve hardcoded config (which now contains GID and full column definitions)
+        const hardcodedSheetConfig = allSheetConfigs[alias as keyof typeof allSheetConfigs]?.(spreadsheetIds); 
+
+        // If no hardcoded config exists for this alias, we can't build a final config.
+        if (!hardcodedSheetConfig) {
+            console.warn(`No hardcoded sheet configuration found for alias: ${alias}. Skipping config generation.`);
+            return;
+        }
+
+        // Determine spreadsheet ID: Prioritize from App sheet, then hardcoded, then fallback
+        let currentSpreadsheetId = hardcodedSheetConfig.spreadsheetId;
+        if (appRow?.spreadsheet_code && spreadsheetIds[appRow.spreadsheet_code as keyof SpreadsheetIds]) {
+            currentSpreadsheetId = spreadsheetIds[appRow.spreadsheet_code as keyof SpreadsheetIds];
+        } else if (!currentSpreadsheetId) { // Fallback if hardcoded also doesn't provide it (shouldn't happen with updated sheetConfig)
+             currentSpreadsheetId = spreadsheetIds.YDC_BASE; // Last resort
+        }
+        
+        // Determine GID: ALWAYS use the GID from `hardcodedSheetConfig` (sheetConfig.ts is the source of truth)
+        const currentGid = hardcodedSheetConfig.gid;
+
+        // Determine Sheet Name: Use the sheet name part from the hardcoded config's range.
+        const currentSheetName = hardcodedSheetConfig.range.split('!')[0].replace(/'/g, '');
+
+        // Final check for essential properties
+        if (!currentSpreadsheetId || !currentGid || !currentSheetName) {
+            console.warn(`Skipping config for alias ${alias}: Missing spreadsheetId (${currentSpreadsheetId}), gid (${currentGid}), or derived sheetName (${currentSheetName}).`);
+            return;
+        }
+
+        // Use column definitions from hardcodedSheetConfig directly (these are now comprehensive)
+        const columnMappings = hardcodedSheetConfig.columns; 
+
+        generatedConfigs[alias] = {
+            spreadsheetId: currentSpreadsheetId,
+            gid: currentGid,
+            range: `${currentSheetName}!A:Z`, // Use dynamic sheet name but generic A:Z range
+            namedDataRange: hardcodedSheetConfig.namedDataRange, // Preserve if exists
+            keyField: schemaConfig.keyField,
+            columns: columnMappings, 
+            schema: schemaConfig.schema,
+        };
+    });
+
+    return generatedConfigs;
+
+  }, [isConfigLoading, appSheetRows, spreadsheetIds, allSheetConfigs]);
 
   const value = {
     spreadsheetIds,
-    sheetMappings,
-    sheetRelations,
-    sheetDataTypes,
     isConfigured,
     isConfigLoading,
-    saveSheetConfiguration,
-    masterSchemaRows,
+    finalConfigs,
+    saveSheetConfiguration: useCallback(
+      async (config: {
+        ids?: SpreadsheetIds;
+        aliasMappings?: Record<number, string>;
+        // headerMappings is no longer used for runtime config but might be part of an admin tool UI if needed
+      }) => {
+        let newIds = { ...spreadsheetIds };
+        if (config.ids) {
+          newIds = { ...newIds, ...config.ids };
+          setSpreadsheetIds(newIds); // Update state immediately
+        }
+
+        // Persist to local storage
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ids: newIds }));
+
+        // Update App sheet with new alias mappings
+        if (config.aliasMappings) {
+          const masterSchemaId = newIds.MASTER_SCHEMA;
+          if (!masterSchemaId) {
+            throw new Error("Master Schema Spreadsheet ID is not configured.");
+          }
+          const appSheetCurrentHeaders = await getHeaderMap(masterSchemaId, 'App');
+          const appSheetAllRows = await googleSheetService.fetchSheetData<AppSheetRow>({
+              spreadsheetId: masterSchemaId,
+              gid: (appSheetRows.find(r => r.sheet_name === 'App')?.sheet_id || '0'), // Find App sheet's GID
+              range: 'App!A:Z',
+              keyField: '_rowIndex',
+              columns: Object.keys(AppSheetRowSchema.shape).reduce((acc: any, key: string) => {
+                  acc[key] = { header: key }; 
+                  return acc;
+              }, {}),
+              schema: AppSheetRowSchema,
+          });
+
+          for (const rowIndexStr in config.aliasMappings) {
+            const rowIndex = parseInt(rowIndexStr, 10);
+            const newAlias = config.aliasMappings[rowIndex];
+            
+            const existingAppRow = appSheetAllRows.find(r => r._rowIndex === rowIndex);
+            if (existingAppRow) {
+                // Keep existing data, just update the alias
+                const updatedRowData: Partial<AppSheetRow> = { ...existingAppRow, table_alias: newAlias };
+                const values = buildAppSheetRowValues(updatedRowData, appSheetCurrentHeaders, newIds);
+                await googleSheetService.updateAppSheetRow(masterSchemaId, rowIndex, values);
+            } else {
+                console.warn(`AppSheetRow for rowIndex ${rowIndex} not found. Cannot update alias.`);
+            }
+          }
+        }
+        
+        // No longer processing config.headerMappings directly via API calls to HEADERS_SNAPSHOT_PARENT
+        // as column definitions are now hardcoded in sheetConfig.ts.
+
+        await loadConfig(); // After saving, reload config to reflect changes
+      },
+      [spreadsheetIds, appSheetRows, loadConfig, buildAppSheetRowValues],
+    ),
     appSheetRows,
-    dynamicGroupedConfigs,
+    masterSchemaRows, // Still providing this for health check page
+    addAppSheetRow: useCallback(async (rowData: Omit<AppSheetRow, '_rowIndex'>) => {
+        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
+        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
+        const appSheetHeadersMap = await getHeaderMap(masterSchemaId, 'App');
+        
+        const newRowValues = buildAppSheetRowValues(rowData, appSheetHeadersMap, spreadsheetIds);
+        
+        await googleSheetService.addAppSheetRow(masterSchemaId, newRowValues);
+        await loadConfig(); // Reload to update state
+    }, [spreadsheetIds, loadConfig, buildAppSheetRowValues]),
+    updateAppSheetRow: useCallback(async (rowData: AppSheetRow) => {
+        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
+        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
+        if (rowData._rowIndex === undefined) throw new Error("Row index is required to update an AppSheetRow.");
+        const appSheetHeadersMap = await getHeaderMap(masterSchemaId, 'App');
+
+        const updatedRowValues = buildAppSheetRowValues(rowData, appSheetHeadersMap, spreadsheetIds);
+
+        await googleSheetService.updateAppSheetRow(masterSchemaId, rowData._rowIndex, updatedRowValues);
+        await loadConfig(); // Reload to update state
+    }, [spreadsheetIds, loadConfig, buildAppSheetRowValues]),
+    deleteAppSheetRow: useCallback(async (rowIndex: number) => {
+        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
+        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
+        await googleSheetService.deleteRow(masterSchemaId, 'App', rowIndex);
+        await loadConfig(); // Reload to update state
+    }, [spreadsheetIds, loadConfig]),
+    getSheetNamesInSpreadsheet,
   };
 
   return (
@@ -479,29 +413,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
 export const useSpreadsheetConfig = () => {
   const context = useContext(SpreadsheetConfigContext);
   if (context === undefined) {
-    throw new Error(
-      'useSpreadsheetConfig must be used within a SpreadsheetConfigProvider',
-    );
+    throw new Error('useSpreadsheetConfig must be used within a SpreadsheetConfigProvider');
   }
   return context;
 };
-
-// Helper for deep merging objects, used to combine master schema with local overrides
-function deepMerge(target: any, source: any) {
-  const output = { ...target };
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach((key) => {
-      if (isObject(source[key])) {
-        if (!(key in target)) Object.assign(output, { [key]: source[key] });
-        else output[key] = deepMerge(target[key], source[key]);
-      } else {
-        Object.assign(output, { [key]: source[key] });
-      }
-    });
-  }
-  return output;
-}
-
-function isObject(item: any) {
-  return item && typeof item === 'object' && !Array.isArray(item);
-}

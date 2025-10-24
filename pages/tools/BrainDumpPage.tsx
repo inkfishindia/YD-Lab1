@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -86,8 +87,8 @@ const BrainDumpPage: React.FC = () => {
       
       <div className="mb-4 p-4 bg-gray-900 border border-gray-800 rounded-lg flex items-center gap-4">
           <input type="text" name="content" placeholder="Filter by content..." value={filters.content} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <input type="text" name="type" placeholder="Filter by type..." value={filters.type} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <select name="priority" value={filters.priority} onChange={handleFilterChange} className="bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <input type="text" name="type" placeholder="Filter by type..." value={filters.type} onChange={handleFilterChange} className="mt-1 block w-full bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <select name="priority" value={filters.priority} onChange={handleFilterChange} className="mt-1 block w-full bg-gray-800 border border-gray-700 text-white rounded-md py-2 px-4 w-1/4 focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">All Priorities</option>
               {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
               {Object.values(Priority).map((p: Priority) => <option key={p} value={p}>{p}</option>)}

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useData } from '../../contexts/DataContext';
 // FIX: Changed to type import from central types.ts file for consistency.
@@ -58,7 +59,8 @@ const FocusPane: React.FC<FocusPaneProps> = ({ selection, onSelect }) => {
                 const hub = data.systemHubs.find(h => h.hub_id === id);
                 return hub ? <HubFocus item={hub} {...props} /> : <div>Hub not found.</div>;
             case 'person':
-                const person = data.systemPeople.find(p => p.person_id === id);
+// FIX: Corrected a TypeScript error by changing the property access from 'person_id' to 'user_id' to match the SystemPerson type definition.
+                const person = data.systemPeople.find(p => p.user_id === id);
                 return person ? <PersonFocus item={person} {...props} /> : <div>Person not found.</div>;
             case 'stage':
                 const stage = data.systemStages.find(s => s.stage_id === id);

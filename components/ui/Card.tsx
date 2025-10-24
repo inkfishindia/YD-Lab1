@@ -1,7 +1,7 @@
+
+
 import React from 'react';
 
-// FIX: Extend React.HTMLAttributes<HTMLDivElement> to allow passing standard div props
-// like onMouseEnter and onMouseLeave to the component.
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
@@ -15,7 +15,6 @@ const Card: React.FC<CardProps> = ({
   ...props
 }) => {
   return (
-    // FIX: Spread any additional props onto the root div element to support event handlers and other attributes.
     <div
       className={`bg-gray-900 border border-gray-800 rounded-xl ${className}`}
       {...props}

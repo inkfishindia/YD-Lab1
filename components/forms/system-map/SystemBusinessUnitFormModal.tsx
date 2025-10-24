@@ -1,3 +1,6 @@
+
+
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemBusinessUnit } from '../../../types';
@@ -14,9 +17,10 @@ const getInitialFormData = (): Omit<SystemBusinessUnit, 'bu_id'> => ({
     bu_name: '',
     bu_type: '',
     in_form_of: '',
-    owner_person: '',
-    primary_flywheel: '',
-    serves_segment: '',
+// FIX: Changed 'owner_person' to 'owner_person_id' to align with the schema.
+    owner_person_id: '',
+    primary_flywheel_id: '',
+    serves_segments_ids: [],
     offering_description: '',
 });
 
@@ -50,40 +54,37 @@ const SystemBusinessUnitFormModal: React.FC<FormModalProps> = ({ isOpen, onClose
             <form onSubmit={handleSubmit} className="space-y-4 max-h-[75vh] overflow-y-auto pr-4">
                 <div>
                     <label>Business Unit Name</label>
-                    <input name="bu_name" value={formData.bu_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
+                    <input name="bu_name" value={formData.bu_name || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
                 </div>
                  <div>
                     <label>BU Type</label>
-                    <input name="bu_type" value={formData.bu_type} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <input name="bu_type" value={formData.bu_type || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                 <div>
                     <label>In Form Of</label>
-                    <input name="in_form_of" value={formData.in_form_of} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <input name="in_form_of" value={formData.in_form_of || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                 <div>
                     <label>Owner</label>
-                    <select name="owner_person" value={formData.owner_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+{/* FIX: Corrected property 'owner_person' to 'owner_person_id' to match the schema. */}
+                    <select name="owner_person_id" value={formData.owner_person_id || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Owner --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                  <div>
                     <label>Primary Flywheel</label>
-                    <select name="primary_flywheel" value={formData.primary_flywheel} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+{/* FIX: Corrected property 'primary_flywheel' to 'primary_flywheel_id' to match the schema. */}
+                    <select name="primary_flywheel_id" value={formData.primary_flywheel_id || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Flywheel --</option>
                         {systemFlywheels.map(f => <option key={f.flywheel_id} value={f.flywheel_id}>{f.flywheel_name}</option>)}
                     </select>
                 </div>
                  <div>
-                    <label>Serves Segment</label>
-                    <select name="serves_segment" value={formData.serves_segment} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                        <option value="">-- Select Segment --</option>
-                        {systemSegments.map(s => <option key={s.segment_id} value={s.segment_id}>{s.segment_name}</option>)}
-                    </select>
-                </div>
-                 <div>
-                    <label>Offering Description</label>
-                    <textarea name="offering_description" value={formData.offering_description} onChange={handleChange} rows={3} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <label>Serves Segments (comma-separated IDs)</label>
+{/* FIX: Corrected property 'serves_segment' to 'serves_segments_ids' to match the schema. */}
+                    <input name="serves_segments_ids" value={Array.isArray(formData.serves_segments_ids) ? formData.serves_segments_ids.join(', ') : (formData.serves_segments_ids || '')} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                 <div className="flex justify-end gap-2 pt-4">
                     <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>

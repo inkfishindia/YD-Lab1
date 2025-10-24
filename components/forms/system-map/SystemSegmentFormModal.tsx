@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemSegment } from '../../../types';
@@ -15,17 +17,17 @@ const getInitialFormData = (): Omit<SystemSegment, 'segment_id'> => ({
     priority_rank: '1',
     customer_profile: '',
     psychological_job: '',
-    served_by_flywheels: [],
+// FIX: Renamed 'served_by_flywheels' to 'served_by_flywheels_ids' to match the schema.
+    served_by_flywheels_ids: [],
     behavioral_truth: '',
     validated_aov: 0,
     annual_orders: 0,
     validated_cac: '',
     validation_status: 'EMERGING',
-    owner_person: '',
+    owner_person_id: '',
     strategic_notes: '',
     revenue_9mo_actual_inr: 0,
     '9mo_actual_orders': 0,
-    served_by_bus: [],
 });
 
 const SystemSegmentFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, initialData }) => {
@@ -63,9 +65,11 @@ const SystemSegmentFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, ini
                 </div>
                  <div>
                     <label>Owner</label>
-                    <select name="owner_person" value={formData.owner_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+{/* FIX: Corrected property 'owner_person' to 'owner_person_id' to match the schema. */}
+                    <select name="owner_person_id" value={formData.owner_person_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Owner --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+{/* FIX: Corrected property 'person_id' to 'user_id' to match the 'SystemPerson' type. */}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                  <div>

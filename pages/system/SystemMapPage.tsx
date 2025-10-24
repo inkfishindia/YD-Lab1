@@ -1,3 +1,9 @@
+
+
+
+
+
+
 import React, { useState, useMemo } from 'react';
 import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { 
@@ -100,7 +106,8 @@ const SystemMapPage: React.FC = () => {
             if (seg.validated_cac) segmentCacMap.set(seg.segment_id, parseCurrency(seg.validated_cac));
         });
         const negativeUnitEconomicsBUs = systemBusinessUnits.filter(bu => {
-            const segmentId = bu.serves_segment;
+// FIX: Corrected property access from 'serves_segment' to 'serves_segments_ids' to match the type.
+            const segmentId = bu.serves_segments_ids?.[0];
             if (segmentId) {
                 const aov = bu.validated_aov || 0;
                 const cac = segmentCacMap.get(segmentId) || 0;

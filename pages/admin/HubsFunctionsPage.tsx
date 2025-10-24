@@ -18,7 +18,8 @@ const HubsFunctionsPage: React.FC = () => {
   const filteredHubs = useMemo(() => {
     return hubs.filter(h =>
       h.hub_name.toLowerCase().includes(filters.name.toLowerCase()) &&
-      h.function_category.toLowerCase().includes(filters.category.toLowerCase())
+// FIX: Add a null check before calling toLowerCase() on a potentially undefined property.
+      (h.function_category ?? '').toLowerCase().includes(filters.category.toLowerCase())
     );
   }, [hubs, filters]);
 
@@ -26,8 +27,8 @@ const HubsFunctionsPage: React.FC = () => {
     let sortableHubs = [...filteredHubs];
     if (sortConfig !== null) {
       sortableHubs.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'ascending' ? 1 : -1;
+        if ((a[sortConfig.key] as any) < (b[sortConfig.key] as any)) return sortConfig.direction === 'ascending' ? -1 : 1;
+        if ((a[sortConfig.key] as any) > (b[sortConfig.key] as any)) return sortConfig.direction === 'ascending' ? 1 : -1;
         return 0;
       });
     }
@@ -57,8 +58,12 @@ const HubsFunctionsPage: React.FC = () => {
   };
 
   const handleSave = (hubData: Omit<Hub, 'hub_id'> | Hub) => {
-    if ('hub_id' in hubData) updateHub(hubData);
-    else addHub(hubData);
+// FIX: Use an if/else block to ensure proper type narrowing for the 'hubData' parameter, resolving the TypeScript error.
+    if ('hub_id' in hubData) {
+        updateHub(hubData);
+    } else {
+        addHub(hubData);
+    }
     closeModal();
   };
   
@@ -104,8 +109,10 @@ const HubsFunctionsPage: React.FC = () => {
             <tr>
               <TableHeader sortKey="hub_name" label="Hub Name" />
               <TableHeader sortKey="function_category" label="Function Category" />
-              <TableHeader sortKey="owner_user_id" label="Owner" />
-              <TableHeader sortKey="monthly_budget" label="Monthly Budget" />
+{/* FIX: Changed property from owner_user_id to owner_person to match schema and mock data. */}
+              <TableHeader sortKey="owner_person" label="Owner" />
+{/* FIX: Changed property from monthly_budget to budget_monthly_inr to match the schema. */}
+              <TableHeader sortKey="budget_monthly_inr" label="Monthly Budget" />
               <TableHeader sortKey="hiring_priority" label="Hiring Priority" />
               <th scope="col" className="relative px-6 py-3"><span className="sr-only">Actions</span></th>
             </tr>
@@ -117,8 +124,10 @@ const HubsFunctionsPage: React.FC = () => {
                   <div className="text-sm font-medium text-white">{hub.hub_name}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{hub.function_category}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(hub.owner_user_id)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">₹{hub.monthly_budget.toLocaleString()}</td>
+{/* FIX: Changed property from owner_user_id to owner_person to match schema and mock data. */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{getPersonName(hub.owner_person || '')}</td>
+{/* FIX: Changed property from monthly_budget to budget_monthly_inr to match the schema. */}
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">₹{(hub.budget_monthly_inr || 0).toLocaleString()}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{hub.hiring_priority}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                   <button onClick={() => openModal(hub)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>

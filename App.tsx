@@ -3,7 +3,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 import CommandPalette from './components/CommandPalette';
 import ConfigurationNeeded from './components/ConfigurationNeeded';
-import Header from './components/Header';
+import { Header } from './components/Header';
 import Sidebar from './components/Sidebar';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
@@ -57,9 +57,8 @@ const VisualMoodPage = React.lazy(
   () => import('./pages/creative/VisualMoodPage'),
 );
 const ManagementPage = React.lazy(() => import('./pages/ManagementPage'));
-const ProgramsViewPage = React.lazy(
-  () => import('./pages/execution/ProgramsViewPage'),
-);
+// FIX: ProgramsViewPage does not appear to have a 'default' export. Accessing the named export directly.
+const ProgramsViewPage = React.lazy(() => import('./pages/execution/ProgramsViewPage').then(module => ({ default: module.ProgramsViewPage })));
 const MarketingPage = React.lazy(() => import('./pages/MarketingPage'));
 const CampaignsTabs = React.lazy(
   () => import('./pages/marketing/CampaignsTabs'),
@@ -122,11 +121,10 @@ const AllAccountsPage = React.lazy(
   () => import('./pages/revenue/accounts/AllAccountsPage'),
 );
 const LeadsTabs = React.lazy(() => import('./pages/revenue/LeadsTabs'));
+// FIX: LeadInboxPage does not appear to have a 'default' export. Accessing the named export directly.
+const LeadInboxPage = React.lazy(() => import('./pages/revenue/leads/LeadInboxPage').then(module => ({ default: module.LeadInboxPage })));
 const LeadDetailPage = React.lazy(
   () => import('./pages/revenue/leads/LeadDetailPage'),
-);
-const LeadInboxPage = React.lazy(
-  () => import('./pages/revenue/leads/LeadInboxPage'),
 );
 const LeadScoringPage = React.lazy(
   () => import('./pages/revenue/leads/LeadScoringPage'),
@@ -140,8 +138,9 @@ const DealForecastPage = React.lazy(
 const OpportunityDetailPage = React.lazy(
   () => import('./pages/revenue/opportunities/OpportunityDetailPage'),
 );
+// FIX: PipelineViewPage does not appear to have a 'default' export. Accessing the named export directly.
 const PipelineViewPage = React.lazy(
-  () => import('./pages/revenue/opportunities/PipelineViewPage'),
+  () => import('./pages/revenue/opportunities/PipelineViewPage').then(module => ({ default: module.PipelineViewPage })),
 );
 const ProductsTabs = React.lazy(() => import('./pages/revenue/ProductsTabs'));
 const InventoryStatusPage = React.lazy(
@@ -151,9 +150,12 @@ const ProductCatalogPage = React.lazy(
   () => import('./pages/revenue/products/ProductCatalogPage'),
 );
 const ProductDetailPage = React.lazy(
-  () => import('./pages/revenue/products/ProductDetailPage'),
+  () => import('./pages/revenue/products/Product/ProductDetailPage'),
 );
 const StrategyPage = React.lazy(() => import('./pages/StrategyPage'));
+const BusinessModelCanvasPage = React.lazy(
+  () => import('./pages/strategy/BusinessModelCanvasPage'),
+);
 const BriefsTabs = React.lazy(() => import('./pages/strategy/BriefsTabs'));
 const ActiveDecisionsPage = React.lazy(
   () => import('./pages/strategy/briefs/ActiveDecisionsPage'),
@@ -202,6 +204,7 @@ const BrainDumpPage = React.lazy(() => import('./pages/tools/BrainDumpPage'));
 const CalendarPage = React.lazy(() => import('./pages/tools/CalendarPage'));
 const InboxPage = React.lazy(() => import('./pages/tools/InboxPage'));
 const NotesDocsPage = React.lazy(() => import('./pages/tools/NotesDocsPage'));
+const NotebookLLMPage = React.lazy(() => import('./pages/tools/NotebookLLMPage'));
 const AnalyticsPage = React.lazy(() => import('./pages/AnalyticsPage'));
 const KPIImportsPage = React.lazy(
   () => import('./pages/analytics/KPIImportsPage'),
@@ -387,8 +390,9 @@ const MainLayout: React.FC<{
 
                 {/* MANAGEMENT (formerly EXECUTION) */}
                 <Route path="/management" element={<ManagementPage />}>
-                  <Route index element={<ProgramsViewPage />} />
-                  <Route path="*" element={<ProgramsViewPage />} />
+                  <Route index element={<Navigate to="programs" replace />} />
+                  <Route path="programs" element={<ProgramsViewPage />} />
+                  <Route path="*" element={<Navigate to="programs" replace />} />
                 </Route>
 
                 {/* MARKETING */}
@@ -494,6 +498,7 @@ const MainLayout: React.FC<{
                     element={<Navigate to="dashboard" replace />}
                   />
                   <Route path="dashboard" element={<FlywheelsMapPage />} />
+                  <Route path="business-model-canvas" element={<BusinessModelCanvasPage />} />
                   <Route path="positioning" element={<PositioningPage />} />
                   <Route path="business-units" element={<BusinessUnitsTabs />}>
                     <Route
@@ -553,6 +558,7 @@ const MainLayout: React.FC<{
                   />
                   <Route path="braindump" element={<BrainDumpPage />} />
                   <Route path="ai-assistant" element={<AIAssistantPage />} />
+                  <Route path="notebook-llm" element={<NotebookLLMPage />} />
                   <Route path="inbox" element={<InboxPage />} />
                   <Route path="calendar" element={<CalendarPage />} />
                   <Route path="notes" element={<NotesDocsPage />} />

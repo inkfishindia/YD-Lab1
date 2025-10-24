@@ -1,27 +1,28 @@
+
 import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useData } from '../../../contexts/DataContext';
-import Card from '../../../components/ui/Card';
-import Button from '../../../components/ui/Button';
+import { useData } from '../contexts/DataContext';
+import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import { 
     PlusIcon, Squares2X2Icon, UserGroupIcon, ExclamationTriangleIcon, TargetIcon,
     RocketLaunchIcon, BuildingStorefrontIcon, MegaphoneIcon, ComputerDesktopIcon,
     QueueListIcon, CursorArrowRaysIcon, EditIcon, CloseIcon,
     CurrencyDollarIcon, PresentationChartLineIcon, ShoppingCartIcon
-} from '../../../components/Icons';
-import Badge from '../../../components/ui/Badge';
-import { PRIORITY_COLORS, SYSTEM_STATUS_COLORS } from '../../../constants';
-import type { Priority } from '../../../types';
+} from '../components/Icons';
+import Badge from '../components/ui/Badge';
+import { PRIORITY_COLORS, SYSTEM_STATUS_COLORS } from '../constants';
+import type { Priority } from '../types';
 
-import type { SystemBusinessUnit, SystemFlywheel, SystemSegment, SystemChannel, SystemHub, SystemPerson, SystemPlatform, SystemEntityType } from '../../../types';
+import type { SystemBusinessUnit, SystemFlywheel, SystemSegment, SystemChannel, SystemHub, SystemPerson, SystemPlatform, SystemEntityType } from '../types';
 
 // Form Modals for System Data
-import SystemSegmentFormModal from '../../../components/forms/system-map/SystemSegmentFormModal';
-import SystemFlywheelFormModal from '../../../components/forms/system-map/SystemFlywheelFormModal';
-import SystemBusinessUnitFormModal from '../../../components/forms/system-map/SystemBusinessUnitFormModal';
-import SystemChannelFormModal from '../../../components/forms/system-map/SystemChannelFormModal';
-import SystemHubFormModal from '../../../components/forms/system-map/SystemHubFormModal';
-import SystemPersonFormModal from '../../../components/forms/system-map/SystemPersonFormModal';
+import SystemSegmentFormModal from '../components/forms/system-map/SystemSegmentFormModal';
+import SystemFlywheelFormModal from '../components/forms/system-map/SystemFlywheelFormModal';
+import SystemBusinessUnitFormModal from '../components/forms/system-map/SystemBusinessUnitFormModal';
+import SystemChannelFormModal from '../components/forms/system-map/SystemChannelFormModal';
+import SystemHubFormModal from '../components/forms/system-map/SystemHubFormModal';
+import SystemPersonFormModal from '../components/forms/system-map/SystemPersonFormModal';
 
 // --- HELPER & DETAIL COMPONENTS ---
 
@@ -614,198 +615,4 @@ const FlywheelsMapPage: React.FC = () => {
                                         </div>
                                         {bu.in_form_of && <p className="text-center text-gray-300 italic my-2 text-sm">{bu.in_form_of}</p>}
                                         <div className="my-2 border-t border-gray-700/50" />
-                                        <div className="flex justify-between items-start gap-4 text-sm mt-auto">
-                                            <p className="text-gray-300 flex-1" title={bu.offering_description}>{bu.offering_description}</p>
-                                            <p className="font-medium text-gray-300 flex-shrink-0 whitespace-nowrap">{bu.order_volume_range}</p>
-                                        </div>
-                                    </Card>
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={(e) => { e.stopPropagation(); handleOpenModal('bu', bu); }} className="p-1 text-gray-400 hover:text-white bg-gray-950/70 rounded-md"><EditIcon className="w-4 h-4" /></button></div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </section>
-
-                {/* --- BOTTOM SECTION --- */}
-                <div className="flex gap-6 flex-1 min-h-0 items-start">
-                    {/* --- BOTTOM LEFT: HOW & WHO --- */}
-                    <div className="flex-1 flex flex-col min-h-0">
-                        <section className="flex flex-col min-h-0">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex-1"></div>
-                                <div className="text-center">
-                                    <h2 className="text-xl font-semibold text-white">How & Who</h2>
-                                    <p className="text-sm text-gray-400 -mt-1">Flywheels & Segments</p>
-                                </div>
-                                <div className="flex-1 flex justify-end">
-                                    <Button onClick={() => handleOpenModal('flywheel')} variant="secondary" className="!px-3 !py-1.5"><PlusIcon className="w-4 h-4 mr-2" />Add Flywheel</Button>
-                                </div>
-                            </div>
-                            <div className="flex gap-4 overflow-x-auto pb-4 -m-2 px-2">
-                                {data.systemFlywheels.map(flywheel => {
-                                    const relatedSegments = data.systemSegments.filter(s => flywheel.serves_segments?.includes(s.segment_id));
-                                    const isSelected = selection?.type === 'flywheel' && selection.id === flywheel.flywheel_id;
-                                    const isHighlighted = highlightedIds.flywheel.has(flywheel.flywheel_id);
-                                    const isDimmed = !!selection && !isHighlighted;
-                                    return (
-                                        <div key={flywheel.flywheel_id} className={`bg-gray-900 border rounded-lg flex flex-col transition-opacity duration-300 w-[28rem] flex-shrink-0 ${isDimmed ? 'opacity-20' : ''} ${isSelected ? 'border-accent-purple' : 'border-gray-800'}`}>
-                                            <div onClick={(e) => { e.stopPropagation(); handleSelect('flywheel', flywheel.flywheel_id) }} className="p-4 bg-gray-800/40 rounded-t-lg border-b border-gray-800 cursor-pointer group relative">
-                                                <h3 onMouseEnter={(e) => handleTooltip(e, flywheelTooltipContent(flywheel))} onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })} className="font-bold text-lg text-accent-purple">{flywheel.flywheel_name}</h3>
-                                                <p className="text-sm text-gray-400 italic mt-1">{flywheel.customer_struggle}</p>
-                                                <div className="my-3 border-t border-gray-700/50" />
-                                                <div className="grid grid-cols-2 gap-4 text-xs">
-                                                    <div><p className="font-semibold text-gray-300 uppercase tracking-wider">Trigger</p><p className="text-gray-400 mt-1">{flywheel.jtbd_trigger_moment}</p></div>
-                                                    <div><p className="font-semibold text-gray-300 uppercase tracking-wider">Motion</p><p className="text-gray-400 mt-1">{flywheel.motion_sequence}</p></div>
-                                                </div>
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><button onClick={(e) => { e.stopPropagation(); handleOpenModal('flywheel', flywheel); }} className="p-1 text-gray-400 hover:text-white bg-gray-950/70 rounded-md"><EditIcon className="w-4 h-4" /></button></div>
-                                            </div>
-                                            <div className="p-2 flex flex-col gap-2 overflow-y-auto flex-1">
-                                                {relatedSegments.map(segment => {
-                                                    const segIsSelected = selection?.type === 'segment' && selection.id === segment.segment_id;
-                                                    const segIsHighlighted = highlightedIds.segment.has(segment.segment_id);
-                                                    const segIsDimmed = !!selection && !segIsHighlighted;
-                                                    const hasCriticalDecision = segment.strategic_notes?.toUpperCase().includes('CRITICAL DECISION');
-                                                    const priority = (segment.priority_rank as Priority) || 'Medium';
-                                                    const relatedPlatforms = data.systemPlatforms.filter(p => splitAndTrim(segment.Platforms).includes(p.platform_id));
-                                                    const isExpanded = expandedSegmentId === segment.segment_id;
-
-                                                    return (
-                                                        <div key={segment.segment_id} onClick={(e) => { e.stopPropagation(); handleSelect('segment', segment.segment_id); }} className={`transition-opacity duration-300 group relative ${segIsDimmed ? 'opacity-20' : ''}`} role="button">
-                                                            <Card className={`!p-3 !border flex flex-col ${segIsSelected ? `border-accent-purple` : `border-gray-700 hover:border-accent-purple/50`}`}>
-                                                                <div>
-                                                                    <div className="space-y-2 text-xs">
-                                                                        <div className="flex justify-between items-start gap-2">
-                                                                            <h4 onMouseEnter={(e) => handleTooltip(e, segmentTooltipContent(segment))} onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })} className="font-semibold text-white flex items-center gap-2 text-base"><TargetIcon className="w-4 h-4 text-gray-400" />{segment.segment_name}</h4>
-                                                                            <div className="flex items-center gap-2 flex-shrink-0">
-                                                                                {hasCriticalDecision && <span title="Critical decision required"><ExclamationTriangleIcon className="w-4 h-4 text-yellow-400" /></span>}
-                                                                                <Badge text={segment.priority_rank || 'N/A'} colorClass={PRIORITY_COLORS[priority]} size="sm" />
-                                                                            </div>
-                                                                        </div>
-                                                                        {segment.Promise && <p className="text-sm text-center text-gray-300 italic">"{segment.Promise}"</p>}
-                                                                    </div>
-                                                                    
-                                                                    <div className="my-2 border-t border-gray-700/50" />
-
-                                                                    <div className="space-y-2 text-xs">
-                                                                        <div className="grid grid-cols-2 gap-x-3">{segment.Positioning && <div><p className="font-semibold text-gray-400">Positioning:</p><p className="text-gray-300">{segment.Positioning}</p></div>}{segment.expression && <div><p className="font-semibold text-gray-400">Expression:</p><p className="text-gray-300">{segment.expression}</p></div>}</div>
-                                                                    </div>
-                                                                    
-                                                                    {isExpanded && (
-                                                                        <div className="mt-3 pt-3 border-t border-gray-700/50 space-y-3 text-xs">
-                                                                            <div className="grid grid-cols-2 gap-x-3">
-                                                                                {segment.For && <div><p className="font-semibold text-gray-400">For:</p><p className="text-gray-300">{segment.For}</p></div>}
-                                                                                {segment.Against && <div><p className="font-semibold text-gray-400">Against:</p><p className="text-gray-300">{segment.Against}</p></div>}
-                                                                            </div>
-                                                                            {segment.vision && <div><p className="font-semibold text-gray-400">Vision:</p><p className="text-gray-300">{segment.vision}</p></div>}
-                                                                            {segment.mission && <div><p className="font-semibold text-gray-400">Mission:</p><p className="text-gray-300">{segment.mission}</p></div>}
-                                                                            <div className="grid grid-cols-2 gap-x-3">
-                                                                                {segment.old_world_pain && <div><p className="font-semibold text-gray-400">Old Pain:</p><p className="text-gray-300">{segment.old_world_pain}</p></div>}
-                                                                                {segment.new_world_gain && <div><p className="font-semibold text-gray-400">New Gain:</p><p className="text-gray-300">{segment.new_world_gain}</p></div>}
-                                                                            </div>
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                                
-                                                                {relatedPlatforms.length > 0 && (
-                                                                    <div className="mt-2 pt-2 border-t border-gray-700/50 flex items-center gap-2.5">
-                                                                        {relatedPlatforms.map(platform => (
-                                                                            <a 
-                                                                                key={platform.platform_id} 
-                                                                                href={platform.platform_link_url || '#'} 
-                                                                                target="_blank" 
-                                                                                rel="noopener noreferrer" 
-                                                                                onMouseEnter={(e) => handleTooltip(e, platform.platform_name)}
-                                                                                onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })}
-                                                                                className="block" 
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                            >
-                                                                                {platform.platform_icon_url && <img src={platform.platform_icon_url} alt={platform.platform_name} className="w-5 h-5 rounded-sm object-contain hover:scale-110 transition-transform" />}
-                                                                            </a>
-                                                                        ))}
-                                                                    </div>
-                                                                )}
-                                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleOpenModal('segment', segment); }} className="p-1 text-gray-400 hover:text-white bg-gray-950/70 rounded-md"><EditIcon className="w-4 h-4" /></button>
-                                                                </div>
-                                                            </Card>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* --- BOTTOM RIGHT: HUBS & TEAMS --- */}
-                    <div className="w-[40rem] flex-shrink-0 flex flex-col min-h-0">
-                        <section className="flex flex-col min-h-0">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="flex-1"></div>
-                                <div className="text-center">
-                                    <h2 className="text-xl font-semibold text-white">Hubs & Teams</h2>
-                                </div>
-                                <div className="flex-1 flex justify-end">
-                                    <Button onClick={() => handleOpenModal('hub')} variant="secondary" className="!px-3 !py-1.5"><PlusIcon className="w-4 h-4 mr-2" />Add Hub</Button>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-4 auto-rows-min overflow-y-auto p-1">
-                                {sortedHubs.map(hub => {
-                                    const relatedPeople = data.systemPeople.filter(p => p.primary_hub === hub.hub_id);
-                                    const isSelected = selection?.type === 'hub' && selection.id === hub.hub_id;
-                                    const isHighlighted = highlightedIds.hub.has(hub.hub_id);
-                                    const isDimmed = !!selection && !isHighlighted;
-                                    return (
-                                        <div key={hub.hub_id} className={`bg-gray-900 border rounded-lg flex flex-col transition-opacity duration-300 ${isDimmed ? 'opacity-20' : ''} ${isSelected ? 'border-accent-green' : 'border-gray-800'}`}>
-                                            {/* Hub Header */}
-                                            <div onClick={(e) => { e.stopPropagation(); handleSelect('hub', hub.hub_id) }} className="p-4 bg-gray-800/40 rounded-t-lg border-b border-gray-800 cursor-pointer group relative">
-                                                <h3 onMouseEnter={(e) => handleTooltip(e, hubTooltipContent(hub))} onMouseLeave={() => setActiveTooltip({ content: null, targetRect: null })} className="font-bold text-lg text-accent-green flex items-center gap-2"><Squares2X2Icon className="w-5 h-5"/>{hub.hub_name}</h3>
-                                                <p className="text-sm text-gray-400 italic mt-1">{hub.hub_type}</p>
-                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button onClick={(e) => { e.stopPropagation(); handleOpenModal('hub', hub); }} className="p-1 text-gray-400 hover:text-white bg-gray-950/70 rounded-md"><EditIcon className="w-4 h-4" /></button>
-                                                </div>
-                                            </div>
-                                            {/* People Grid */}
-                                            <div className="p-2 grid grid-cols-2 gap-1 flex-1 items-start content-start [&>:last-child:nth-child(odd)]:col-span-2">
-                                                {relatedPeople.map(person => {
-                                                    const personIsSelected = selection?.type === 'person' && selection.id === person.user_id;
-                                                    const personIsHighlighted = highlightedIds.person.has(person.user_id);
-                                                    const personIsDimmed = !!selection && !personIsHighlighted;
-                                                    return (
-                                                        <div key={person.user_id} onClick={(e) => { e.stopPropagation(); handleSelect('person', person.user_id) }} className={`transition-opacity duration-300 group relative ${personIsDimmed ? 'opacity-20' : ''}`} role="button">
-                                                            <Card className={`!p-2 !border ${personIsSelected ? 'border-accent-green' : 'border-gray-700 hover:border-accent-green/50'}`}>
-                                                                <h4 className="font-semibold text-white text-sm truncate">{person.full_name}</h4>
-                                                                <p className="text-xs text-gray-400 truncate">{person.role}</p>
-                                                            </Card>
-                                                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                <button onClick={(e) => { e.stopPropagation(); handleOpenModal('person', person); }} className="p-1 text-gray-400 hover:text-white bg-gray-950/70 rounded-md"><EditIcon className="w-3 h-3" /></button>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    </div>
-
-                </div>
-            </div>
-            
-            <DetailSidebar selection={selection} onClose={() => { setSelection(null); setExpandedSegmentId(null); }} onSelect={handleSelect} />
-
-            {modalState.type === 'segment' && <SystemSegmentFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-            {modalState.type === 'flywheel' && <SystemFlywheelFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-            {modalState.type === 'bu' && <SystemBusinessUnitFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-            {modalState.type === 'channel' && <SystemChannelFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-            {modalState.type === 'hub' && <SystemHubFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-            {modalState.type === 'person' && <SystemPersonFormModal isOpen={modalState.isOpen} onClose={handleCloseModal} initialData={modalState.data} />}
-        </div>
-    );
-};
-
-export default FlywheelsMapPage;
+                                        <div className="flex justify-between items-start

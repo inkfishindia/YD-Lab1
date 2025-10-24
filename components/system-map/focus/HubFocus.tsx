@@ -1,3 +1,6 @@
+
+
+
 import React from 'react';
 import type { SystemHub } from '../../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -10,14 +13,13 @@ interface FocusProps {
     onSelect: (type: any, id: string) => void;
 }
 
-const splitAndTrim = (str: string | undefined): string[] => str ? str.split(',').map(s => s.trim()).filter(Boolean) : [];
-
 const HubFocus: React.FC<FocusProps> = ({ item, onSelect }) => {
     const { systemInterfaces, systemChannels, systemPeople } = useData();
 
-    const owner = systemPeople.find(p => p.person_id === item.owner_person);
-    const ownedInterfaces = systemInterfaces.filter(i => splitAndTrim(item.interfaces_owned).includes(i.interface_id));
-    const ownedChannels = systemChannels.filter(c => splitAndTrim(item.channels_owned).includes(c.channel_id));
+// FIX: Corrected a TypeScript error by changing the property access from 'person_id' to 'user_id' to match the SystemPerson type definition.
+    const owner = systemPeople.find(p => p.user_id === item.owner_person);
+    const ownedInterfaces = systemInterfaces.filter(i => item.interfaces_owned?.includes(i.interface_id));
+    const ownedChannels = systemChannels.filter(c => item.channels_owned?.includes(c.channel_id));
 
     return (
         <div className="p-4 space-y-5">

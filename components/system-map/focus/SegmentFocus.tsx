@@ -1,3 +1,8 @@
+
+
+
+
+
 import React from 'react';
 import type { SystemSegment } from '../../../types';
 import { useData } from '../../../contexts/DataContext';
@@ -13,12 +18,14 @@ interface FocusProps {
 const SegmentFocus: React.FC<FocusProps> = ({ item: segment, onSelect }) => {
     const { systemFlywheels, systemBusinessUnits, systemPeople } = useData();
     
-    const owner = systemPeople.find(p => p.person_id === segment.owner_person);
+// FIX: Corrected property name from 'owner_person' to 'owner_person_id' and 'person_id' to 'user_id' to match schema.
+    const owner = systemPeople.find(p => p.user_id === segment.owner_person_id);
 
     // FIX: The 'served_by_flywheels' and 'served_by_bus' properties are already string arrays.
     // The 'splitAndTrim' helper function, which expects a string, is not needed here.
-    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels?.includes(fw.flywheel_id));
-    const relatedBUs = systemBusinessUnits.filter(bu => segment.served_by_bus?.includes(bu.bu_id));
+// FIX: Corrected 'served_by_flywheels' to 'served_by_flywheels_ids' and 'served_by_bus' to use the 'bu_id' property.
+    const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels_ids?.includes(fw.flywheel_id));
+    const relatedBUs = systemBusinessUnits.filter(bu => bu.bu_id === segment.bu_id);
     
     return (
         <div className="p-4 space-y-5">
@@ -29,7 +36,7 @@ const SegmentFocus: React.FC<FocusProps> = ({ item: segment, onSelect }) => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-                <StatCard label="9-Mo Revenue" value={segment['9mo_actual_revenue_inr']} prefix="₹" icon={CurrencyDollarIcon}/>
+                <StatCard label="9-Mo Revenue" value={segment.revenue_9mo_actual_inr} prefix="₹" icon={CurrencyDollarIcon}/>
                 <StatCard label="LTV/CAC Ratio" value={segment.ltv_cac_ratio} icon={PresentationChartLineIcon}/>
                 <StatCard label="Customers" value={segment.current_customers} icon={UserGroupIcon}/>
                 <StatCard label="Avg. AOV" value={segment.validated_aov} prefix="₹" icon={ShoppingCartIcon}/>
@@ -49,7 +56,7 @@ const SegmentFocus: React.FC<FocusProps> = ({ item: segment, onSelect }) => {
                 <h4 className="text-xs uppercase tracking-wider font-semibold text-gray-400 mb-2">Served by Flywheels</h4>
                 <div className="space-y-2">
                     {relatedFlywheels.length > 0 ? relatedFlywheels.map(fw => 
-                        <RelatedItem key={fw.flywheel_id} type="flywheel" name={fw.flywheel_name} detail={fw.owner_person_Name} onClick={() => onSelect('flywheel', fw.flywheel_id)} />
+                        <RelatedItem key={fw.flywheel_id} type="flywheel" name={fw.flywheel_name} detail={fw.owner_person_Name ?? undefined} onClick={() => onSelect('flywheel', fw.flywheel_id)} />
                     ) : <p className="text-sm text-gray-500">None</p>}
                 </div>
             </div>

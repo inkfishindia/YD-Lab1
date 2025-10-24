@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { SystemChannel } from '../../../types';
@@ -45,17 +46,17 @@ const SystemChannelFormModal: React.FC<FormModalProps> = ({ isOpen, onClose, ini
             <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                     <label>Channel Name</label>
-                    <input name="channel_name" value={formData.channel_name} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
+                    <input name="channel_name" value={formData.channel_name || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required />
                 </div>
                  <div>
                     <label>Channel Type</label>
-                    <input name="channel_type" value={formData.channel_type} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
+                    <input name="channel_type" value={formData.channel_type || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" />
                 </div>
                 <div>
                     <label>Responsible Person</label>
-                    <select name="responsible_person" value={formData.responsible_person} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
+                    <select name="responsible_person" value={formData.responsible_person || ''} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
                         <option value="">-- Select Person --</option>
-                        {systemPeople.map(p => <option key={p.person_id} value={p.person_id}>{p.full_name}</option>)}
+                        {systemPeople.map(p => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                     </select>
                 </div>
                 <div className="flex justify-end gap-2 pt-4">

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Lead, Person } from '../../../types';
@@ -12,7 +11,7 @@ import { LEAD_STATUS_COLORS } from '../../../constants';
 
 type SortConfig = { key: keyof Lead; direction: 'ascending' | 'descending' } | null;
 
-export const LeadInboxPage: React.FC = () => {
+const LeadInboxPage: React.FC = () => {
   const { leads, addLead, updateLead, deleteLead, people } = useData();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);

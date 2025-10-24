@@ -1,6 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
 import { useData } from '../../contexts/DataContext';
-// FIX: Import missing types for data from context.
 import { Project, Priority, Status, Person, BusinessUnit } from '../../types';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
@@ -12,12 +12,11 @@ interface ProjectFormModalProps {
   project: Project | null;
 }
 
-const getInitialData = (people: any[], businessUnits: any[]): Omit<Project, 'project_id' | 'created_at' | 'updated_at'> => ({
+const getInitialData = (people: Person[], businessUnits: BusinessUnit[]): Omit<Project, 'project_id' | 'created_at' | 'updated_at'> => ({
     project_name: '',
-    business_unit_id: businessUnits[0] ? [businessUnits[0].bu_id] : [],
+    business_unit_id: businessUnits[0] ? [businessUnits[0].bu_id!] : [],
     owner_user_id: people[0]?.user_id || '',
     priority: Priority.Medium,
-    // FIX: Use bracket notation for enum members with spaces.
     status: Status['Not Started'],
     start_date: '',
     target_end_date: '',
@@ -37,7 +36,7 @@ const getInitialData = (people: any[], businessUnits: any[]): Omit<Project, 'pro
 
 const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, onSave, project }) => {
     const { people, businessUnits } = useData();
-    const [formData, setFormData] = useState(getInitialData(people, businessUnits));
+    const [formData, setFormData] = useState<Omit<Project, 'project_id' | 'created_at' | 'updated_at'>>(getInitialData(people, businessUnits));
 
     useEffect(() => {
       if (isOpen) {
@@ -73,7 +72,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, on
         if (numericFields.includes(name)) {
             setFormData(prev => ({ ...prev, [name]: parseFloat(value) || 0 }));
         } else if (arrayStringFields.includes(name)) {
-             setFormData(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()).filter(Boolean) }));
+             setFormData(prev => ({ ...prev, [name]: value.split(',').map(s => s.trim()).filter(Boolean) as string[] }));
         } else {
             setFormData(prev => ({ ...prev, [name]: value }));
         }
@@ -100,14 +99,12 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, on
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Owner</label>
                         <select name="owner_user_id" value={formData.owner_user_id} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white" required>
-                            {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
                             {people.map((p: Person) => <option key={p.user_id} value={p.user_id}>{p.full_name}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Status</label>
                         <select name="status" value={formData.status} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                            {/* FIX: Explicitly type 's' to resolve type inference issue. */}
                             {Object.values(Status).map((s: Status) => <option key={s} value={s}>{s}</option>)}
                         </select>
                     </div>
@@ -116,7 +113,6 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, on
                     <div>
                         <label className="block text-sm font-medium text-gray-300">Priority</label>
                         <select name="priority" value={formData.priority} onChange={handleChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white">
-                            {/* FIX: Explicitly type 'p' to resolve type inference issue. */}
                             {Object.values(Priority).map((p: Priority) => <option key={p} value={p}>{p}</option>)}
                         </select>
                     </div>
@@ -138,8 +134,7 @@ const ProjectFormModal: React.FC<ProjectFormModalProps> = ({ isOpen, onClose, on
                  <div>
                     <label className="block text-sm font-medium text-gray-300">Business Unit(s)</label>
                     <select name="business_unit_id" multiple value={formData.business_unit_id} onChange={handleMultiSelectChange} className="mt-1 block w-full bg-gray-700 border-gray-600 rounded-md shadow-sm text-white h-24">
-                        {/* FIX: Explicitly type 'bu' to resolve type inference issue. */}
-                        {businessUnits.map((bu: BusinessUnit) => <option key={bu.bu_id} value={bu.bu_id}>{bu.bu_name}</option>)}
+                        {businessUnits.map((bu: BusinessUnit) => <option key={bu.bu_id} value={bu.bu_id!}>{bu.bu_name}</option>)}
                     </select>
                 </div>
                 <div className="flex justify-end space-x-3 pt-4 border-t border-gray-700 mt-4">
