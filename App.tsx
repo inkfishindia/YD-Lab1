@@ -10,6 +10,7 @@ import { DataProvider } from './contexts/DataContext';
 import { PermissionsProvider } from './contexts/PermissionsContext';
 import {
   SpreadsheetConfigProvider,
+  // FIX: Exported member 'useSpreadsheetConfig' must be imported from the module.
   useSpreadsheetConfig,
 } from './contexts/SpreadsheetConfigContext';
 
@@ -26,13 +27,13 @@ const HubsFunctionsPage = React.lazy(
 );
 // FIX: PlatformsIntegrationsPage does not appear to have a 'default' export. Accessing the named export directly.
 const PlatformsIntegrationsPage = React.lazy(
-  () => import('./pages/admin/PlatformsIntegrationsPage'));
+  () => import('./pages/admin/PlatformsIntegrationsPage').then(module => ({ default: module.PlatformsIntegrationsPage })));
 const RoleManagementPage = React.lazy(
   () => import('./pages/admin/RoleManagementPage'),
 );
 // FIX: SheetHealthCheckPage does not appear to have a 'default' export. Accessing the named export directly.
 const SheetHealthCheckPage = React.lazy(
-  () => import('./pages/admin/SheetHealthCheckPage'));
+  () => import('./pages/admin/SheetHealthCheckPage').then(module => ({ default: module.SheetHealthCheckPage })));
 const CommandCenterPage = React.lazy(() => import('./pages/CommandCenterPage'));
 const DashboardPage = React.lazy(
   () => import('./pages/command-center/DashboardPage'),
@@ -72,15 +73,16 @@ const CampaignDetailPage = React.lazy(
 const PerformanceDashboardPage = React.lazy(
   () => import('./pages/marketing/campaigns/PerformanceDashboardPage'),
 );
+// FIX: AllInterfacesPage does not appear to have a 'default' export. Accessing the named export directly.
 const AllInterfacesPage = React.lazy(
-  () => import('./pages/marketing/channels/AllInterfacesPage'),
+  () => import('./pages/marketing/channels/AllInterfacesPage').then(module => ({ default: module.AllInterfacesPage })),
 );
 const BudgetAllocationPage = React.lazy(
   () => import('./pages/marketing/channels/BudgetAllocationPage'),
 );
+// FIX: ChannelsListPage does not appear to have a 'default' export. Accessing the named export directly.
 const ChannelsListPage = React.lazy(
-  () => import('./pages/marketing/channels/ChannelsListPage'),
-);
+  () => import('./pages/marketing/channels/ChannelsListPage').then(module => ({ default: module.ChannelsListPage })));
 const InterfacePerformancePage = React.lazy(
   () => import('./pages/marketing/channels/InterfacePerformancePage'),
 );
@@ -140,8 +142,7 @@ const OpportunityDetailPage = React.lazy(
 );
 // FIX: PipelineViewPage does not appear to have a 'default' export. Accessing the named export directly.
 const PipelineViewPage = React.lazy(
-  () => import('./pages/revenue/opportunities/PipelineViewPage').then(module => ({ default: module.PipelineViewPage })),
-);
+  () => import('./pages/revenue/opportunities/PipelineViewPage').then(module => ({ default: module.PipelineViewPage })));
 const ProductsTabs = React.lazy(() => import('./pages/revenue/ProductsTabs'));
 const InventoryStatusPage = React.lazy(
   () => import('./pages/revenue/products/InventoryStatusPage'),

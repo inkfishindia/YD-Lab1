@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from 'react';
 
-import { getAuthAccessToken, setAuthAccessToken } from '../services/googleAuth';
+import { getAuthAccessToken, setAuthAccessToken, initTC } from '../services/googleAuth';
 
 interface GoogleUser {
   id: string;
@@ -35,8 +35,6 @@ interface IAuthContext {
 
 const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
-const SCOPES =
-  'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/drive.readonly';
 const LOCAL_STORAGE_KEY = 'google_auth_session';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({
@@ -50,14 +48,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
   const signOut = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
-    const token = getAuthAccessToken(); // Get token from our module
+    const token = getAuthAccessToken(); // Get token from our service
     if (token && (window as any).google?.accounts?.oauth2) {
       (window as any).google.accounts.oauth2.revoke(
-        token, // Use the stored access token
-        () => {},
+        token,
+        () => {}, // Callback for revocation
       );
     }
-    setAuthAccessToken(null); // Clear our stored token
+    setAuthAccessToken(null); // Clear local token
     setCurrentUser(null);
     setIsSignedIn(false);
   }, []);
@@ -111,53 +109,36 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
 
     gisScript.onload = () => {
       try {
-        const clientId = process.env.GOOGLE_CLIENT_ID;
-        if (!clientId || clientId === "YOUR_GOOGLE_CLIENT_ID") { // Placeholder check
-            const missingIdError = "Google Client ID is missing or is a placeholder. Please update `window.process.env.GOOGLE_CLIENT_ID` in `index.html` with your actual Client ID.";
-            console.error(missingIdError);
-            setInitError(missingIdError);
-            setIsLoading(false);
-            return;
+        // FIX: Access VITE_GOOGLE_CLIENT_ID from process.env instead of import.meta.env
+        if (!process.env.VITE_GOOGLE_CLIENT_ID) {
+          throw new Error('VITE_GOOGLE_CLIENT_ID is not defined in environment variables.');
         }
-
-        const client = (window as any).google.accounts.oauth2.initTokenClient({
-          client_id: clientId,
-          scope: SCOPES,
-          callback: handleTokenResponse,
-          error_callback: (error: any) => {
-              console.error('Google token client error:', error);
-              setInitError(`Google Sign-In failed: ${error?.details || 'Check console for details.'}`);
-              setIsLoading(false);
-          }
-        });
+        const client = initTC(handleTokenResponse); // Use our initTC function
         setTokenClient(client);
         
-        // Check for a stored session after GIS is ready
-        try {
-          const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
-          if (storedSession) {
-            const session = JSON.parse(storedSession);
-            // Check if session is expired
-            if (session && session.accessToken && session.expiresAt > Date.now()) {
-              // Restore session
-              setAuthAccessToken(session.accessToken);
-              setCurrentUser(session.user);
-              setIsSignedIn(true);
-            } else {
-              // Clear expired session
-              localStorage.removeItem(LOCAL_STORAGE_KEY);
-            }
+        // Check for a stored session and attempt to restore
+        const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (storedSession) {
+          const session = JSON.parse(storedSession);
+          if (session && session.accessToken && session.expiresAt > Date.now()) {
+            setAuthAccessToken(session.accessToken);
+            setCurrentUser(session.user);
+            setIsSignedIn(true);
+          } else {
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
           }
-        } catch (e) {
-          console.error("Could not restore session:", e);
-          localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
-
+        setIsLoading(false); // Finished loading GIS and checking session
       } catch (e: any) {
           console.error("Error initializing Google Identity Services:", e);
-          setInitError(`Failed to initialize Google Sign-In services. Error: ${e.message}`);
-      } finally {
-        setIsLoading(false);
+          let errorMessage = `Failed to initialize Google Sign-In services.`;
+          if (e.message) {
+            errorMessage += ` Error: ${e.message}`;
+          } else if (typeof e === 'object' && e !== null) {
+            errorMessage += ` Details: ${JSON.stringify(e)}`;
+          }
+          setInitError(errorMessage);
+          setIsLoading(false);
       }
     };
     

@@ -15,6 +15,7 @@ import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import {
   SpreadsheetIds,
+  // FIX: Exported member 'useSpreadsheetConfig' must be imported from the module.
   useSpreadsheetConfig,
 } from '../../contexts/SpreadsheetConfigContext';
 import { AppSheetRow } from '../../types';
@@ -70,7 +71,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
       const spreadsheetId = spreadsheetIds[spreadsheetCode];
       if (spreadsheetId && !uniqueDefs.has(spreadsheetCode)) {
         // Try to get a more readable name from allSheetConfigs or a default
-        let name = spreadsheetCode;
+        let name: string = spreadsheetCode;
         switch (spreadsheetCode) {
             case 'YDS_APP': name = 'YDS Application Config'; break;
             case 'YDC_BASE': name = 'YDC Base Data'; break;
@@ -78,7 +79,7 @@ const PlatformsIntegrationsPage: React.FC = () => {
             case 'STRATEGY': name = 'Strategy & BMC'; break;
             case 'PARTNERS': name = 'Partners & Ecosystem'; break;
             case 'YDS_MANAGEMENT': name = 'YDS Program Management'; break;
-            default: name = spreadsheetCode.replace(/_/g, ' '); break; // Fallback to formatted code
+            default: name = String(spreadsheetCode).replace(/_/g, ' '); break; // Fallback to formatted code
         }
         uniqueDefs.set(spreadsheetCode, name);
       }

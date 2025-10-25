@@ -26,7 +26,7 @@
               'gray-500': '#71717A', // text-muted
               'gray-400': '#A1A1AA', // text-secondary
               'gray-300': '#D4D4D8',
-              'gray-200': '#E4E4E7', // text-primary
+              'gray-200': '#F4F4F5',
               'gray-100': '#F4F4F5',
 
               // Primary Action Color
@@ -53,27 +53,32 @@
     </script>
     <!--
       **************************************************************************************************
-      IMPORTANT: GOOGLE API KEYS & CLIENT ID CONFIGURATION
+      IMPORTANT: ENVIRONMENT VARIABLE CONFIGURATION FOR NON-VITE ENVIRONMENTS
       --------------------------------------------------------------------------------------------------
-      YOU MUST REPLACE "YOUR_GOOGLE_CLIENT_ID" BELOW WITH YOUR ACTUAL CREDENTIALS FROM THE GOOGLE CLOUD CONSOLE.
+      When not running with the Vite development server or a Vite build, `import.meta.env` is undefined.
+      To ensure the application can still access environment variables (like Google Client ID and
+      Spreadsheet IDs), we inject a `window.process.env` object.
 
-      FAILURE TO DO SO WILL RESULT IN APPLICATION INITIALIZATION ERRORS!
+      In a production Vite build, these values are statically replaced during compilation.
+      This block is primarily for local testing or specific hosting environments that don't
+      natively support `import.meta.env` injection.
 
-      1. Go to Google Cloud Console: https://console.cloud.google.com/
-      2. Select or create your project.
-      3. Navigate to "APIs & Services" > "Credentials".
-      4. Create or obtain your "OAuth 2.0 Client IDs".
-         - For Client ID: Set up your OAuth consent screen and create a "Web application" client ID.
-      5. IMPORTANT: Ensure your API Key (if any other Google services require it) is enabled for necessary APIs (e.g., Google Sheets).
-      6. IMPORTANT: For your OAuth 2.0 Client ID, add your application's URL (e.g., http://localhost:3000)
-         to "Authorized JavaScript origins".
+      Please replace the placeholder values with your actual Google Cloud credentials and Spreadsheet IDs.
       **************************************************************************************************
     -->
     <script>
-      window.process = window.process || {};
-      window.process.env = window.process.env || {};
-      // API_KEY is removed as Gemini usage is removed and it's not needed for GIS authentication.
-      window.process.env.GOOGLE_CLIENT_ID = "155749101771-lvmc383eus9pg407dedlp3r2q330gukj.apps.googleusercontent.com"; // <<< This has been updated with the provided Client ID.
+      window.process = { env: {} };
+      // Google Client ID for OAuth
+      window.process.env.VITE_GOOGLE_CLIENT_ID = "155749101771-lvmc383eus9pg407dedlp3r2q330gukj.apps.googleusercontent.com";
+
+      // Spreadsheet IDs
+      // These values were derived from previous interactions and should be accurate.
+      // If you have specific `.env.local` variables, ensure they are reflected here.
+      window.process.env.VITE_SHEETS_ID = "1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw"; // Used for YDS_APP and MASTER_SCHEMA
+      window.process.env.VITE_STRATEGY_ID = "1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc";
+      window.process.env.VITE_PARTNERS_ID = "1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs";
+      window.process.env.VITE_YDC_BASE_ID = "1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY";
+      window.process.env.VITE_YDS_MANAGEMENT_ID = "1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA";
     </script>
     <!-- ONLY KEEP GIS FOR AUTH -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>

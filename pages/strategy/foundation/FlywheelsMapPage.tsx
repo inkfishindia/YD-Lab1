@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo, useRef, useLayoutEffect, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useData } from '../../../contexts/DataContext';
@@ -93,6 +92,7 @@ const iconMap: Record<string, React.ElementType> = {
     person: UserGroupIcon,
     stage: QueueListIcon,
     touchpoint: CursorArrowRaysIcon,
+    platform: ComputerDesktopIcon, // Added platform icon as well.
 };
 
 const StatCard: React.FC<{ label: string; value: any; prefix?: string; suffix?: string; icon?: React.ElementType; }> = ({ label, value, prefix = '', suffix = '', icon: Icon }) => {
@@ -164,7 +164,8 @@ const SegmentDetailView: React.FC<{ item: SystemSegment; onSelect: (type: System
     const owner = systemPeople.find(p => p.user_id === segment.owner_person_id);
     const relatedFlywheels = systemFlywheels.filter(fw => segment.served_by_flywheels_ids?.includes(fw.flywheel_id));
     const relatedBUs = systemBusinessUnits.filter(bu => bu.bu_id === segment.bu_id);
-    const relatedPlatforms = systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); // FIX: String() conversion
+    // FIX: Ensure Platforms is treated as a string before splitting.
+    const relatedPlatforms = systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); 
 
     return (
         <div className="p-4 space-y-4">
@@ -280,7 +281,8 @@ const FlywheelDetailView: React.FC<{ item: SystemFlywheel; onSelect: (type: Syst
     const owner = systemPeople.find(p => p.user_id === item.owner_person);
     const relatedSegments = systemSegments.filter(s => item.serves_segments?.includes(s.segment_id));
     const relatedBUs = systemBusinessUnits.filter(bu => item.serves_bus?.includes(bu.bu_id));
-    const relatedChannels = systemChannels.filter(c => String(item.acquisition_channels).includes(c.channel_id)); // FIX: String() conversion
+    // FIX: Ensure acquisition_channels is treated as a string before splitting.
+    const relatedChannels = systemChannels.filter(c => splitAndTrim(String(item.acquisition_channels)).includes(c.channel_id)); 
 
     return (
         <div className="p-4 space-y-4">
@@ -298,6 +300,7 @@ const FlywheelDetailView: React.FC<{ item: SystemFlywheel; onSelect: (type: Syst
             <DetailSection title="Customer Struggle">{item.customer_struggle}</DetailSection>
             <DetailSection title="JTBD Trigger Moment">{item.jtbd_trigger_moment}</DetailSection>
             <DetailSection title="Motion Sequence">{item.motion_sequence}</DetailSection>
+            {/* FIX: Ensure efficiency_metrics is treated as an array or string. */}
             <DetailSection title="Efficiency Metrics"><p className="whitespace-pre-wrap">{Array.isArray(item.efficiency_metrics) ? item.efficiency_metrics.join(', ') : item.efficiency_metrics}</p></DetailSection>
 
             <DetailSection title="Serves Segments"><div className="space-y-2">{relatedSegments.map(s => <RelatedItem key={s.segment_id} type="segment" name={s.segment_name} onClick={() => onSelect('segment', s.segment_id)} />)}</div></DetailSection>
@@ -329,7 +332,8 @@ const BuDetailView: React.FC<{ item: SystemBusinessUnit; onSelect: (type: System
             <DetailSection title="Offering Description">{item.offering_description}</DetailSection>
             
             <div className="grid grid-cols-2 gap-2 text-sm">
-                <DetailSection title="Pricing Model">{String(item.pricing_model_name || item.pricing_model)}</DetailSection> {/* FIX: String() conversion */}
+                {/* FIX: Ensure pricing_model_name/pricing_model is treated as a string */}
+                <DetailSection title="Pricing Model">{String(item.pricing_model_name || item.pricing_model)}</DetailSection> 
                 <DetailSection title="Order Volume">{item.order_volume_range}</DetailSection>
             </div>
 
@@ -500,7 +504,8 @@ const FlywheelsMapPage: React.FC = () => {
     }, [data.systemHubs]);
 
     const highlightedIds = useMemo(() => {
-        const sets: Record<string, Set<string>> = { bu: new Set(), flywheel: new Set(), segment: new Set(), channel: new Set(), hub: new Set(), person: new Set(), platform: new Set() }; // FIX: Added platform to sets
+        // FIX: Added 'platform' to sets type definition.
+        const sets: Record<string, Set<string>> = { bu: new Set(), flywheel: new Set(), segment: new Set(), channel: new Set(), hub: new Set(), person: new Set(), platform: new Set() }; 
         if (!selection) return sets;
 
         sets[selection.type].add(selection.id);
@@ -510,12 +515,16 @@ const FlywheelsMapPage: React.FC = () => {
             const currentSize = Object.values(sets).reduce((acc, set) => acc + set.size, 0);
 
             data.systemBusinessUnits.forEach(bu => { if (sets.bu.has(bu.bu_id)) { if(bu.primary_flywheel_id) sets.flywheel.add(bu.primary_flywheel_id); bu.serves_segments_ids?.forEach(id => sets.segment.add(id)); if(bu.owner_person_id) sets.person.add(bu.owner_person_id); }});
-            data.systemFlywheels.forEach(fw => { if (sets.flywheel.has(fw.flywheel_id)) { fw.serves_segments?.forEach(id => sets.segment.add(id)); fw.serves_bus?.forEach(id => sets.bu.add(id)); if (fw.acquisition_channels) { (fw.acquisition_channels as string[]).forEach(channelId => data.systemChannels.forEach(c => channelId === c.channel_id && sets.channel.add(c.channel_id)))}; if(fw.owner_person) sets.person.add(fw.owner_person); }}); // FIX: Cast acquisition_channels to string[]
+            data.systemFlywheels.forEach(fw => { if (sets.flywheel.has(fw.flywheel_id)) { fw.serves_segments?.forEach(id => sets.segment.add(id)); fw.serves_bus?.forEach(id => sets.bu.add(id)); 
+                // FIX: Cast acquisition_channels to string[] to ensure forEach is available.
+                if (fw.acquisition_channels) { (fw.acquisition_channels as string[]).forEach(channelId => data.systemChannels.forEach(c => channelId === c.channel_id && sets.channel.add(c.channel_id)))}; 
+                if(fw.owner_person) sets.person.add(fw.owner_person); }}); 
             data.systemSegments.forEach(seg => { if (sets.segment.has(seg.segment_id)) { 
                 seg.served_by_flywheels_ids?.forEach(id => sets.flywheel.add(id)); 
                 if (seg.bu_id) sets.bu.add(seg.bu_id);
                 if(seg.owner_person_id) sets.person.add(seg.owner_person_id); 
-                splitAndTrim(String(seg.Platforms)).forEach(platformId => sets.platform.add(platformId)); // FIX: String() conversion
+                // FIX: Ensure Platforms is treated as a string before splitting.
+                splitAndTrim(String(seg.Platforms)).forEach(platformId => sets.platform.add(platformId)); 
             }});
             data.systemChannels.forEach(chan => { if(sets.channel.has(chan.channel_id)) { chan.serves_flywheels?.forEach(id => sets.flywheel.add(id)); chan.serves_bus?.forEach(id => sets.bu.add(id)); if(chan.responsible_person) sets.person.add(chan.responsible_person); }});
             data.systemHubs.forEach(hub => { if (sets.hub.has(hub.hub_id)) { if(hub.owner_person) sets.person.add(hub.owner_person); data.systemPeople.forEach(p => { if(p.primary_hub === hub.hub_id) sets.person.add(p.user_id) }) }});
@@ -550,7 +559,8 @@ const FlywheelsMapPage: React.FC = () => {
             <p className="font-bold text-gray-300 mt-2">Support Model</p>
             <p>{bu.support_model}</p>
             <p className="font-bold text-gray-300 mt-2">Pricing</p>
-            <p>{String(bu.pricing_model_name)}</p> {/* FIX: String() conversion */}
+            {/* FIX: Ensure pricing_model_name is treated as a string */}
+            <p>{String(bu.pricing_model_name)}</p> 
         </div>
     );
 
@@ -615,7 +625,7 @@ const FlywheelsMapPage: React.FC = () => {
                                                 <span title={`Status: ${bu.status}`} className={`w-3 h-3 rounded-full ${statusColor} flex-shrink-0`} />
                                             </div>
                                         </div>
-                                        {bu.in_form_of && <p className="text-center text-gray-300 italic my-2 text-sm">{bu.in_form_of}</p>}
+                                        {bu.in_form_of && <p className="text-center text-gray-300 italic my-2 text-sm">{String(bu.in_form_of)}</p>} {/* FIX: String() conversion */}
                                         <div className="my-2 border-t border-gray-700/50" />
                                         <div className="flex justify-between items-start gap-4 text-sm mt-auto">
                                             <p className="text-gray-300 flex-1" title={String(bu.offering_description)}>{String(bu.offering_description)}</p> {/* FIX: String() conversion */}
@@ -667,9 +677,11 @@ const FlywheelsMapPage: React.FC = () => {
                                                     const segIsSelected = selection?.type === 'segment' && selection.id === segment.segment_id;
                                                     const segIsHighlighted = highlightedIds.segment.has(segment.segment_id);
                                                     const segIsDimmed = !!selection && !segIsHighlighted;
-                                                    const hasCriticalDecision = (String(segment.strategic_notes))?.toUpperCase().includes('CRITICAL DECISION'); // FIX: String() conversion
+                                                    // FIX: Ensure strategic_notes is treated as a string before using toUpperCase.
+                                                    const hasCriticalDecision = (String(segment.strategic_notes))?.toUpperCase().includes('CRITICAL DECISION'); 
                                                     const priority = (segment.priority_rank as Priority) || 'Medium';
-                                                    const relatedPlatforms = data.systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); // FIX: String() conversion
+                                                    // FIX: Ensure Platforms is treated as a string before splitting.
+                                                    const relatedPlatforms = data.systemPlatforms.filter(p => splitAndTrim(String(segment.Platforms)).includes(p.platform_id)); 
                                                     const isExpanded = expandedSegmentId === segment.segment_id;
 
                                                     return (
@@ -690,7 +702,8 @@ const FlywheelsMapPage: React.FC = () => {
                                                                     <div className="my-2 border-t border-gray-700/50" />
 
                                                                     <div className="space-y-2 text-xs">
-                                                                        <div className="grid grid-cols-2 gap-x-3">{segment.Positioning && <div><p className="font-semibold text-gray-400">Positioning:</p><p className="text-gray-300">{segment.Positioning}</p></div>}{segment.expression && <div><p className="font-semibold text-gray-400">Expression:</p><p className="text-gray-300">{segment.expression}</p></div>}</div>
+                                                                        {/* FIX: Ensure Positioning and expression are treated as strings */}
+                                                                        <div className="grid grid-cols-2 gap-x-3">{String(segment.Positioning) && <div><p className="font-semibold text-gray-400">Positioning:</p><p className="text-gray-300">{String(segment.Positioning)}</p></div>}{segment.expression && <div><p className="font-semibold text-gray-400">Expression:</p><p className="text-gray-300">{segment.expression}</p></div>}</div>
                                                                     </div>
                                                                     
                                                                     {isExpanded && (

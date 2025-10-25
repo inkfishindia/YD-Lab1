@@ -19,7 +19,7 @@ const AllChannelsPage: React.FC = () => {
   const filteredChannels = useMemo(() => {
     return channels.filter(c =>
       c.channel_name.toLowerCase().includes(filters.name.toLowerCase()) &&
-      String(c.channel_type || '').toLowerCase().includes(filters.type.toLowerCase()) // FIX: Add String() conversion
+      (c.channel_type as string || '').toLowerCase().includes(filters.type.toLowerCase())
     );
   }, [channels, filters]);
 
@@ -69,7 +69,7 @@ const AllChannelsPage: React.FC = () => {
     closeModal();
   };
   
-  const TableHeader: React.FC<{ sortKey: keyof Channel, label: React.ReactNode }> = ({ sortKey, label }) => (
+  const TableHeader: React.FC<{ sortKey: keyof Channel, label: string }> = ({ sortKey, label }) => (
     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider cursor-pointer" onClick={() => requestSort(sortKey)}>
       <div className="flex items-center">{label}{sortConfig?.key === sortKey && <SortIcon className="w-4 h-4 ml-2" />}</div>
     </th>
@@ -120,25 +120,5 @@ const AllChannelsPage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">{channel.channel_name}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.channel_type}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.focus}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{channel.interfaces as React.ReactNode}</td> {/* FIX: Cast to React.ReactNode */}
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                  <button onClick={() => openModal(channel)} className="text-blue-400 hover:text-blue-300"><EditIcon className="w-5 h-5"/></button>
-                  <button onClick={() => deleteChannel(channel.channel_id)} className="text-red-400 hover:text-red-300"><TrashIcon className="w-5 h-5"/></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      <ChannelFormModal 
-        isOpen={isModalOpen} 
-        onClose={closeModal} 
-        onSave={handleSave} 
-        channel={editingChannel} 
-      />
-    </div>
-  );
-};
-
-export default AllChannelsPage;
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{String(channel.interfaces)}</td> {/* FIX: Cast to string */}
+                <td className="px-6

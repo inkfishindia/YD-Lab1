@@ -1,5 +1,4 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { useData } from '../../../contexts/DataContext';
 import type { Channel } from '../../../types';
@@ -133,12 +132,4 @@ const ChannelsListPage: React.FC = () => {
 
       <ChannelFormModal 
         isOpen={isModalOpen} 
-        onClose={closeModal} 
-        onSave={handleSave} 
-        channel={editingChannel} 
-      />
-    </div>
-  );
-};
-
-export default ChannelsListPage;
+        onClose={close

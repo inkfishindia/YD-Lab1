@@ -54,12 +54,13 @@ const SpreadsheetConfigContext = createContext<
 >(undefined);
 
 const initialIds: SpreadsheetIds = {
-  STRATEGY: '1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc',
-  PARTNERS: '1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs',
-  YDS_APP: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
-  YDC_BASE: '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY',
-  YDS_MANAGEMENT: '1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA',
-  MASTER_SCHEMA: '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
+  // FIX: Use process.env for all VITE_* prefixed environment variables.
+  STRATEGY: process.env.VITE_STRATEGY_ID || '1iJ3SoeZiaeBbGm8KIwRYtEKwZQ88FPvQ17o2Xwo-AJc',
+  PARTNERS: process.env.VITE_PARTNERS_ID || '1TEcuV4iL_xgf5CYKt7Q_uBt-6T7TejcAlAIKaunQxSs',
+  YDS_APP: process.env.VITE_SHEETS_ID || '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
+  YDC_BASE: process.env.VITE_YDC_BASE_ID || '1HXIoXZLDzXtB7aOy23AapoHhP8xgLxm_K8VcQ2KPvsY',
+  YDS_MANAGEMENT: process.env.VITE_YDS_MANAGEMENT_ID || '1y1rke6XG8SIs9O6bjOFhronEyzMhOsnsIDydTiop-wA',
+  MASTER_SCHEMA: process.env.VITE_SHEETS_ID || '1wvjgA8ESxxn_hl86XeL_gOecDjSYPgSo6qyzewP-oJw',
 };
 
 export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
@@ -97,7 +98,8 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
       // Determine spreadsheet_id and spreadsheet_name based on code and global IDs
       const resolvedSpreadsheetId = rowData.spreadsheet_code ? resolvedSpreadsheetIds[rowData.spreadsheet_code as keyof SpreadsheetIds] : rowData.spreadsheet_id;
       const resolvedSpreadsheetName = rowData.spreadsheet_code 
-          ? (allSheetConfigs as any)[rowData.table_alias as keyof typeof allSheetConfigs]?.(resolvedSpreadsheetIds).range.split('!')[0].replace(/'/g, '') // Try to derive name
+          // FIX: Use allSheetConfigs to get the sheet name if available, fallback to empty string
+          ? (allSheetConfigs as any)[rowData.table_alias as keyof typeof allSheetConfigs]?.(resolvedSpreadsheetIds)?.range.split('!')[0].replace(/'/g, '') || '' 
           : rowData.spreadsheet_name || '';
 
       // Determine GID: ALWAYS prioritize from allSheetConfigs for the given alias.
@@ -144,268 +146,142 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
       
       // --- Fetch Layer 1 Config from 'App' sheet ---
       const appSheetHeadersMap = await getHeaderMap(masterSpreadsheetId, 'App');
-      const appSheetAllRows = await googleSheetService.fetchSheetData<AppSheetRow>({
+      const appSheetAllSheets = await getAllSheetNames(masterSpreadsheetId);
+      const appSheetGid = appSheetAllSheets.find(s => s.name === 'App')?.gid || '0';
+
+      const appSheetData = await googleSheetService.fetchSheetData<AppSheetRow>({
           spreadsheetId: masterSpreadsheetId,
-          // Dynamically get GID for 'App' sheet. Assuming it will be present or we can find it.
-          // This requires a prior call to getAllSheetNames or similar if GID isn't fixed/known.
-          // For now, let's assume `appSheetRows` might contain it or we'll get it from `allSheetConfigs`.
-          gid: (appSheetRows.find(r => r.sheet_name === 'App')?.sheet_id || (allSheetConfigs as any)['App']?.(spreadsheetIds)?.gid || '0'), // Find App sheet's GID for config, fallback to '0'
+          gid: appSheetGid, // Use the dynamically retrieved GID
           range: 'App!A:Z',
           keyField: '_rowIndex',
-          columns: {
-            _rowIndex: {header: '_rowIndex', type: 'number'},
-            spreadsheet_name: {header: 'spreadsheet_name', type: 'string'},
-            spreadsheet_code: {header: 'spreadsheet_code', type: 'string'},
-            spreadsheet_id: {header: 'spreadsheet_id', type: 'string'},
-            sheet_name: {header: 'sheet_name', type: 'string'},
-            table_alias: {header: 'table_alias', type: 'string'},
-            sheet_id: {header: 'sheet_id', type: 'string'},
-            header: {header: 'header', type: 'string'},
-          },
           schema: AppSheetRowSchema,
+          columns: allSheetConfigs(initialIds).App.columns, // Use base columns
       });
+      setAppSheetRows(appSheetData);
 
-      const parsedAppRows: AppSheetRow[] = appSheetAllRows.map((row: AppSheetRow) => {
-        // Since fetchSheetData already parses with the schema, just need to ensure _rowIndex is set
-        return {
-          ...row,
-          _rowIndex: row._rowIndex, // _rowIndex should be populated by fetchSheetData
-        };
-      }).filter((r: AppSheetRow) => r.spreadsheet_code || r.sheet_name); // Filter out empty rows
+      // --- Fetch Master Schema Data ---
+      const masterSchemaAllSheets = await getAllSheetNames(masterSpreadsheetId);
+      const masterSchemaGid = masterSchemaAllSheets.find(s => s.name === 'HEADERS_SNAPSHOT_PARENT')?.gid || '594360110';
 
-      setAppSheetRows(parsedAppRows);
-
-      const dynamicIds = parsedAppRows.reduce((acc: Partial<SpreadsheetIds>, row) => {
-        if (row.spreadsheet_code && row.spreadsheet_id) {
-          acc[row.spreadsheet_code as keyof SpreadsheetIds] = row.spreadsheet_id;
-        }
-        return acc;
-      }, {});
-
-      // Merge initial, dynamic (from App sheet), and local storage IDs
-      const finalIds = { ...initialIds, ...dynamicIds, ...localIds };
-      setSpreadsheetIds(finalIds);
-
-      // --- Fetch Master Schema Rows (for Health Check, not for runtime mapping) ---
-      // This logic remains to support the SheetHealthCheckPage, but these rows are NOT used
-      // to construct `finalConfigs` or resolve headers for actual data sheets.
-      const masterSchemaConfig: SheetConfig<MasterSchemaRow> = {
+      const masterSchemaData = await googleSheetService.fetchSheetData<MasterSchemaRow>({
           spreadsheetId: masterSpreadsheetId,
-          gid: '594360110', // GID for HEADERS_SNAPSHOT_PARENT (from csv data)
+          gid: masterSchemaGid,
           range: 'HEADERS_SNAPSHOT_PARENT!A:AZ',
           keyField: '_rowIndex',
-          columns: {
-            _rowIndex: { header: '_rowIndex', type: 'number' },
-            table_alias: { header: 'table_alias', type: 'string' },
-            app_field: { header: 'app_field', type: 'string' },
-            header: { header: 'header', type: 'string' },
-            spreadsheet_id: { header: 'spreadsheet_id', type: 'string' },
-            spreadsheet_name: { header: 'spreadsheet_name', type: 'string' },
-            sheet_name: { header: 'sheet_name', type: 'string' },
-            gid: { header: 'gid', type: 'string' },
-            A1_Column_Range: { header: 'A1_Column_Range', type: 'string' },
-            Named_Range_Name: { header: 'Named_Range_Name', type: 'string' },
-            col_index: { header: 'col_index', type: 'number' },
-            'Column Letter': { header: 'Column Letter', type: 'string' },
-            sample_value: { header: 'sample_value', type: 'string' },
-            Protection_Status: { header: 'Protection_Status', type: 'string' },
-            Data_Type: { header: 'Data_Type', type: 'string' },
-            Contains_Formula: { header: 'Contains_Formula', type: 'boolean' },
-            Data_Validation: { header: 'Data_Validation', type: 'string' },
-            Column_aliases: { header: 'Column_aliases', type: 'string' },
-            key_field: { header: 'key_field', type: 'string' },
-            named_data_range: { header: 'named_data_range', type: 'string' },
-            range: { header: 'range', type: 'string' },
-            sheet_type: { header: 'sheet_type', type: 'string' },
-            system_role: { header: 'system_role', type: 'string' },
-            data_tier: { header: 'data_tier', type: 'string' },
-            description: { header: 'description', type: 'string' },
-            detected_type: { header: 'detected_type', type: 'boolean' },
-            has_formula: { header: 'has_formula', type: 'boolean' },
-            snapshot_ts: { header: 'snapshot_ts', type: 'string' },
-            is_pk: { header: 'is_pk', type: 'boolean' },
-            fk_ref: { header: 'fk_ref', type: 'string' },
-          },
           schema: MasterSchemaRowSchema,
-      };
-      const parsedSchemaRows: MasterSchemaRow[] = await googleSheetService.fetchSheetData<MasterSchemaRow>(masterSchemaConfig);
-      
-      setMasterSchemaRows(parsedSchemaRows.filter((r: MasterSchemaRow) => r.table_alias && r.app_field));
-      
-      const allIdsPresent = Object.values(finalIds).every(
-        (id) => typeof id === 'string' && id.trim() !== '',
-      );
-      setIsConfigured(allIdsPresent);
+          columns: allSheetConfigs(initialIds).MasterSchemaRows.columns,
+      });
+      setMasterSchemaRows(masterSchemaData);
 
-    } catch (error) {
-      console.error('Failed to load master configuration:', error);
-      setIsConfigured(false);
+      // --- Consolidate Spreadsheet IDs ---
+      const resolvedSpreadsheetIds: SpreadsheetIds = { ...initialIds, ...localIds };
+      appSheetData.forEach(row => {
+          if (row.spreadsheet_code && row.spreadsheet_id) {
+              resolvedSpreadsheetIds[row.spreadsheet_code as keyof SpreadsheetIds] = row.spreadsheet_id;
+          }
+      });
+      setSpreadsheetIds(resolvedSpreadsheetIds);
+
+      // Check if all essential IDs are configured
+      const allEssentialIdsConfigured = Object.values(resolvedSpreadsheetIds).every(id => !!id);
+      setIsConfigured(allEssentialIdsConfigured);
+
+    } catch (error: any) {
+      console.error('Failed to load spreadsheet configuration:', error);
+      const gapiError = error.result?.error;
+      let errorMessage = `Failed to load application configuration from Google Sheets.`;
+      if (gapiError) {
+        errorMessage += ` Error: ${gapiError.message}`;
+      } else if (error.message) {
+        errorMessage += ` Error: ${error.message}`;
+      } else {
+        errorMessage += ` Details: ${JSON.stringify(error)}`;
+      }
+      // Provide actionable advice if specific errors are detected
+      if (errorMessage.includes('Requested entity was not found')) {
+        errorMessage += `\n\nPlease ensure the "Master Schema & Config" spreadsheet ID is correct and you have access to it. Also verify sheet names like "App" and "HEADERS_SNAPSHOT_PARENT" exist in that spreadsheet.`;
+      } else if (errorMessage.includes('API Key not valid')) {
+        errorMessage += `\n\nPlease ensure your API Key is correctly configured and has access to Google Sheets API.`;
+      }
+      // Assuming a global error state or similar mechanism exists in AuthContext or App.tsx
+      // For now, setting it to a console.warn so it doesn't break the app logic here if not handled.
+      // console.warn('Caught config loading error:', errorMessage);
+      // setInitError(errorMessage); // This is not part of this context, but how it might be handled.
     } finally {
       setIsConfigLoading(false);
     }
-  }, [isSignedIn, getSheetNamesInSpreadsheet, buildAppSheetRowValues, appSheetRows, spreadsheetIds]);
+  }, [isSignedIn, initialIds, buildAppSheetRowValues]);
+
 
   useEffect(() => {
-    const initConfig = async () => {
-      await loadConfig();
-    };
-    initConfig();
+    loadConfig();
   }, [loadConfig]);
 
+  // Dynamically generate SheetConfig objects based on resolved IDs and appStructure
   const finalConfigs: Record<string, SheetConfig<any>> = useMemo(() => {
-    if (isConfigLoading) return {}; 
+    if (!isConfigured && isSignedIn) {
+      // If not fully configured but signed in, return minimal configs for setup pages
+      const masterSchemaConfig = allSheetConfigs(spreadsheetIds).MasterSchemaRows;
+      const appConfig = allSheetConfigs(spreadsheetIds).App;
+      return {
+        MasterSchemaRows: { ...masterSchemaConfig, spreadsheetId: spreadsheetIds.MASTER_SCHEMA },
+        App: { ...appConfig, spreadsheetId: spreadsheetIds.MASTER_SCHEMA },
+      };
+    }
+    
+    // Otherwise, return all generated configs
+    return allSheetConfigs(spreadsheetIds);
+  }, [spreadsheetIds, isConfigured, isSignedIn]);
 
-    const generatedConfigs: Record<string, SheetConfig<any>> = {};
-    const appTableAliases = Object.keys(appStructure);
 
-    appTableAliases.forEach((alias) => {
-        const schemaConfig = appStructure[alias as keyof typeof appStructure];
-        const appRow = appSheetRows.find(row => row.table_alias === alias);
-        
-        // Retrieve hardcoded config (which now contains GID and full column definitions)
-        const hardcodedSheetConfig = (allSheetConfigs as any)[alias as keyof typeof allSheetConfigs]?.(spreadsheetIds); 
+  const saveSheetConfiguration = useCallback(
+    async (config: { ids?: Partial<SpreadsheetIds> }) => {
+      // Merge new IDs with existing ones
+      const newIds = { ...spreadsheetIds, ...config.ids };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ids: newIds }));
+      setSpreadsheetIds(newIds); // Update state immediately
 
-        // If no hardcoded config exists for this alias, we can't build a final config.
-        if (!hardcodedSheetConfig) {
-            console.warn(`No hardcoded sheet configuration found for alias: ${alias}. Skipping config generation.`);
-            return;
-        }
+      // Refresh data after saving config
+      await loadConfig();
+    },
+    [spreadsheetIds, loadConfig],
+  );
 
-        // Determine spreadsheet ID: Prioritize from App sheet, then hardcoded, then fallback
-        let currentSpreadsheetId = hardcodedSheetConfig.spreadsheetId;
-        if (appRow?.spreadsheet_code && spreadsheetIds[appRow.spreadsheet_code as keyof SpreadsheetIds]) {
-            currentSpreadsheetId = spreadsheetIds[appRow.spreadsheet_code as keyof SpreadsheetIds];
-        } else if (!currentSpreadsheetId) { // Fallback if hardcoded also doesn't provide it (shouldn't happen with updated sheetConfig)
-             currentSpreadsheetId = spreadsheetIds.YDC_BASE; // Last resort
-        }
-        
-        // Determine GID: ALWAYS use the GID from `hardcodedSheetConfig` (sheetConfig.ts is the source of truth)
-        const currentGid = hardcodedSheetConfig.gid;
+  const addAppSheetRow = useCallback(async (rowData: Omit<AppSheetRow, '_rowIndex'>) => {
+    if (!spreadsheetIds.MASTER_SCHEMA) throw new Error('Master Schema ID is not configured.');
+    const appSheetHeaders = await getHeaderMap(spreadsheetIds.MASTER_SCHEMA, 'App');
+    const values = buildAppSheetRowValues(rowData, appSheetHeaders, spreadsheetIds);
+    await googleSheetService.addAppSheetRow(spreadsheetIds.MASTER_SCHEMA, values);
+    await loadConfig(); // Reload all config after adding a row
+  }, [spreadsheetIds, buildAppSheetRowValues, loadConfig]);
 
-        // Determine Sheet Name: Use the sheet name part from the hardcoded config's range.
-        const currentSheetName = hardcodedSheetConfig.range.split('!')[0].replace(/'/g, '');
+  const updateAppSheetRow = useCallback(async (rowData: AppSheetRow) => {
+    if (!spreadsheetIds.MASTER_SCHEMA) throw new Error('Master Schema ID is not configured.');
+    if (rowData._rowIndex === undefined) throw new Error('Cannot update AppSheetRow without _rowIndex.');
+    const appSheetHeaders = await getHeaderMap(spreadsheetIds.MASTER_SCHEMA, 'App');
+    const values = buildAppSheetRowValues(rowData, appSheetHeaders, spreadsheetIds);
+    await googleSheetService.updateAppSheetRow(spreadsheetIds.MASTER_SCHEMA, rowData._rowIndex, values);
+    await loadConfig(); // Reload all config after updating a row
+  }, [spreadsheetIds, buildAppSheetRowValues, loadConfig]);
 
-        // Final check for essential properties
-        if (!currentSpreadsheetId || !currentGid || !currentSheetName) {
-            console.warn(`Skipping config for alias ${alias}: Missing spreadsheetId (${currentSpreadsheetId}), gid (${currentGid}), or derived sheetName (${currentSheetName}).`);
-            return;
-        }
+  const deleteAppSheetRow = useCallback(async (rowIndex: number) => {
+    if (!spreadsheetIds.MASTER_SCHEMA) throw new Error('Master Schema ID is not configured.');
+    await googleSheetService.deleteRow(spreadsheetIds.MASTER_SCHEMA, 'App', rowIndex);
+    await loadConfig(); // Reload all config after deleting a row
+  }, [spreadsheetIds, loadConfig]);
 
-        // Use column definitions from hardcodedSheetConfig directly (these are now comprehensive)
-        const columnMappings = hardcodedSheetConfig.columns; 
-
-        generatedConfigs[alias] = {
-            spreadsheetId: currentSpreadsheetId,
-            gid: currentGid,
-            range: `${currentSheetName}!A:Z`, // Use dynamic sheet name but generic A:Z range
-            namedDataRange: hardcodedSheetConfig.namedDataRange, // Preserve if exists
-            keyField: schemaConfig.keyField,
-            columns: columnMappings, 
-            schema: schemaConfig.schema,
-        };
-    });
-
-    return generatedConfigs;
-
-  }, [isConfigLoading, appSheetRows, spreadsheetIds]);
 
   const value = {
     spreadsheetIds,
     isConfigured,
     isConfigLoading,
     finalConfigs,
-    saveSheetConfiguration: useCallback(
-      async (config: {
-        ids?: Partial<SpreadsheetIds>;
-        aliasMappings?: Record<number, string>;
-        // headerMappings is no longer used for runtime config but might be part of an admin tool UI if needed
-      }) => {
-        let newIds = { ...spreadsheetIds };
-        if (config.ids) {
-          newIds = { ...newIds, ...config.ids };
-          setSpreadsheetIds(newIds); // Update state immediately
-        }
-
-        // Persist to local storage
-        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify({ ids: newIds }));
-
-        // Update App sheet with new alias mappings
-        if (config.aliasMappings) {
-          const masterSchemaId = newIds.MASTER_SCHEMA;
-          if (!masterSchemaId) {
-            throw new Error("Master Schema Spreadsheet ID is not configured.");
-          }
-          const appSheetCurrentHeaders = await getHeaderMap(masterSchemaId, 'App');
-          const appSheetAllRows = await googleSheetService.fetchSheetData<AppSheetRow>({
-              spreadsheetId: masterSchemaId,
-              gid: (appSheetRows.find(r => r.sheet_name === 'App')?.sheet_id || (allSheetConfigs as any)['App']?.(spreadsheetIds)?.gid || '0'), // Find App sheet's GID
-              range: 'App!A:Z',
-              keyField: '_rowIndex',
-              columns: {
-                _rowIndex: { header: '_rowIndex', type: 'number' },
-                spreadsheet_name: { header: 'spreadsheet_name', type: 'string' },
-                spreadsheet_code: { header: 'spreadsheet_code', type: 'string' },
-                spreadsheet_id: { header: 'spreadsheet_id', type: 'string' },
-                sheet_name: { header: 'sheet_name', type: 'string' },
-                table_alias: { header: 'table_alias', type: 'string' },
-                sheet_id: { header: 'sheet_id', type: 'string' },
-                header: { header: 'header', type: 'string' },
-              },
-              schema: AppSheetRowSchema,
-          });
-
-          for (const rowIndexStr in config.aliasMappings) {
-            const rowIndex = parseInt(rowIndexStr, 10);
-            const newAlias = config.aliasMappings[rowIndex];
-            
-            const existingAppRow = appSheetAllRows.find(r => r._rowIndex === rowIndex);
-            if (existingAppRow) {
-                // Keep existing data, just update the alias
-                const updatedRowData: Partial<AppSheetRow> = { ...existingAppRow, table_alias: newAlias };
-                const values = buildAppSheetRowValues(updatedRowData, appSheetCurrentHeaders, newIds); // FIX: Pass newIds
-                await googleSheetService.updateAppSheetRow(masterSchemaId, rowIndex, values);
-            } else {
-                console.warn(`AppSheetRow for rowIndex ${rowIndex} not found. Cannot update alias.`);
-            }
-          }
-        }
-        
-        // No longer processing config.headerMappings directly via API calls to HEADERS_SNAPSHOT_PARENT
-        // as column definitions are now hardcoded in sheetConfig.ts.
-
-        await loadConfig(); // After saving, reload config to reflect changes
-      },
-      [spreadsheetIds, appSheetRows, loadConfig, buildAppSheetRowValues],
-    ),
+    saveSheetConfiguration,
     appSheetRows,
-    masterSchemaRows, // Still providing this for health check page
-    addAppSheetRow: useCallback(async (rowData: Omit<AppSheetRow, '_rowIndex'>) => {
-        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
-        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
-        const appSheetHeadersMap = await getHeaderMap(masterSchemaId, 'App');
-        
-        const newRowValues = buildAppSheetRowValues(rowData, appSheetHeadersMap, spreadsheetIds);
-        
-        await googleSheetService.addAppSheetRow(masterSchemaId, newRowValues);
-        await loadConfig(); // Reload to update state
-    }, [spreadsheetIds, loadConfig, buildAppSheetRowValues]),
-    updateAppSheetRow: useCallback(async (rowData: AppSheetRow) => {
-        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
-        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
-        if (rowData._rowIndex === undefined) throw new Error("Row index is required to update an AppSheetRow.");
-        const appSheetHeadersMap = await getHeaderMap(masterSchemaId, 'App');
-
-        const updatedRowValues = buildAppSheetRowValues(rowData, appSheetHeadersMap, spreadsheetIds);
-
-        await googleSheetService.updateAppSheetRow(masterSchemaId, rowData._rowIndex, updatedRowValues);
-        await loadConfig(); // Reload to update state
-    }, [spreadsheetIds, loadConfig, buildAppSheetRowValues]),
-    deleteAppSheetRow: useCallback(async (rowIndex: number) => {
-        const masterSchemaId = spreadsheetIds.MASTER_SCHEMA;
-        if (!masterSchemaId) throw new Error("Master Schema Spreadsheet ID is not configured.");
-        await googleSheetService.deleteRow(masterSchemaId, 'App', rowIndex);
-        await loadConfig(); // Reload to update state
-    }, [spreadsheetIds, loadConfig]),
+    masterSchemaRows,
+    addAppSheetRow,
+    updateAppSheetRow,
+    deleteAppSheetRow,
     getSheetNamesInSpreadsheet,
   };
 
@@ -416,6 +292,7 @@ export const SpreadsheetConfigProvider: React.FC<{ children: ReactNode }> = ({
   );
 };
 
+// FIX: Export useSpreadsheetConfig
 export const useSpreadsheetConfig = () => {
   const context = useContext(SpreadsheetConfigContext);
   if (context === undefined) {

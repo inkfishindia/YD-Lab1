@@ -368,9 +368,9 @@ export const SystemFlywheelSchema = FlywheelSchema.extend({
   jtbd_trigger_moment: optionalString, // From CSV
   motion_sequence: optionalString, // From CSV
   serves_bus: stringToArray, // From CSV, assuming it's an array
-  acquisition_channels: optionalString, // From CSV, assuming this is a single ID/string
+  acquisition_channels: stringToArray, // From CSV, assuming this is a string array now
   order_size_range: optionalString, // From CSV
-  efficiency_metrics: optionalString, // From CSV, can be string array
+  efficiency_metrics: stringToArray, // From CSV, now a string array
   owner_person: optionalString, // From CSV
   owner_person_Name: optionalString, // From CSV
   cac_target: optionalString, // From CSV
@@ -679,6 +679,7 @@ export const MgmtProjectSchema = z.object({
   updated_at: optionalString,
   updated_by: optionalString,
   objective: optionalString, // Keep for form compatibility
+  risk_level: optionalString, // FIX: Added risk_level for compatibility with project mapping
 });
 
 export const MilestoneSchema = z.object({

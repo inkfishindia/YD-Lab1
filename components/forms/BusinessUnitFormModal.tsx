@@ -59,7 +59,7 @@ export const BusinessUnitFormModal: React.FC<BusinessUnitFormModalProps> = ({ is
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         // FIX: Explicitly cast 'e.target.value' to 'any' to resolve a TypeScript error related to form input types.
-        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value as any }));
+        setFormData(prev => ({ ...prev, [e.target.name]: e.target.value as string }));
     };
     
     const handleSubmit = (e: React.FormEvent) => {

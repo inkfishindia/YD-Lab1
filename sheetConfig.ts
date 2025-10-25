@@ -140,7 +140,8 @@ function getColumnConfig<T extends z.ZodTypeAny>(
   spreadsheetIds: SpreadsheetIds,
 ): SheetConfig<z.infer<T>>['columns'] {
   const columns: SheetConfig<z.infer<T>>['columns'] = {};
-  const entitySchema = schema as ZodObject<any>; // Cast for easier property access
+  // FIX: Changed type assertion to accurately reflect the schema type.
+  const entitySchema = schema as z.ZodObject<any, 'strip', any>; 
 
   const schemaShape = entitySchema.shape; // Get the shape of the Zod object
 
@@ -212,16 +213,7 @@ function getColumnConfig<T extends z.ZodTypeAny>(
   return columns;
 }
 
-// --- Hardcoded Sheet Configurations ---
-// This maps our internal app aliases to their full SheetConfig details.
-// This is the source of truth for:
-// - Spreadsheet ID (via `spreadsheetIds` lookup)
-// - GID (Google Sheet ID for the specific tab)
-// - Range (e.g., 'Sheet1!A:Z')
-// - Key field
-// - Zod Schema
-// - Column definitions derived from schema and potentially CSV (via getColumnConfig)
-
+// Pre-declare allSheetConfigs for use in getColumnConfig
 export const allSheetConfigs = (
   spreadsheetIds: SpreadsheetIds,
 ): Record<string, SheetConfig<any>> => ({
@@ -365,6 +357,7 @@ export const allSheetConfigs = (
     gid: '1418702005',
     range: 'Funnel Stages!A:AZ',
     keyField: 'stageId',
+    // FIX: Corrected typo from FunnelStagesSchema to FunnelStageSchema.
     schema: schemas.FunnelStageSchema,
     columns: getColumnConfig(schemas.FunnelStageSchema, 'FunnelStages', spreadsheetIds),
   },
@@ -597,7 +590,10 @@ export const predefinedRelations = [
   { from: 'SystemPeople', fromField: 'owns_channels_ids', to: 'SystemChannels', toField: 'channel_id' },
   { from: 'SystemPeople', fromField: 'owns_flywheels_ids', to: 'SystemFlywheels', toField: 'flywheel_id' },
   { from: 'SystemPeople', fromField: 'owns_interfaces_ids', to: 'SystemInterfaces', toField: 'interface_id' },
+  { from: 'SystemPeople', fromField: 'owns_platforms_ids', to: 'SystemPlatforms', toField: 'platform_id' },
   { from: 'SystemPeople', fromField: 'owns_segments_ids', to: 'SystemSegments', toField: 'segment_id' },
+  { from: 'SystemPeople', fromField: 'owns_stages_ids', to: 'SystemStages', toField: 'stage_id' },
+  { from: 'SystemPeople', fromField: 'owns_touchpoints_ids', to: 'SystemTouchpoints', toField: 'touchpoint_id' },
   { from: 'SystemStages', fromField: 'flywheel', to: 'SystemFlywheels', toField: 'flywheel_id' },
   { from: 'SystemTouchpoints', fromField: 'stage_id', to: 'SystemStages', toField: 'stage_id' },
   { from: 'SystemTouchpoints', fromField: 'flywheel_id', to: 'SystemFlywheels', toField: 'flywheel_id' },
